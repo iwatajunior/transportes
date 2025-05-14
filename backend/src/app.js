@@ -69,6 +69,6 @@ app.use('/api/v1/users', userRoutes); // <-- Uso das rotas de usuário
 
 const PORT = process.env.PORT || 3002;
 
-app.listen(PORT, () => {
-  console.log(`Servidor backend rodando na porta ${PORT}`);
+app.listen(PORT, '10.1.1.42', () => {
+  console.log(`Servidor backend rodando em http://10.1.1.42:${PORT}`);
 });

@@ -131,7 +131,7 @@ const TripListPage = () => {
             case 'Aprovada':
                 return { color: 'success', icon: <CheckCircleIcon /> };
             case 'Agendada':
-                return { color: 'primary', icon: <EventIcon /> };
+                return { color: 'warning', icon: <EventIcon /> };
             case 'Em Andamento':
                 return { color: 'info', icon: <AccessTimeIcon /> };
             case 'Concluida':
@@ -412,7 +412,7 @@ const TripListPage = () => {
                                     <TableCell sx={{ py: 1, px: 2 }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Avatar
-                                                src={trip.solicitante_avatar ? `http://localhost:3001${trip.solicitante_avatar}` : undefined}
+                                                src={trip.solicitante_avatar ? `http://10.1.1.42:3001${trip.solicitante_avatar}` : undefined}
                                                 sx={{ 
                                                     width: 32, 
                                                     height: 32,
@@ -465,7 +465,7 @@ const TripListPage = () => {
                                         {trip.motorista_nome ? (
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Avatar
-                                                    src={trip.motorista_avatar ? `http://localhost:3001${trip.motorista_avatar}` : undefined}
+                                                    src={trip.motorista_avatar ? `http://10.1.1.42:3001${trip.motorista_avatar}` : undefined}
                                                     sx={{ 
                                                         width: 32, 
                                                         height: 32,

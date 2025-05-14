@@ -62,7 +62,7 @@ const EditProfilePage = () => {
                 }));
                 
                 if (profileData.fotoperfilurl) {
-                    const fullUrl = `http://localhost:3001${profileData.fotoperfilurl}`;
+                    const fullUrl = `http://10.1.1.42:3001${profileData.fotoperfilurl}`;
                     setImagePreviewUrl(fullUrl);
                 }
                 setIsLoading(false);

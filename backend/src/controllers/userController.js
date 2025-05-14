@@ -238,33 +238,27 @@ const userController = {
             }
 
             // Adicionar o caminho/nome do arquivo da imagem aos dados a serem atualizados, se um arquivo foi enviado
-            if (imageFile) {
-                console.log("[userController] Entrou no bloco if (imageFile).");
+            if (imageFile && imageFile.buffer) {
+                console.log("[userController] Processando arquivo de imagem...");
                 const fileName = `${Date.now()}-${imageFile.originalname.replace(/\s+/g, '_')}`;
-                console.log(`[userController] Nome do arquivo gerado: ${fileName}`);
-                const uploadsDir = path.join(__dirname, '..', 'uploads');
-                console.log(`[userController] Diretório de uploads calculado: ${uploadsDir}`);
+                const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
                 const filePath = path.join(uploadsDir, fileName);
-                console.log(`[userController] Caminho completo do arquivo calculado: ${filePath}`);
 
                 try {
-                    console.log("[userController] Entrando no bloco try para salvar imagem.");
+                    // Garantir que o diretório de uploads existe
                     if (!fs.existsSync(uploadsDir)) {
-                        console.log(`[userController] Diretório ${uploadsDir} não existe. Tentando criar...`);
                         fs.mkdirSync(uploadsDir, { recursive: true });
-                        console.log(`[userController] Diretório ${uploadsDir} criado com sucesso.`);
-                    } else {
-                        console.log(`[userController] Diretório ${uploadsDir} já existe.`);
                     }
                     
-                    console.log(`[userController] Tentando salvar arquivo em: ${filePath}`);
+                    // Salvar o arquivo usando o buffer
                     fs.writeFileSync(filePath, imageFile.buffer);
                     console.log(`[userController] Imagem salva com sucesso em: ${filePath}`);
-                    // Usar o caminho relativo para as fotos
-                    validatedTextData.fotoperfilurl = `/uploads/${fileName}`; 
-                    console.log(`[userController] fotoUrl para o banco definida como: ${validatedTextData.fotoperfilurl}`);
+                    
+                    // Atualizar o caminho da foto no banco
+                    validatedTextData.fotoperfilurl = `/uploads/${fileName}`;
                 } catch (saveError) {
-                    console.error("[userController] CAPTUROU ERRO AO SALVAR IMAGEM:", saveError);
+                    console.error("[userController] Erro ao salvar imagem:", saveError);
+                    throw new Error('Erro ao salvar a imagem do perfil.');
                 }
             } else if (textFields.removerFoto === 'true') {
                 // Se o frontend enviar um campo específico para indicar a remoção da foto

@@ -48,39 +48,71 @@ const CreateUserPage = () => {
     const handleSubmit = async (formData) => {
         setIsLoading(true);
         setError('');
-        setSuccessMessage(''); 
-        setShowError(false); // Esconde erro anterior ao tentar novamente
-        setShowSuccess(false);
-        const token = getAuthToken();
-
-        if (!token) {
-            setError('Erro de autenticação. Faça login novamente.');
-            setIsLoading(false);
-            return;
-        }
-
         try {
-            const response = await api.post('/users/register', formData, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const token = localStorage.getItem('token');
+            if (!token) {
+                setError('Usuário não autenticado');
+                history.push('/login');
+                return;
+            }
+
+            // Verifica campos obrigatórios
+            const requiredFields = ['nome', 'email', 'senha', 'perfil'];
+            let missingFields;
+
+            if (formData instanceof FormData) {
+                missingFields = requiredFields.filter(field => !formData.get(field));
+            } else {
+                missingFields = requiredFields.filter(field => !formData[field]);
+            }
+
+            if (missingFields.length > 0) {
+                throw new Error(`Campos obrigatórios faltando: ${missingFields.join(', ')}`);
+            }
+
+            let response;
+
+            if (formData instanceof FormData) {
+                // Log dos dados que serão enviados
+                const formDataEntries = Array.from(formData.entries());
+                console.log('Enviando dados (FormData):', {
+                    nome: formData.get('nome'),
+                    email: formData.get('email'),
+                    perfil: formData.get('perfil'),
+                    setor: formData.get('setor'),
+                    foto: formData.get('foto')?.name,
+                    entries: formDataEntries.map(([key, value]) => `${key}: ${value instanceof File ? value.name : value}`)
+                });
+
+                // Remove o Content-Type para que o axios configure automaticamente com o boundary correto
+                response = await api.post('/users/register', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            } else {
+                console.log('Enviando dados (JSON):', formData);
+
+                response = await api.post('/users/register', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+            }
             
             setSuccessMessage('Usuário criado com sucesso! ID: ' + response.data.user.userid);
             // O useEffect cuidará do redirecionamento após a mensagem de sucesso
-
-        } catch (err) {
-            console.error("Erro ao criar usuário:", err);
-            let errorMessage = 'Falha ao criar usuário. Verifique os dados e tente novamente.';
-            if (err.response && err.response.data) {
-                const apiError = err.response.data;
-                if (apiError.errors && Array.isArray(apiError.errors)) {
-                    errorMessage = apiError.errors.map(e => `${e.field || 'Campo'}: ${e.message}`).join('; ');
-                } else if (apiError.message) {
-                    errorMessage = apiError.message;
-                }
+        } catch (error) {
+            console.error('Erro ao criar usuário:', error);
+            
+            if (error.response?.status === 409) {
+                setError('Já existe um usuário cadastrado com este email.');
+            } else if (error.response?.status === 400) {
+                setError('Dados inválidos. Verifique se todos os campos obrigatórios estão preenchidos corretamente.');
+            } else {
+                setError('Erro ao criar usuário: ' + error.message);
             }
-            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }

@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Configurar o diretório de uploads
-const uploadDir = path.join(__dirname, '../../uploads');
+const uploadDir = path.join(__dirname, '..', '..', 'uploads');
 console.log('DEBUG - Configurando multer para salvar em:', uploadDir);
 
 // Garantir que o diretório existe
@@ -11,18 +11,8 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Configuração do Multer
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        // Gerar um nome único para o arquivo
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname).toLowerCase();
-        cb(null, 'profile-' + uniqueSuffix + ext);
-    }
-});
+// Configuração do Multer usando memoryStorage
+const storage = multer.memoryStorage();
 
 // Filtro de arquivos
 const fileFilter = (req, file, cb) => {

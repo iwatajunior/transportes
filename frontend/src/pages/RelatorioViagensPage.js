@@ -81,12 +81,20 @@ const RelatorioViagensPage = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'concluida':
+            case 'Concluida':
                 return { bg: '#4caf50', text: 'white' };
-            case 'em_andamento':
+            case 'Em Andamento':
                 return { bg: '#2196f3', text: 'white' };
-            case 'pendente':
+            case 'Pendente':
                 return { bg: '#ff9800', text: 'white' };
+            case 'Agendada':
+                return { bg: '#ff9800', text: 'white' };
+            case 'Aprovada':
+                return { bg: '#4caf50', text: 'white' };
+            case 'Recusada':
+                return { bg: '#f44336', text: 'white' };
+            case 'Cancelada':
+                return { bg: '#f44336', text: 'white' };
             default:
                 return { bg: '#757575', text: 'white' };
         }

@@ -44,7 +44,7 @@ const getStatusColor = (status) => {
         case 'Aprovada':
             return 'success';
         case 'Agendada':
-            return 'primary';
+            return 'warning';
         case 'Em Andamento':
             return 'info';
         case 'Concluida':
@@ -237,7 +237,7 @@ const TripDetailPage = () => {
         setKmError('');
         setKmSuccess('');
         try {
-            const response = await api.put(`http://localhost:3001/api/v1/trips/${id}/km/manage-start`, { 
+            const response = await api.put(`/trips/${id}/km/start`, { 
                 km_inicial: Number(initialKm) 
             });
             setKmSuccess('KM Inicial salvo com sucesso!');
@@ -296,7 +296,7 @@ const TripDetailPage = () => {
 
         try {
             console.log(`Enviando alocação para viagem ${id}: Veículo=${selectedVehicle}, Motorista=${selectedDriver}`);
-            const response = await api.post(`/trips/${id}/allocate`, {
+            const response = await api.put(`/trips/${id}/allocate`, {
                 vehicleId: selectedVehicle || null,
                 driverId: selectedDriver || null,
             });

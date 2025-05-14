@@ -48,8 +48,8 @@ const Navbar = ({ onLogout, userRole, userName, userPhotoUrl }) => {
                     >
                         {console.log('DEBUG - Avatar Props:', { userName, userPhotoUrl })}
                         <Avatar 
-                            src={userPhotoUrl ? `http://localhost:3001${userPhotoUrl}` : ''}
-                            alt={userName}
+                            src={userPhotoUrl ? `http://10.1.1.42:3001${userPhotoUrl}` : ''}
+                            alt={userName ? userName.charAt(0).toUpperCase() : 'U'}
                             sx={{ 
                                 width: 32, 
                                 height: 32,
