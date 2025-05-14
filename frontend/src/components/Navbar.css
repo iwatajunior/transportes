@@ -1,0 +1,8 @@
+/* src/components/Navbar.css */
+.navbar-mui {
+    display: flex; /* Mantém os botões em linha */
+    align-items: center; /* Alinha verticalmente se necessário */
+}
+
+/* Estilos específicos para os botões MUI podem ser adicionados aqui se necessário,
+   mas idealmente usamos a prop `sx` ou theming do MUI. */
