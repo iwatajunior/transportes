@@ -16,13 +16,10 @@ import { USER_ROLES, normalizePerfil } from '../../utils/userConstants';
 
 // Criar opções de perfil a partir das constantes USER_ROLES
 const USER_ROLES_OPTIONS = [
-    { value: USER_ROLES.REQUISITANTE, label: 'Requisitante' },
+    { value: USER_ROLES.ADMINISTRADOR, label: 'Administrador' },
     { value: USER_ROLES.GESTOR, label: 'Gestor' },
     { value: USER_ROLES.MOTORISTA, label: 'Motorista' },
-    { value: USER_ROLES.ADMINISTRADOR, label: 'Administrador' },
-    { value: USER_ROLES.USUARIO_REQUISITANTE, label: 'Usuário Requisitante' },
-    { value: USER_ROLES.USUARIO_GESTOR, label: 'Usuário Gestor' },
-    { value: USER_ROLES.MOTORISTA_LOWER, label: 'Motorista (minúsculo)' }
+    { value: USER_ROLES.REQUISITANTE, label: 'Requisitante' }
 ];
 
 const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {

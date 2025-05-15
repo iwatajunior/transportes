@@ -3,13 +3,14 @@ export const USER_ROLES = {
     REQUISITANTE: 'Requisitante',
     GESTOR: 'Gestor',
     MOTORISTA: 'Motorista',
-    ADMINISTRADOR: 'administrador',
-    USUARIO_REQUISITANTE: 'usuario requisitante',
-    USUARIO_GESTOR: 'usuario gestor',
-    MOTORISTA_LOWER: 'motorista'
+    ADMINISTRADOR: 'Administrador'
 };
 
-// Função para normalizar o perfil para um dos valores válidos do enum
+/**
+ * Normaliza o valor do perfil para um dos valores válidos
+ * @param {string} perfil - O valor do perfil a ser normalizado
+ * @returns {string} - O valor normalizado do perfil
+ */
 export const normalizePerfil = (perfil) => {
     if (!perfil) return USER_ROLES.REQUISITANTE;
     
@@ -19,7 +20,7 @@ export const normalizePerfil = (perfil) => {
     }
     
     // Normalizar baseado no texto
-    const perfilLower = String(perfil).toLowerCase();
+    const perfilLower = String(perfil).toLowerCase().trim();
     
     if (perfilLower === 'requisitante' || perfilLower.includes('requisitante')) {
         return USER_ROLES.REQUISITANTE;
@@ -29,10 +30,6 @@ export const normalizePerfil = (perfil) => {
         return USER_ROLES.GESTOR;
     } else if (perfilLower === 'administrador' || perfilLower.includes('admin')) {
         return USER_ROLES.ADMINISTRADOR;
-    } else if (perfilLower.includes('usuario requisitante')) {
-        return USER_ROLES.USUARIO_REQUISITANTE;
-    } else if (perfilLower.includes('usuario gestor')) {
-        return USER_ROLES.USUARIO_GESTOR;
     }
     
     // Valor padrão

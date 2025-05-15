@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { USER_ROLES } = require('../utils/userConstants'); // Para verificação de roles
+const { USER_ROLES, normalizePerfil } = require('../utils/userConstants'); // Para verificação de roles
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -32,15 +32,22 @@ const authMiddleware = {
     },
 
     // Middleware para verificar se o usuário tem um dos perfis permitidos
-    // ex: authorizeRoles([USER_ROLES.ADMINISTRADOR, USER_ROLES.GESTOR])
+    // ex: authorizeRoles(USER_ROLES.ADMINISTRADOR, USER_ROLES.GESTOR)
     authorizeRoles(...allowedRoles) {
         return (req, res, next) => {
             if (!req.user || !req.user.perfil) {
                 return res.status(401).json({ message: 'Usuário não autenticado ou perfil não definido.' });
             }
 
-            const userProfileLower = req.user.perfil.toLowerCase();
-            const hasRole = allowedRoles.includes(userProfileLower);
+            // Normalizar o perfil do usuário
+            const normalizedUserProfile = normalizePerfil(req.user.perfil);
+            console.log(`[authMiddleware.authorizeRoles] Perfil original: ${req.user.perfil}, Perfil normalizado: ${normalizedUserProfile}, Perfis permitidos: ${allowedRoles.join(', ')}`);
+            
+            // Verificar se o perfil normalizado está entre os permitidos (case-insensitive)
+            const hasRole = allowedRoles.some(role => 
+                role.toLowerCase() === normalizedUserProfile.toLowerCase()
+            );
+            
             if (!hasRole) {
                 return res.status(403).json({
                     message: `Acesso negado. Você não tem permissão para este recurso. Perfis permitidos: ${allowedRoles.join(', ')}.`
@@ -52,7 +59,21 @@ const authMiddleware = {
 
     // Atalho para verificar se é administrador
     isAdmin(req, res, next) {
-        return authMiddleware.authorizeRoles(USER_ROLES.ADMINISTRADOR)(req, res, next);
+        if (!req.user || !req.user.perfil) {
+            return res.status(401).json({ message: 'Usuário não autenticado ou perfil não definido.' });
+        }
+
+        // Normalizar o perfil do usuário
+        const normalizedUserProfile = normalizePerfil(req.user.perfil);
+        console.log(`[authMiddleware.isAdmin] Perfil original: ${req.user.perfil}, Perfil normalizado: ${normalizedUserProfile}, Comparando com: ${USER_ROLES.ADMINISTRADOR}`);
+        
+        // Verificar se o perfil normalizado é Administrador (case-insensitive)
+        if (normalizedUserProfile.toLowerCase() !== USER_ROLES.ADMINISTRADOR.toLowerCase()) {
+            return res.status(403).json({
+                message: `Acesso negado. Você não tem permissão para este recurso. Perfis permitidos: ${USER_ROLES.ADMINISTRADOR}.`
+            });
+        }
+        next();
     }
 };
 

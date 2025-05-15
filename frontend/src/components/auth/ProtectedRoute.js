@@ -1,6 +1,7 @@
 import React from 'react';
 import { Route, Redirect, useLocation } from 'react-router-dom'; // Para v5
 import { jwtDecode } from 'jwt-decode';
+import { normalizePerfil } from '../../utils/userConstants';
 
 const getDecodedToken = () => {
     const token = localStorage.getItem('token');
@@ -29,21 +30,29 @@ const ProtectedRoute = ({ component: Component, allowedRoles, ...rest }) => {
 
     console.log(`[ProtectedRoute] Token encontrado para ${location.pathname}. Perfil: ${decodedToken.perfil}`);
 
-    // 2. Verificar perfil (case-insensitive)
-    const userProfile = decodedToken.perfil?.toLowerCase();
-    if (!userProfile) {
+    // 2. Verificar perfil usando normalizePerfil
+    if (!decodedToken.perfil) {
         console.error('[ProtectedRoute] Perfil do usuário não encontrado no token.');
         // Considerar remover token inválido aqui também
         localStorage.removeItem('token'); 
         return <Redirect to={{ pathname: '/login', state: { from: location, error: 'Token inválido' } }} />;
     }
+    
+    // Normalizar o perfil do usuário
+    const userProfile = normalizePerfil(decodedToken.perfil);
 
     // 3. Verificar permissões
-    const allowedRolesLower = allowedRoles ? allowedRoles.map(role => role.toLowerCase()) : [];
-    if (allowedRoles && allowedRoles.length > 0 && !allowedRolesLower.includes(userProfile)) {
-        console.warn(`[ProtectedRoute] Acesso negado para rota ${location.pathname}. Perfil do usuário: ${userProfile} (token original: ${decodedToken.perfil}). Perfis permitidos (lower): ${allowedRolesLower.join(', ')}`);
-        // Redireciona para /login com mensagem de erro
-        return <Redirect to={{ pathname: '/login', state: { from: location, error: 'Acesso negado' } }} />;
+    if (allowedRoles && allowedRoles.length > 0) {
+        // Verificar se o perfil do usuário está entre os permitidos (case-insensitive)
+        const hasRole = allowedRoles.some(role => 
+            role.toLowerCase() === userProfile.toLowerCase()
+        );
+        
+        if (!hasRole) {
+            console.warn(`[ProtectedRoute] Acesso negado para rota ${location.pathname}. Perfil do usuário normalizado: ${userProfile} (token original: ${decodedToken.perfil}). Perfis permitidos: ${allowedRoles.join(', ')}`);
+            // Redireciona para /login com mensagem de erro
+            return <Redirect to={{ pathname: '/login', state: { from: location, error: 'Acesso negado' } }} />;
+        }
     }
 
     // 4. Acesso permitido: Renderiza a rota com o componente

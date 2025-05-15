@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { normalizePerfil } from '../utils/userConstants';
 
 const AuthContext = createContext(null);
 
@@ -16,10 +17,10 @@ export const AuthProvider = ({ children }) => {
                     // Decodifica o token para obter os dados do usuário
                     const decodedToken = decodeToken(token);
                     if (decodedToken) {
-                        // Garante que o perfil está em minúsculas
+                        // Normaliza o perfil usando a função normalizePerfil
                         const normalizedUser = {
                             ...decodedToken,
-                            perfil: decodedToken.perfil?.toLowerCase()
+                            perfil: normalizePerfil(decodedToken.perfil)
                         };
                         setUser(normalizedUser);
                         console.log('Usuário normalizado:', normalizedUser);
@@ -64,10 +65,10 @@ export const AuthProvider = ({ children }) => {
         const decodedToken = decodeToken(token);
         console.log('DEBUG - Dados do usuário decodificados do token:', decodedToken);
         
-        // Normaliza o perfil para minúsculas
+        // Normaliza o perfil usando a função normalizePerfil
         const normalizedUser = {
             ...decodedToken,
-            perfil: decodedToken.perfil?.toLowerCase()
+            perfil: normalizePerfil(decodedToken.perfil)
         };
         
         // Define o usuário com os dados normalizados

@@ -3,7 +3,7 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const upload = require('../config/multerConfig');
 const { authenticateToken, authorizeRoles, isAdmin } = require('../middleware/authMiddleware'); // Ajuste o caminho
-const { USER_ROLES } = require('../utils/userConstants');
+const { USER_ROLES, normalizePerfil } = require('../utils/userConstants');
 
 // Rota protegida para buscar motoristas (usuários com perfil Motorista e ativos)
 router.get(

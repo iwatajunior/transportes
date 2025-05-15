@@ -4,7 +4,7 @@ const userModel = require('../models/userModel');
 const { createUserSchema, loginUserSchema, updateUserSchema } = require('../validators/userSchemas'); 
 const fs = require('fs');
 const path = require('path');
-const { normalizePerfil } = require('../utils/profileNormalizer');
+const { normalizePerfil } = require('../utils/userConstants');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;

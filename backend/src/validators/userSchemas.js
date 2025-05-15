@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { USER_ROLES } = require('../utils/userConstants');
+const { USER_ROLES, normalizePerfil } = require('../utils/userConstants');
 
 const createUserSchema = Joi.object({
     nome: Joi.string().min(3).max(100).required().messages({
@@ -21,9 +21,15 @@ const createUserSchema = Joi.object({
         'string.min': 'Senha deve ter no mínimo {#limit} caracteres.',
         'any.required': 'Senha é obrigatória.'
     }),
-    perfil: Joi.string().valid(...Object.values(USER_ROLES)).required().messages({
+    perfil: Joi.string().required().custom((value, helpers) => {
+        const normalizedValue = normalizePerfil(value);
+        if (!Object.values(USER_ROLES).includes(normalizedValue)) {
+            return helpers.error('any.only', { values: Object.values(USER_ROLES).join(', ') });
+        }
+        return normalizedValue;
+    }).messages({
         'string.base': 'Perfil deve ser um texto.',
-        'any.only': `Perfil deve ser um dos seguintes: ${Object.values(USER_ROLES).join(', ')}.`,
+        'any.only': `Perfil deve ser um dos seguintes: ${Object.values(USER_ROLES).join(', ')}`,
         'any.required': 'Perfil é obrigatório.'
     }),
     setor: Joi.string().min(2).max(100).optional().allow('', null).messages({
@@ -59,35 +65,11 @@ const updateUserSchema = Joi.object({
         'string.min': 'Senha deve ter no mínimo {#limit} caracteres se fornecida.'
     }),
     perfil: Joi.string().optional().custom((value, helpers) => {
-        // O enum perfil_usuario_enum tem 7 valores possíveis:
-        // 'Requisitante', 'Motorista', 'Gestor', 'administrador', 'usuario requisitante', 'usuario gestor', 'motorista'
-        const enumValues = [
-            'Requisitante', 'Motorista', 'Gestor', 
-            'administrador', 'usuario requisitante', 'usuario gestor', 'motorista'
-        ];
-        
-        // Verificar se o valor já é um dos valores válidos do enum
-        if (enumValues.includes(value)) {
-            return value;
+        const normalizedValue = normalizePerfil(value);
+        if (!Object.values(USER_ROLES).includes(normalizedValue)) {
+            return helpers.error('any.only', { values: Object.values(USER_ROLES).join(', ') });
         }
-        
-        // Verificar se o valor é um dos valores definidos em USER_ROLES
-        if (Object.values(USER_ROLES).includes(value)) {
-            return value;
-        }
-        
-        // Tentar normalizar o valor
-        const lowerValue = String(value).toLowerCase();
-        if (lowerValue.includes('requisitante')) {
-            return 'Requisitante';
-        } else if (lowerValue.includes('motor')) {
-            return 'Motorista';
-        } else if (lowerValue === 'gestor' || lowerValue.includes('aprovador') || lowerValue.includes('admin')) {
-            return 'Gestor';
-        }
-        
-        // Se não conseguir normalizar, retornar erro
-        return helpers.error('any.only', { value });
+        return normalizedValue;
     }).messages({
         'string.base': 'Perfil deve ser um texto.',
         'any.only': `Perfil deve ser um dos seguintes: ${Object.values(USER_ROLES).join(', ')}.`
