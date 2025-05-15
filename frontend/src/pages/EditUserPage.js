@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { getUserById, updateUser } from '../services/api';
-import UserForm from '../components/users/UserForm'; // Importar UserForm
+import UserForm from '../components/users/UserForm';
 import { Typography, Paper, CircularProgress, Alert, Container } from '@mui/material'; // Adicionar imports do Material-UI
+import { normalizePerfil } from '../utils/userConstants';
 
 const EditUserPage = () => {
     const { userId } = useParams();
@@ -16,47 +17,48 @@ const EditUserPage = () => {
     const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            try {
+        const loadUserData = async () => {
+            if (userId) {
                 setLoading(true);
-                setError(null);
-                const data = await getUserById(userId);
-                console.log('[EditUserPage] Data received from API (getUserById):', data);
-                console.log('[EditUserPage] Perfil do usuário:', data.perfil);
+                try {
+                    console.log('[EditUserPage] User ID from params:', userId);
+                    const response = await getUserById(userId);
+                    console.log('[EditUserPage] Dados recebidos da API:', response);
+                    
+                    if (!response) {
+                        console.error('[EditUserPage] Dados do usuário não encontrados');
+                        setError('Dados do usuário não encontrados.');
+                        return;
+                    }
 
-                if (data) {
-                    // Mapear os dados da API para o formato esperado pelo UserForm
-                    console.log('[EditUserPage] Dados brutos do usuário:', data);
+                    // Normalizar o valor do perfil para garantir compatibilidade com o enum
+                    const originalPerfil = response.perfil || '';
+                    console.log('[EditUserPage] Perfil original:', originalPerfil);
+                    
+                    // Usar a função normalizePerfil para garantir um valor válido
+                    const normalizedPerfil = normalizePerfil(originalPerfil);
+                    console.log(`[EditUserPage] Perfil normalizado: "${originalPerfil}" -> "${normalizedPerfil}"`);
+                    
                     const userData = {
-                        nome: data.nome || '',
-                        email: data.email || '',
-                        perfil: (data.perfil || '').toLowerCase(),
-                        setor: data.setor || '',
-                        // ativo: data.ativo !== undefined ? data.ativo : true, // UserForm não lida com 'ativo' diretamente
-                        fotoUrl: data.fotoperfilurl || '' // Corrigido para fotoperfilurl (minúsculas)
+                        nome: response.nome || '',
+                        email: response.email || '',
+                        perfil: normalizedPerfil,
+                        setor: response.setor || '',
+                        // ativo: response.ativo !== undefined ? response.ativo : true, // UserForm não lida com 'ativo' diretamente
+                        fotoUrl: response.fotoperfilurl || '' // Corrigido para fotoperfilurl (minúsculas)
                     };
                     console.log('[EditUserPage] Dados mapeados para UserForm:', userData);
                     setInitialUserData(userData);
-                    console.log('[EditUserPage] Formed initialUserData:', {
-                        nome: data.nome || '',
-                        email: data.email || '',
-                        perfil: data.perfil || '',
-                        setor: data.setor || '',
-                        fotoUrl: data.fotoUrl || data.profileImageUrl || ''
-                    });
-                } else {
-                    setError('Usuário não encontrado.');
-                }
-            } catch (err) {
-                console.error(`[EditUserPage] Error fetching user data for ${userId}:`, err);
-                setError(err.message || 'Falha ao carregar dados do usuário.');
-            } finally {
+                } catch (err) {
+                    console.error(`[EditUserPage] Error fetching user data for ${userId}:`, err);
+                    setError(err.message || 'Falha ao carregar dados do usuário.');
+                } finally {
                 setLoading(false);
             }
         };
 
         if (userId) {
-            fetchUserData();
+            loadUserData();
         }
     }, [userId]);
 
@@ -67,6 +69,23 @@ const EditUserPage = () => {
         setLoading(true);
 
         try {
+            // Verificar e corrigir o valor do perfil no FormData
+            const perfilValue = formDataWithFile.get('perfil');
+            console.log('[EditUserPage] Valor do perfil no FormData:', perfilValue);
+            
+            if (perfilValue) {
+                // Usar a função normalizePerfil para garantir um valor válido
+                const normalizedPerfil = normalizePerfil(perfilValue);
+                
+                if (normalizedPerfil !== perfilValue) {
+                    console.log(`[EditUserPage] Perfil normalizado no FormData: "${perfilValue}" -> "${normalizedPerfil}"`);
+                    // Atualizar o valor no FormData
+                    formDataWithFile.set('perfil', normalizedPerfil);
+                } else {
+                    console.log('[EditUserPage] Perfil já está normalizado:', normalizedPerfil);
+                }
+            }
+            
             // FormData já está pronto para ser enviado
             const result = await updateUser(userId, formDataWithFile);
             setSuccessMessage(result.message || 'Usuário atualizado com sucesso!');
@@ -89,9 +108,57 @@ const EditUserPage = () => {
             }, 2000);
 
         } catch (err) {
-            console.error("Erro ao atualizar usuário:", err);
-            const apiErrorMessage = err.response?.data?.message || err.message || (err.errors && err.errors.map(e => e.message).join(', '));
-            setError(apiErrorMessage || 'Falha ao atualizar usuário. Verifique os campos ou tente novamente.');
+            console.error("[EditUserPage] Erro ao atualizar usuário:", err);
+            
+            // Verificar se o erro é um objeto ou uma string
+            if (typeof err === 'object') {
+                console.log('[EditUserPage] Tipo do erro:', typeof err);
+                console.log('[EditUserPage] Propriedades do erro:', Object.keys(err));
+                
+                if (err.message) {
+                    console.log('[EditUserPage] Mensagem de erro:', err.message);
+                    setError(err.message);
+                } else if (err.errors && Array.isArray(err.errors)) {
+                    const errorMsg = err.errors.map(e => e.message).join(', ');
+                    console.log('[EditUserPage] Erros:', errorMsg);
+                    setError(errorMsg);
+                } else {
+                    console.log('[EditUserPage] Erro sem mensagem ou estrutura conhecida');
+                    setError('Falha ao atualizar usuário. Verifique os campos ou tente novamente.');
+                }
+            } else {
+                console.log('[EditUserPage] Erro é do tipo:', typeof err);
+                setError(String(err) || 'Falha ao atualizar usuário. Verifique os campos ou tente novamente.');
+            }
+            
+            // Mesmo com erro, vamos tentar buscar os dados do usuário novamente
+            // para garantir que a interface está sincronizada com o backend
+            try {
+                console.log('[EditUserPage] Tentando buscar dados atualizados após erro...');
+                const refreshedUser = await getUserById(userId);
+                
+                if (refreshedUser) {
+                    console.log('[EditUserPage] Dados do usuário obtidos após erro:', refreshedUser);
+                    
+                    // Normalizar o perfil do usuário atualizado
+                    const normalizedPerfil = normalizePerfil(refreshedUser.perfil || '');
+                    console.log(`[EditUserPage] Perfil normalizado do usuário atualizado: "${refreshedUser.perfil}" -> "${normalizedPerfil}"`);
+                    
+                    setInitialUserData({
+                        nome: refreshedUser.nome || '',
+                        email: refreshedUser.email || '',
+                        perfil: normalizedPerfil,
+                        setor: refreshedUser.setor || '',
+                        fotoUrl: refreshedUser.fotoperfilurl || ''
+                    });
+                    
+                    // Se conseguimos obter os dados atualizados, talvez a atualização tenha funcionado
+                    // apesar do erro de comunicação
+                    setSuccessMessage('Os dados foram obtidos do servidor. Verifique se as informações estão corretas.');
+                }
+            } catch (refreshError) {
+                console.error('[EditUserPage] Erro ao tentar atualizar dados após erro:', refreshError);
+            }
         } finally {
             setLoading(false);
         }

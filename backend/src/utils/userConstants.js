@@ -1,8 +1,12 @@
+// Valores do enum perfil_usuario_enum no banco de dados
 const USER_ROLES = Object.freeze({
-    REQUISITANTE: 'requisitante',
-    GESTOR: 'gestor',
+    REQUISITANTE: 'Requisitante',
+    GESTOR: 'Gestor',
+    MOTORISTA: 'Motorista',
     ADMINISTRADOR: 'administrador',
-    MOTORISTA: 'motorista'
+    USUARIO_REQUISITANTE: 'usuario requisitante',
+    USUARIO_GESTOR: 'usuario gestor',
+    MOTORISTA_LOWER: 'motorista'
 });
 
 module.exports = {

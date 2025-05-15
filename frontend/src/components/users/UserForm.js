@@ -12,12 +12,17 @@ import {
     Typography,
     Avatar
 } from '@mui/material';
+import { USER_ROLES, normalizePerfil } from '../../utils/userConstants';
 
+// Criar opções de perfil a partir das constantes USER_ROLES
 const USER_ROLES_OPTIONS = [
-    { value: 'requisitante', label: 'Requisitante' },
-    { value: 'aprovador', label: 'Aprovador' },
-    { value: 'administrador', label: 'Administrador' },
-    { value: 'motorista', label: 'Motorista' }
+    { value: USER_ROLES.REQUISITANTE, label: 'Requisitante' },
+    { value: USER_ROLES.GESTOR, label: 'Gestor' },
+    { value: USER_ROLES.MOTORISTA, label: 'Motorista' },
+    { value: USER_ROLES.ADMINISTRADOR, label: 'Administrador' },
+    { value: USER_ROLES.USUARIO_REQUISITANTE, label: 'Usuário Requisitante' },
+    { value: USER_ROLES.USUARIO_GESTOR, label: 'Usuário Gestor' },
+    { value: USER_ROLES.MOTORISTA_LOWER, label: 'Motorista (minúsculo)' }
 ];
 
 const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
@@ -30,7 +35,7 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
         email: initialData.email || '',
         senha: '',
         confirmarSenha: '',
-        perfil: initialData.perfil || 'requisitante',
+        perfil: initialData.perfil || 'Requisitante', // Valor correto do enum com primeira letra maiúscula
         setor: initialData.setor || '',
         fotoUrl: initialData.fotoUrl || ''
     });
@@ -137,11 +142,21 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
+            // Normalizar o valor do perfil para garantir que seja um dos valores válidos do enum
+            console.log('[UserForm] Valor original do perfil:', formData.perfil);
+            
+            // Usar a função normalizePerfil para garantir um valor válido
+            const normalizedPerfil = normalizePerfil(formData.perfil);
+            
+            console.log(`[UserForm] Perfil normalizado: ${formData.perfil} -> ${normalizedPerfil}`);
+            console.log('[UserForm] Perfil final a ser enviado:', normalizedPerfil);
+            
             const submitData = {
                 nome: formData.nome.trim(),
                 email: formData.email.trim(),
                 senha: formData.senha,
-                perfil: formData.perfil
+                // Garantir que o perfil seja um dos valores exatos do enum
+                perfil: normalizedPerfil
             };
 
             if (formData.setor && formData.setor.trim()) {

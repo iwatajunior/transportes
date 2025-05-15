@@ -58,7 +58,37 @@ const updateUserSchema = Joi.object({
         'string.base': 'Senha deve ser um texto.',
         'string.min': 'Senha deve ter no mínimo {#limit} caracteres se fornecida.'
     }),
-    perfil: Joi.string().valid(...Object.values(USER_ROLES)).optional().messages({
+    perfil: Joi.string().optional().custom((value, helpers) => {
+        // O enum perfil_usuario_enum tem 7 valores possíveis:
+        // 'Requisitante', 'Motorista', 'Gestor', 'administrador', 'usuario requisitante', 'usuario gestor', 'motorista'
+        const enumValues = [
+            'Requisitante', 'Motorista', 'Gestor', 
+            'administrador', 'usuario requisitante', 'usuario gestor', 'motorista'
+        ];
+        
+        // Verificar se o valor já é um dos valores válidos do enum
+        if (enumValues.includes(value)) {
+            return value;
+        }
+        
+        // Verificar se o valor é um dos valores definidos em USER_ROLES
+        if (Object.values(USER_ROLES).includes(value)) {
+            return value;
+        }
+        
+        // Tentar normalizar o valor
+        const lowerValue = String(value).toLowerCase();
+        if (lowerValue.includes('requisitante')) {
+            return 'Requisitante';
+        } else if (lowerValue.includes('motor')) {
+            return 'Motorista';
+        } else if (lowerValue === 'gestor' || lowerValue.includes('aprovador') || lowerValue.includes('admin')) {
+            return 'Gestor';
+        }
+        
+        // Se não conseguir normalizar, retornar erro
+        return helpers.error('any.only', { value });
+    }).messages({
         'string.base': 'Perfil deve ser um texto.',
         'any.only': `Perfil deve ser um dos seguintes: ${Object.values(USER_ROLES).join(', ')}.`
     }),

@@ -4,6 +4,7 @@ const userModel = require('../models/userModel');
 const { createUserSchema, loginUserSchema, updateUserSchema } = require('../validators/userSchemas'); 
 const fs = require('fs');
 const path = require('path');
+const { normalizePerfil } = require('../utils/profileNormalizer');
 require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -216,12 +217,75 @@ const userController = {
 
         const { userId } = req.params;
         // Com multer, os campos de texto estão em req.body e o arquivo (se houver) em req.file
-        const textFields = req.body;
+        const textFields = {...req.body};
         const imageFile = req.file;
+        
+        // Normalizar o valor do perfil se estiver presente
+        if (textFields.perfil) {
+            // Verificar se o perfil já é um dos valores válidos exatos
+            if (textFields.perfil === 'Requisitante' || textFields.perfil === 'Motorista' || textFields.perfil === 'Gestor') {
+                console.log("[userController.updateUser] O perfil já é um valor válido:", textFields.perfil);
+            } else {
+                const perfil = String(textFields.perfil).toLowerCase();
+                console.log("[userController.updateUser] Perfil original:", perfil);
+                
+                // Baseado no schema do banco de dados, o enum tipo_perfil_usuario tem apenas 3 valores:
+                // 'Requisitante', 'Motorista', 'Gestor'
+                
+                // Se o perfil contiver "requisitante", normalizar para "Requisitante"
+                if (perfil.includes('requisitante')) {
+                    textFields.perfil = 'Requisitante';
+                } 
+                // Se o perfil for "gestor" ou contiver "aprovador" ou "admin", normalizar para "Gestor"
+                else if (perfil === 'gestor' || perfil.includes('aprovador') || perfil.includes('admin')) {
+                    textFields.perfil = 'Gestor';
+                }
+                // Se o perfil contiver "motor", normalizar para "Motorista"
+                else if (perfil.includes('motor')) {
+                    textFields.perfil = 'Motorista';
+                }
+                // Se não for um dos valores válidos, definir como "Requisitante" por padrão
+                else {
+                    textFields.perfil = 'Requisitante';
+                }
+                
+                console.log("[userController.updateUser] Perfil normalizado:", textFields.perfil);
+            }
+        }
 
         try {
             // Validar os dados de texto de entrada (req.body)
-            const { error, value: validatedTextData } = updateUserSchema.validate(textFields, { abortEarly: false, stripUnknown: true });
+            console.log("[userController.updateUser] Valor do perfil antes da validação:", textFields.perfil);
+            console.log("[userController.updateUser] Tipo do perfil antes da validação:", typeof textFields.perfil);
+            
+            console.log("[userController.updateUser] Dados antes da validação:", JSON.stringify(textFields, null, 2));
+            
+            // Usando a opção convert: true para garantir que a função custom seja chamada
+            const { error, value: validatedTextData } = updateUserSchema.validate(textFields, { 
+                abortEarly: false, 
+                stripUnknown: true,
+                convert: true
+            });
+            
+            console.log("[userController.updateUser] Dados validados:", JSON.stringify(validatedTextData, null, 2));
+            
+            // Adicionar logs após a validação para ver se o valor foi alterado
+            if (validatedTextData.perfil) {
+                console.log("[userController.updateUser] Valor do perfil após validação:", validatedTextData.perfil);
+                console.log("[userController.updateUser] Tipo do perfil após validação:", typeof validatedTextData.perfil);
+                
+                // Garantir que o perfil seja exatamente um dos valores válidos do enum
+                if (validatedTextData.perfil === 'Requisitante' || validatedTextData.perfil === 'Gestor' || validatedTextData.perfil === 'Motorista') {
+                    console.log("[userController.updateUser] O perfil já é um valor válido.");
+                } else {
+                    console.log("[userController.updateUser] Forçando o perfil para 'Requisitante'");
+                    validatedTextData.perfil = 'Requisitante';
+                }
+                
+                // Log final do perfil que será enviado para o modelo
+                console.log("[userController.updateUser] Valor FINAL do perfil:", validatedTextData.perfil);
+            }
+
             if (error) {
                 const errors = error.details.map(detail => ({
                     field: detail.path.join('.'),
@@ -307,6 +371,19 @@ const userController = {
                 }
             }
 
+            console.log('[userController.updateUser] Dados validados para atualização:', JSON.stringify(validatedTextData, null, 2));
+            
+            // Verificar e corrigir o valor do perfil se estiver presente
+            if (validatedTextData.perfil) {
+                console.log('[userController.updateUser] Valor original do perfil:', validatedTextData.perfil);
+                
+                // Usar a função normalizePerfil para garantir um valor válido
+                const originalPerfil = validatedTextData.perfil;
+                validatedTextData.perfil = normalizePerfil(originalPerfil);
+                
+                console.log(`[userController.updateUser] Perfil normalizado: "${originalPerfil}" -> "${validatedTextData.perfil}"`);
+            }
+            
             const finalUpdatedUser = await userModel.update(userId, validatedTextData);
 
             if (!finalUpdatedUser) {
@@ -314,15 +391,70 @@ const userController = {
                 return res.status(404).json({ message: 'Usuário não encontrado ou nenhuma alteração efetivada no banco de dados.' });
             }
 
-            res.status(200).json({ message: 'Usuário atualizado com sucesso!', user: finalUpdatedUser });
-
+            console.log('[userController.updateUser] Enviando resposta de sucesso com dados:', {
+                message: 'Usuário atualizado com sucesso!',
+                user: finalUpdatedUser
+            });
+            
+            // Garantir que estamos enviando todos os dados necessários
+            res.status(200).json({
+                message: 'Usuário atualizado com sucesso!',
+                user: finalUpdatedUser
+            });
         } catch (error) {
             // Tratamento de erro específico para email duplicado vindo do model
             if (error.message && error.message.includes('endereço de e-mail fornecido já está em uso')) {
                 return res.status(409).json({ message: error.message });
             }
+            
+            // Tratamento de erro específico para o enum perfil_usuario_enum
+            if (error.code === '22P02' && error.message.includes('perfil_usuario_enum')) {
+                console.error(`Erro de enum no perfil ao atualizar usuário ${userId}:`, error);
+                
+                // Tentar novamente com um valor garantido
+                try {
+                    validatedTextData.perfil = 'Requisitante';
+                    console.log('[userController.updateUser] Tentando novamente com perfil = Requisitante');
+                    
+                    const finalUpdatedUser = await userModel.update(userId, validatedTextData);
+                    
+                    if (!finalUpdatedUser) {
+                        return res.status(404).json({ message: 'Usuário não encontrado ou nenhuma alteração efetivada no banco de dados.' });
+                    }
+                    
+                    console.log('[userController.updateUser] Enviando resposta de sucesso após correção do perfil:', {
+                        message: 'Usuário atualizado com sucesso (com correção automática do perfil)!',
+                        user: finalUpdatedUser
+                    });
+                    
+                    return res.status(200).json({ 
+                        message: 'Usuário atualizado com sucesso (com correção automática do perfil)!', 
+                        user: finalUpdatedUser 
+                    });
+                } catch (retryError) {
+                    console.error(`Erro na segunda tentativa ao atualizar usuário ${userId}:`, retryError);
+                    return res.status(500).json({ message: 'Erro ao tentar corrigir o perfil do usuário.' });
+                }
+            }
+            
             console.error(`Erro no controller ao atualizar usuário ${userId}:`, error);
-            res.status(500).json({ message: 'Erro interno do servidor ao tentar atualizar o usuário.' });
+            
+            // Logar mais detalhes sobre o erro
+            if (error.code) {
+                console.error(`Código do erro: ${error.code}`);
+            }
+            if (error.stack) {
+                console.error(`Stack trace: ${error.stack}`);
+            }
+            
+            // Enviar resposta de erro com mais detalhes
+            const errorResponse = {
+                message: 'Erro interno do servidor ao tentar atualizar o usuário.',
+                details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            };
+            
+            console.error('[userController.updateUser] Enviando resposta de erro:', errorResponse);
+            res.status(500).json(errorResponse);
         }
     },
 

@@ -105,27 +105,91 @@ export const getUsers = async () => {
 
 export const getUserById = async (userId) => {
   try {
+    console.log(`[getUserById] Buscando usuário com ID: ${userId}`);
     const response = await apiClient.get(`/users/${userId}`);
-    return response.data;
+    console.log(`[getUserById] Resposta recebida:`, response.data);
+    
+    // Verificar se a resposta tem a estrutura esperada
+    if (response.data && response.data.user) {
+      console.log(`[getUserById] Dados do usuário encontrados:`, response.data.user);
+      return response.data.user;
+    } else if (response.data) {
+      console.log(`[getUserById] Dados recebidos sem estrutura user:`, response.data);
+      return response.data; // Retorna os dados como estão, caso não estejam na estrutura esperada
+    } else {
+      console.warn(`[getUserById] Resposta sem dados para o usuário ${userId}`);
+      return null;
+    }
   } catch (error) {
-    console.error(`Error fetching user ${userId}:`, error.response ? error.response.data : error.message);
-    throw error.response ? error.response.data : new Error('Network error or server unreachable when fetching user by ID');
+    console.error(`[getUserById] Erro ao buscar usuário ${userId}:`, error);
+    console.error('[getUserById] Status do erro:', error.response?.status);
+    console.error('[getUserById] Dados do erro:', error.response?.data);
+    
+    // Lançar um erro mais descritivo
+    if (error.response) {
+      if (error.response.status === 404) {
+        throw new Error(`Usuário com ID ${userId} não encontrado`);
+      } else {
+        throw error.response.data || new Error(`Erro ${error.response.status} ao buscar usuário`);
+      }
+    } else {
+      throw new Error('Erro de rede ou servidor indisponível ao buscar usuário');
+    }
   }
 };
 
-export const updateUser = async (userId, userData) => {
+export const updateUser = async (userId, formData) => {
   try {
-    const response = await apiClient.put(`/users/${userId}`, userData);
+    console.log(`[updateUser] Enviando atualização para usuário ${userId}`);
+    
+    // Log dos dados sendo enviados
+    if (formData instanceof FormData) {
+      console.log(`[updateUser] Perfil no formData:`, formData.get('perfil'));
+      console.log(`[updateUser] Nome no formData:`, formData.get('nome'));
+      console.log(`[updateUser] Email no formData:`, formData.get('email'));
+      console.log(`[updateUser] Setor no formData:`, formData.get('setor'));
+      console.log(`[updateUser] Foto no formData:`, formData.get('foto') ? 'Foto presente' : 'Sem foto');
+    } else {
+      console.log('[updateUser] Dados:', formData);
+    }
+    
+    const response = await apiClient.put(`/users/${userId}`, formData, {
+      headers: {
+        'Content-Type': formData instanceof FormData ? 'multipart/form-data' : 'application/json',
+      },
+    });
+    
+    console.log(`[updateUser] Resposta da API (status):`, response.status);
+    console.log(`[updateUser] Resposta da API (dados):`, response.data);
+    
+    if (response.data && response.data.user) {
+      console.log(`[updateUser] Dados do usuário atualizados:`, response.data.user);
+    }
+    
     return response.data;
   } catch (error) {
-    console.error(`Error updating user ${userId}:`, error.response ? error.response.data : error.message);
-    // Lança o erro para que possa ser tratado pelo chamador (ex: EditUserPage)
-    // Isso permite que a página de edição exiba mensagens de erro específicas da API (ex: email já em uso)
-    throw error.response ? error.response.data : new Error('Network error or server unreachable when updating user');
+    console.error(`[updateUser] Erro ao atualizar usuário ${userId}:`, error);
+    
+    if (error.response) {
+      console.error(`[updateUser] Status do erro:`, error.response.status);
+      console.error(`[updateUser] Dados do erro:`, error.response.data);
+      
+      // Criar um erro mais descritivo
+      const errorMessage = error.response.data?.message || `Erro ${error.response.status} ao atualizar usuário`;
+      const enhancedError = new Error(errorMessage);
+      enhancedError.statusCode = error.response.status;
+      enhancedError.responseData = error.response.data;
+      
+      throw enhancedError;
+    } else if (error.request) {
+      console.error(`[updateUser] Erro de requisição (sem resposta):`, error.request);
+      throw new Error('Erro de conexão: o servidor não respondeu à solicitação');
+    } else {
+      console.error(`[updateUser] Erro geral:`, error.message);
+      throw new Error(`Erro ao atualizar usuário: ${error.message}`);
+    }
   }
 };
-
-
 // Add other API functions here as needed
 // export const getUsers = async () => { ... };
 

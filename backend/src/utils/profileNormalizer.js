@@ -1,16 +1,12 @@
-// Valores do enum perfil_usuario_enum no banco de dados
-export const USER_ROLES = {
-    REQUISITANTE: 'Requisitante',
-    GESTOR: 'Gestor',
-    MOTORISTA: 'Motorista',
-    ADMINISTRADOR: 'administrador',
-    USUARIO_REQUISITANTE: 'usuario requisitante',
-    USUARIO_GESTOR: 'usuario gestor',
-    MOTORISTA_LOWER: 'motorista'
-};
+// Utilitário para normalizar o valor do perfil para um dos valores válidos do enum perfil_usuario_enum
+const { USER_ROLES } = require('./userConstants');
 
-// Função para normalizar o perfil para um dos valores válidos do enum
-export const normalizePerfil = (perfil) => {
+/**
+ * Normaliza o valor do perfil para um dos valores válidos do enum perfil_usuario_enum
+ * @param {string} perfil - O valor do perfil a ser normalizado
+ * @returns {string} - Um valor válido do enum perfil_usuario_enum
+ */
+const normalizePerfil = (perfil) => {
     if (!perfil) return USER_ROLES.REQUISITANTE;
     
     // Verificar se já é um valor válido
@@ -37,4 +33,8 @@ export const normalizePerfil = (perfil) => {
     
     // Valor padrão
     return USER_ROLES.REQUISITANTE;
+};
+
+module.exports = {
+    normalizePerfil
 };
