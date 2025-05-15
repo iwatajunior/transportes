@@ -21,6 +21,7 @@ router.post(
     '/register',
     authenticateToken, // Primeiro, verifica se está logado
     isAdmin, // Depois, verifica se é admin
+    upload.single('foto'), // Middleware do multer para processar o upload da foto
     userController.register
 );
 

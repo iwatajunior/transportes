@@ -1,6 +1,6 @@
 // backend/src/models/userModel.js
 const { Pool } = require('pg');
-const { normalizePerfil } = require('../utils/profileNormalizer');
+const { normalizePerfil } = require('../utils/userConstants');
 require('dotenv').config(); // Garante que as variáveis de .env sejam carregadas
 
 const pool = new Pool({

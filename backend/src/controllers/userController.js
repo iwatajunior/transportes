@@ -17,30 +17,48 @@ if (!JWT_SECRET) {
 const userController = {
     async register(req, res) {
         try {
-            // Validar os dados da requisição com o schema do Joi
-            const validatedData = await createUserSchema.validateAsync(req.body, {
-                abortEarly: false, // Retorna todos os erros de uma vez
-                // stripUnknown: true // Remove campos não definidos no schema (cuidado se precisar deles)
-            });
-
+            console.log('Dados recebidos:', req.body);
+            console.log('Arquivo recebido:', req.file);
+            
+            // Verificar se os dados estão no formato esperado
+            if (!req.body.nome || !req.body.email || !req.body.senha || !req.body.perfil) {
+                return res.status(400).json({ 
+                    message: 'Dados incompletos. Todos os campos obrigatórios devem ser fornecidos.',
+                    requiredFields: ['nome', 'email', 'senha', 'perfil'],
+                    receivedFields: Object.keys(req.body)
+                });
+            }
+            
+            // Normalizar o perfil
+            const normalizedPerfil = normalizePerfil(req.body.perfil);
+            console.log(`[userController.register] Perfil original: ${req.body.perfil}, Perfil normalizado: ${normalizedPerfil}`);
+            
             // Verificar se o email já existe
-            const existingUser = await userModel.findByEmail(validatedData.email);
+            const existingUser = await userModel.findByEmail(req.body.email);
             if (existingUser) {
                 return res.status(409).json({ message: 'Este email já está cadastrado.' });
             }
-
+            
             // Hash da senha
             const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(validatedData.senha, salt);
-
-            // Preparar dados para o modelo (removendo confirmarSenha se existisse no body, Joi já validou)
+            const hashedPassword = await bcrypt.hash(req.body.senha, salt);
+            
+            // Preparar dados para o modelo
             const userDataToSave = {
-                nome: validatedData.nome,
-                email: validatedData.email,
-                senha: hashedPassword, // Enviar a senha hasheada
-                perfil: validatedData.perfil,
-                setor: validatedData.setor // Joi garante que é opcional ou string
+                nome: req.body.nome,
+                email: req.body.email,
+                senha: hashedPassword,
+                perfil: normalizedPerfil,
+                setor: req.body.setor || null
             };
+            
+            // Processar o arquivo de foto, se existir
+            if (req.file) {
+                // Usar o diretório de uploads existente
+                const relativePath = `/uploads/${req.file.filename}`;
+                userDataToSave.fotoperfilurl = relativePath;
+                console.log(`[userController.register] Foto salva em: ${relativePath}`);
+            }
 
             const newUser = await userModel.create(userDataToSave);
 
