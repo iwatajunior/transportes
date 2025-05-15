@@ -53,7 +53,8 @@ const EditUserPage = () => {
                     console.error(`[EditUserPage] Error fetching user data for ${userId}:`, err);
                     setError(err.message || 'Falha ao carregar dados do usuário.');
                 } finally {
-                setLoading(false);
+                    setLoading(false);
+                }
             }
         };
 

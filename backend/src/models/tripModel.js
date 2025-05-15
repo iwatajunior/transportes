@@ -96,7 +96,9 @@ const tripModel = {
      */
     async findAll(userData = {}) {
         const { userId } = userData;
-    const perfil = userData.perfil?.toLowerCase(); // Convertido para minúsculas
+        // Mantemos o perfil original para comparar com USER_ROLES e também obtemos a versão em minúsculas para comparações mais flexíveis
+        const perfil = userData.perfil;
+        const perfilLower = userData.perfil?.toLowerCase();
 
         // Base da query com JOINs para buscar dados relacionados
         let queryText = `
@@ -131,15 +133,18 @@ const tripModel = {
         }
 
         // Aplica filtro baseado no perfil
-        if (perfil === USER_ROLES.REQUISITANTE) {
+        // Verificamos tanto o perfil original quanto a versão em minúsculas para maior flexibilidade
+        if (perfil === USER_ROLES.REQUISITANTE || perfilLower === 'requisitante' || perfilLower === 'usuario requisitante') {
+            console.log(`Perfil requisitante identificado: ${perfil}. Filtrando viagens do usuário ${userId}.`);
             conditions.push(`v.solicitante_usuarioid = $${queryParams.push(userId)}`); // Adiciona userId aos params e usa o novo índice
-        } else if (perfil === USER_ROLES.GESTOR || perfil === USER_ROLES.ADMINISTRADOR) {
+        } else if (perfil === USER_ROLES.GESTOR || perfil === USER_ROLES.ADMINISTRADOR || 
+                   perfilLower === 'gestor' || perfilLower === 'administrador' || 
+                   perfilLower === 'usuario gestor') {
+            console.log(`Perfil gestor/admin identificado: ${perfil}. Mostrando todas as viagens.`);
             // Gestor/Admin vê tudo, nenhuma condição adicional por perfil.
-        } else if (perfil === USER_ROLES.MOTORISTA) {
-            // TODO: Definir o que motoristas devem ver (ex: viagens alocadas a eles).
-             conditions.push(`v.motorista_usuarioid = $${queryParams.push(userId)}`); // Exemplo: Motorista vê suas viagens
-            // console.warn('Perfil MOTORISTA em tripModel.findAll: Lógica de listagem não definida, retornando vazio.');
-            // return []; 
+        } else if (perfil === USER_ROLES.MOTORISTA || perfilLower === 'motorista') {
+            console.log(`Perfil motorista identificado: ${perfil}. Filtrando viagens do motorista ${userId}.`);
+            conditions.push(`v.motorista_usuarioid = $${queryParams.push(userId)}`); // Motorista vê suas viagens
         } else {
             console.warn(`Perfil '${perfil}' não explicitamente tratado em tripModel.findAll. Retornando vazio por segurança.`);
             return []; // Retorna lista vazia por segurança para perfis não mapeados.

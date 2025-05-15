@@ -18,7 +18,10 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { ptBR } from 'date-fns/locale'; 
 
-const tipoVeiculoOptions = ['Passeio', 'Carga', 'Misto', 'Van', 'Ônibus', 'Outro']; 
+// NOTA: O banco de dados tem um ENUM chamado status_tipo_veiculo_enum que aceita apenas certos valores
+// O erro indica que 'Van' não é aceito, então voltamos aos valores anteriores que funcionavam
+// Esses valores devem corresponder ao ENUM status_tipo_veiculo_enum no banco de dados
+const tipoVeiculoOptions = ['Passeio', 'Carga', 'Misto']; // Valores aceitos pelo banco de dados
 
 const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false }) => {
     const [formData, setFormData] = useState({

@@ -114,8 +114,8 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
         }
     };
 
-    const vehicleTypes = ['Carro', 'Van', 'Ônibus', 'Moto', 'Caminhão', 'Caminhonete', 'Outro'];
-    const usageTypes = ['Carga', 'Passeio', 'Misto', 'Serviço', 'Outro'];
+    const vehicleTypes = ['Carro', 'Van', 'Ônibus', 'Moto']; // Valores correspondentes ao ENUM tipo_veiculo no banco de dados
+    const usageTypes = ['Carga', 'Passeio', 'Misto']; // Valores correspondentes aos tipos de uso permitidos no schema de validação
 
     return (
         <Box component="form" onSubmit={handleSubmit} noValidate>
