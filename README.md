@@ -11,7 +11,7 @@ O sistema permitirá o gerenciamento de solicitações de viagens, alocação de
 - **Gestor:** Gerencia todo o fluxo, usuários, veículos, relatórios e dashboards.
 
 ## Tecnologias
-- **Frontend:** React, Tailwind CSS (sugerido), Chart.js, Matrual UI
+- **Frontend:** React, Tailwind CSS (sugerido), Chart.js, Material UI
 - **Backend:** Node.js, Express.js
 - **Banco de Dados:** PostgreSQL
 - **Autenticação:** JWT
