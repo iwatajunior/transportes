@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { getUserById, updateUser } from '../services/api';
 import UserForm from '../components/users/UserForm';
-import { Typography, Paper, CircularProgress, Alert, Container } from '@mui/material'; // Adicionar imports do Material-UI
+import { Typography, Paper, CircularProgress, Alert, Container, Box } from '@mui/material'; // Adicionar imports do Material-UI
 import { normalizePerfil } from '../utils/userConstants';
 
 const EditUserPage = () => {
@@ -193,28 +193,37 @@ const EditUserPage = () => {
     }
 
     return (
-        <Container maxWidth="md" sx={{ mt: 4 }}>
-            <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="h4" component="h1" gutterBottom align="center">
-                    Editar Usuário (ID: {userId})
-                </Typography>
-                
-                {/* Exibir erro geral da página aqui, se houver, e não relacionado ao formulário em si */}
-                {error && !successMessage && initialUserData && (
-                    <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-                )}
-                {successMessage && (
-                    <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
-                )}
+        <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Typography variant="h4" component="h1" gutterBottom sx={{
+                        fontFamily: "'Exo 2', sans-serif",
+                        fontWeight: 'bold',
+                        color: 'primary.main'
+                    }}>
+                        Editar Usuário
+                    </Typography>
+                    <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                        ID: {userId}
+                    </Typography>
 
-                {initialUserData && (
-                    <UserForm 
-                        onSubmit={handleFormSubmit} 
-                        isLoading={loading} 
-                        initialData={initialUserData} 
-                        isEditMode={true} 
-                    />
-                )}
+                    {/* Exibir erro geral da página aqui, se houver, e não relacionado ao formulário em si */}
+                    {error && !successMessage && initialUserData && (
+                        <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+                    )}
+                    {successMessage && (
+                        <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
+                    )}
+
+                    {initialUserData && (
+                        <UserForm 
+                            onSubmit={handleFormSubmit} 
+                            isLoading={loading} 
+                            initialData={initialUserData} 
+                            isEditMode={true} 
+                        />
+                    )}
+                </Box>
             </Paper>
         </Container>
     );

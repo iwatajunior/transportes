@@ -30,16 +30,22 @@ const AddVehiclePage = () => {
   };
 
   return (
-    <Container component="main" maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+    <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ fontFamily: "'Exo 2', sans-serif", textAlign: 'center' }}>
-          Cadastrar Novo Veículo
-        </Typography>
-        <Box sx={{ mt: 3 }}>
-          {/* Aqui podem entrar Alerts se o feedback for gerenciado aqui */}
-          {/* error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> */}
-          {/* success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert> */}
-          <VehicleForm onSubmit={handleFormSubmit} />
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography variant="h4" component="h1" gutterBottom sx={{
+            fontFamily: "'Exo 2', sans-serif",
+            fontWeight: 'bold',
+            color: 'primary.main'
+          }}>
+            Cadastrar Novo Veículo
+          </Typography>
+          <Box sx={{ mt: 3 }}>
+            {/* Aqui podem entrar Alerts se o feedback for gerenciado aqui */}
+            {/* error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> */}
+            {/* success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert> */}
+            <VehicleForm onSubmit={handleFormSubmit} />
+          </Box>
         </Box>
       </Paper>
     </Container>

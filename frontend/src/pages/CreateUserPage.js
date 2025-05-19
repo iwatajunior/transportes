@@ -119,34 +119,40 @@ const CreateUserPage = () => {
     };
 
     return (
-        <Container component="main" maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+        <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
-                <Typography variant="h4" component="h1" gutterBottom sx={{ fontFamily: "'Exo 2', sans-serif", textAlign: 'center' }}>
-                    Criar Novo Usuário
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Typography variant="h4" component="h1" gutterBottom sx={{
+                        fontFamily: "'Exo 2', sans-serif",
+                        fontWeight: 'bold',
+                        color: 'primary.main'
+                    }}>
+                        Criar Novo Usuário
+                    </Typography>
 
-                <Box sx={{ mt: 2, mb: 2, minHeight: '70px' /* Espaço para o Alert */ }}>
-                    <Collapse in={showError}>
-                        <Alert 
-                            severity="error" 
-                            onClose={() => {setError(''); setShowError(false);}}
-                            sx={{ mb: 2 }}
-                        >
-                            {error}
-                        </Alert>
-                    </Collapse>
-                    <Collapse in={showSuccess}>
-                        <Alert 
-                            severity="success" 
-                            onClose={() => {setSuccessMessage(''); setShowSuccess(false);}}
-                            sx={{ mb: 2 }}
-                        >
-                            {successMessage}
-                        </Alert>
-                    </Collapse>
+                    <Box sx={{ mt: 2, mb: 2, minHeight: '70px' }}>
+                        <Collapse in={showError}>
+                            <Alert 
+                                severity="error" 
+                                onClose={() => {setError(''); setShowError(false);}}
+                                sx={{ mb: 2 }}
+                            >
+                                {error}
+                            </Alert>
+                        </Collapse>
+                        <Collapse in={showSuccess}>
+                            <Alert 
+                                severity="success" 
+                                onClose={() => {setSuccessMessage(''); setShowSuccess(false);}}
+                                sx={{ mb: 2 }}
+                            >
+                                {successMessage}
+                            </Alert>
+                        </Collapse>
+                    </Box>
+                    
+                    <UserForm onSubmit={handleSubmit} isLoading={isLoading} />
                 </Box>
-                
-                <UserForm onSubmit={handleSubmit} isLoading={isLoading} />
             </Paper>
         </Container>
     );

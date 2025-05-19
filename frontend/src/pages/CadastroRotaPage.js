@@ -144,16 +144,21 @@ const CadastroRotaPage = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography variant="h5" component="h1" gutterBottom align="center">
-          Cadastro de Rota
-        </Typography>
+    <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography variant="h4" component="h1" gutterBottom sx={{
+            fontFamily: "'Exo 2', sans-serif",
+            fontWeight: 'bold',
+            color: 'primary.main'
+          }}>
+            Cadastro de Rota
+          </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-        <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             {/* Cidades */}
             <Grid item xs={12}>
@@ -303,7 +308,8 @@ const CadastroRotaPage = () => {
               </Box>
             </Grid>
           </Grid>
-        </form>
+          </form>
+        </Box>
       </Paper>
     </Container>
   );

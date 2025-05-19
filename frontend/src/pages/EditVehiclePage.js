@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import VehicleForm from '../components/vehicles/VehicleForm';
-import { getVehicleById, updateVehicle } from '../services/api'; // Essas funções API precisam ser criadas
+import { getVehicleById, updateVehicle } from '../services/api';
+import { Container, Paper, Typography, Box, Alert } from '@mui/material';
 
 const EditVehiclePage = () => {
   const { id } = useParams(); // Pega o ID da URL
@@ -98,16 +99,42 @@ const EditVehiclePage = () => {
     }
   };
 
-  if (loading) return <p>Carregando dados do veículo...</p>;
-  if (error) return <p style={{ color: 'red' }}>Erro: {error}</p>;
-  if (!vehicleData) return <p>Veículo não encontrado.</p>;
+  if (loading) return (
+    <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+      <Typography variant="h6">Carregando dados do veículo...</Typography>
+    </Container>
+  );
+  if (error) return (
+    <Container>
+      <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+    </Container>
+  );
+  if (!vehicleData) return (
+    <Container>
+      <Alert severity="error" sx={{ mb: 2 }}>Veículo não encontrado.</Alert>
+    </Container>
+  );
 
   return (
-    <div>
-      <h2>Editar Veículo</h2>
-      {submitError && <p style={{ color: 'red' }}>Erro ao salvar: {submitError}</p>}
-      <VehicleForm onSubmit={handleUpdateVehicle} initialData={vehicleData} />
-    </div>
+    <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography variant="h4" component="h1" gutterBottom sx={{
+            fontFamily: "'Exo 2', sans-serif",
+            fontWeight: 'bold',
+            color: 'primary.main'
+          }}>
+            Editar Veículo
+          </Typography>
+          <Box sx={{ mt: 2, mb: 2 }}>
+            {submitError && (
+              <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>
+            )}
+          </Box>
+          <VehicleForm onSubmit={handleUpdateVehicle} initialData={vehicleData} />
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 
