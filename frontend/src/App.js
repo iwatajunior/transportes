@@ -32,145 +32,10 @@ import RelatorioViagensPage from './pages/RelatorioViagensPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import TripDetailPage from './pages/TripDetailPage';
+import HomePage from './pages/HomePage';
+import CadastroRotaPage from './pages/CadastroRotaPage';
 
 const ALL_AUTHENTICATED_ROLES = Object.values(USER_ROLES);
-
-const HomePage = () => {
-  const { user, loading } = useAuth();
-  console.log('HomePage - user:', user);
-  
-  return (
-    <Container maxWidth="lg">
-      <Box sx={{ textAlign: 'center', mb: 3, mt: 2 }}>
-        <Typography variant="h5" component="h1" gutterBottom sx={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 'bold' }}>
-          {loading ? 'Carregando...' : user ? `Bem-vindo, ${user.nome.split(' ')[0]}!` : 'Bem-vindo ao Rotas e Viagens!'}
-        </Typography>
-        <Typography variant="body1" sx={{ fontFamily: "'Exo 2', sans-serif" }}>
-          Requisite e Gerencie Suas Viagens Aqui!
-        </Typography>
-      </Box>
-
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' }, 
-        gap: 1.5,
-        mb: 3
-      }}>
-            <Link to="/registrar-viagem" style={{ textDecoration: 'none' }}>
-              <Paper sx={{
-                p: 1.5,
-                height: '100px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                bgcolor: '#1976d2',
-                color: 'white',
-                transition: 'all 0.2s',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: '#1565c0',
-                  transform: 'scale(1.02)'
-                }
-              }}>
-                <AddIcon sx={{ fontSize: 32, mb: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 500 }}>Nova Viagem</Typography>
-                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Solicite uma nova viagem</Typography>
-              </Paper>
-            </Link>
-
-            <Link to="/viagens" style={{ textDecoration: 'none' }}>
-              <Paper sx={{
-                p: 1.5,
-                height: '100px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                bgcolor: '#9c27b0',
-                color: 'white',
-                transition: 'all 0.2s',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: '#7b1fa2',
-                  transform: 'scale(1.02)'
-                }
-              }}>
-                <ListAltIcon sx={{ fontSize: 32, mb: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 500 }}>Painel de Viagens</Typography>
-                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Visualize e gerencie viagens</Typography>
-              </Paper>
-            </Link>
-
-            <Link to="/admin/users" style={{ textDecoration: 'none' }}>
-              <Paper sx={{
-                p: 1.5,
-                height: '100px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                bgcolor: '#0288d1',
-                color: 'white',
-                transition: 'all 0.2s',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: '#0277bd',
-                  transform: 'scale(1.02)'
-                }
-              }}>
-                <GroupIcon sx={{ fontSize: 32, mb: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 500 }}>Usuários</Typography>
-                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Gerenciar usuários</Typography>
-              </Paper>
-            </Link>
-
-            <Link to="/veiculos" style={{ textDecoration: 'none' }}>
-              <Paper sx={{
-                p: 1.5,
-                height: '100px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                bgcolor: '#ed6c02',
-                color: 'white',
-                transition: 'all 0.2s',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: '#e65100',
-                  transform: 'scale(1.02)'
-                }
-              }}>
-                <DirectionsCarIcon sx={{ fontSize: 32, mb: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 500 }}>Veículos</Typography>
-                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Gerenciar frota</Typography>
-              </Paper>
-            </Link>
-
-            <Link to="/admin/dashboard" style={{ textDecoration: 'none' }}>
-              <Paper sx={{
-                p: 1.5,
-                height: '100px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                bgcolor: '#2e7d32',
-                color: 'white',
-                transition: 'all 0.2s',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: '#1b5e20',
-                  transform: 'scale(1.02)'
-                }
-              }}>
-                <DashboardIcon sx={{ fontSize: 32, mb: 1 }} />
-                <Typography variant="h6" sx={{ fontWeight: 500 }}>Dashboard</Typography>
-                <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>Estatísticas e relatórios</Typography>
-              </Paper>
-            </Link>
-      </Box>
-
-
-    </Container>
-  );
-};
 
 const AppContent = () => {
   const history = useHistory();
@@ -214,6 +79,8 @@ const AppContent = () => {
         const decodedUser = JSON.parse(jsonPayload);
         setUser(decodedUser);
         setIsAuthenticated(true);
+        // Redireciona para a HomePage após o login
+        history.push('/');
       } catch (error) {
         console.error("Erro ao decodificar token no login:", error);
         localStorage.removeItem('token');
@@ -265,6 +132,7 @@ const AppContent = () => {
           <ProtectedRoute path="/admin/dashboard" component={AdminDashboardPage} allowedRoles={[USER_ROLES.ADMINISTRADOR]} />
           <ProtectedRoute path="/relatorio-viagens" component={RelatorioViagensPage} allowedRoles={[USER_ROLES.ADMINISTRADOR]} />
           <ProtectedRoute exact path="/" component={HomePage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
+          <ProtectedRoute path="/cadastrar-rota" component={CadastroRotaPage} allowedRoles={[USER_ROLES.ADMINISTRADOR, USER_ROLES.GESTOR]} />
           <ProtectedRoute path="/cadastrar-veiculo" component={AddVehiclePage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
           <ProtectedRoute path="/veiculos" component={VehicleListPage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
           <ProtectedRoute path="/editar-veiculo/:id" component={EditVehiclePage} allowedRoles={ALL_AUTHENTICATED_ROLES} />

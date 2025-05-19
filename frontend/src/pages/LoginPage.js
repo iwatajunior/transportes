@@ -66,10 +66,10 @@ const LoginPage = ({ onLoginSuccess }) => {
             }
             
             const navigatedFromLogout = location.state?.navigatedFromLogout;
-            let finalRedirectPath = "/viagens"; 
+            let finalRedirectPath = "/"; 
 
             if (navigatedFromLogout) {
-                finalRedirectPath = "/viagens";
+                finalRedirectPath = "/";
             } else if (location.state?.from?.pathname && location.state.from.pathname !== '/') {
                 finalRedirectPath = location.state.from.pathname;
             }
