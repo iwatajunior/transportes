@@ -6,14 +6,19 @@ import {
   Dashboard as DashboardIcon,
   LocalShipping as LocalShippingIcon,
   Person as PersonIcon,
-  DirectionsCar as DirectionsCarIcon
+  DirectionsCar as DirectionsCarIcon,
+  DirectionsBus as BusIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
-import RotaVeiculo from '../components/RotaVeiculo';
+import { Link, useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import RouteMap from '../components/RouteMap';
+
+const BUTTON_COLOR = '#FFA500';
 
 const HomePage = () => {
   const { user } = useAuth();
+  const history = useHistory();
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -46,142 +51,186 @@ const HomePage = () => {
       <Grid container spacing={2}>
         {/* Primary Actions */}
         <Grid item xs={12} md={4}>
-          <Link to="/cadastrar-rota" style={{ textDecoration: 'none' }}>
-            <Button 
-              variant="contained" 
-              color="primary"
-              fullWidth
-              startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Rota</Typography>
-            </Button>
-          </Link>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
+            onClick={() => history.push('/cadastrar-rota')}
+            sx={{
+              bgcolor: '#FF9800',
+              color: 'white',
+              textTransform: 'none',
+              borderRadius: 2,
+              mb: 1,
+              '&:hover': {
+                transform: 'scale(1.02)',
+                bgcolor: '#F57C00'
+              }
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Rota</Typography>
+          </Button>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Link to="/registrar-viagem" style={{ textDecoration: 'none' }}>
-            <Button 
-              variant="contained" 
-              color="primary"
-              fullWidth
-              startIcon={<AddIcon sx={{ fontSize: 28 }} />}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Viagem</Typography>
-            </Button>
-          </Link>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<EditIcon sx={{ fontSize: 28 }} />}
+            onClick={() => history.push('/rotas')}
+            sx={{
+              bgcolor: '#FF9800',
+              color: 'white',
+              textTransform: 'none',
+              borderRadius: 2,
+              mb: 1,
+              '&:hover': {
+                transform: 'scale(1.02)',
+                bgcolor: '#F57C00'
+              }
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Editar Rotas</Typography>
+          </Button>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Link to="/viagens" style={{ textDecoration: 'none' }}>
-            <Button 
-              variant="contained" 
-              color="secondary"
-              fullWidth
-              startIcon={<ListIcon sx={{ fontSize: 28 }} />}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Viagens</Typography>
-            </Button>
-          </Link>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<AddIcon sx={{ fontSize: 28 }} />}
+            onClick={() => history.push('/registrar-viagem')}
+            sx={{
+              bgcolor: '#FF9800',
+              color: 'white',
+              textTransform: 'none',
+              borderRadius: 2,
+              mb: 1,
+              '&:hover': {
+                transform: 'scale(1.02)',
+                bgcolor: '#F57C00'
+              }
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Viagem</Typography>
+          </Button>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Link to="/admin/dashboard" style={{ textDecoration: 'none' }}>
-            <Button 
-              variant="contained" 
-              color="info"
-              fullWidth
-              startIcon={<DashboardIcon sx={{ fontSize: 28 }} />}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Dashboard</Typography>
-            </Button>
-          </Link>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<ListIcon sx={{ fontSize: 28 }} />}
+            onClick={() => history.push('/viagens')}
+            sx={{
+              bgcolor: '#FF9800',
+              color: 'white',
+              textTransform: 'none',
+              borderRadius: 2,
+              mb: 1,
+              '&:hover': {
+                transform: 'scale(1.02)',
+                bgcolor: '#F57C00'
+              }
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Viagens</Typography>
+          </Button>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Link to="/veiculos" style={{ textDecoration: 'none' }}>
-            <Button 
-              variant="contained" 
-              color="warning"
-              fullWidth
-              startIcon={<DirectionsCarIcon sx={{ fontSize: 28 }} />}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Veículos</Typography>
-            </Button>
-          </Link>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<DashboardIcon sx={{ fontSize: 28 }} />}
+            onClick={() => history.push('/admin/dashboard')}
+            sx={{
+              bgcolor: '#FF9800',
+              color: 'white',
+              textTransform: 'none',
+              borderRadius: 2,
+              mb: 1,
+              '&:hover': {
+                transform: 'scale(1.02)',
+                bgcolor: '#F57C00'
+              }
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Dashboard</Typography>
+          </Button>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Link to="/usuarios" style={{ textDecoration: 'none' }}>
-            <Button 
-              variant="contained" 
-              color="error"
-              fullWidth
-              startIcon={<PersonIcon sx={{ fontSize: 28 }} />}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Usuários</Typography>
-            </Button>
-          </Link>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<DirectionsCarIcon sx={{ fontSize: 28 }} />}
+            onClick={() => history.push('/veiculos')}
+            sx={{
+              bgcolor: '#FF9800',
+              color: 'white',
+              textTransform: 'none',
+              borderRadius: 2,
+              mb: 1,
+              '&:hover': {
+                transform: 'scale(1.02)',
+                bgcolor: '#F57C00'
+              }
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Veículos</Typography>
+          </Button>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<PersonIcon sx={{ fontSize: 28 }} />}
+            onClick={() => history.push('/usuarios')}
+            sx={{
+              bgcolor: '#FF9800',
+              color: 'white',
+              textTransform: 'none',
+              borderRadius: 2,
+              mb: 1,
+              '&:hover': {
+                transform: 'scale(1.02)',
+                bgcolor: '#F57C00'
+              }
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Usuários</Typography>
+          </Button>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
+            onClick={() => {
+              // Aqui você pode abrir um modal ou redirecionar para uma página onde o usuário escolhe a rota e a cidade
+              alert('Funcionalidade em desenvolvimento: Escolha uma rota e cidade para enviar materiais.');
+            }}
+            sx={{
+              bgcolor: '#FF9800',
+              color: 'white',
+              textTransform: 'none',
+              borderRadius: 2,
+              mb: 1,
+              '&:hover': {
+                transform: 'scale(1.02)',
+                bgcolor: '#F57C00'
+              }
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Enviar material</Typography>
+          </Button>
         </Grid>
       </Grid>
 
-      {/* RotaVeiculo Component */}
-      <Box sx={{ 
-        bgcolor: 'background.paper',
-        borderRadius: 2,
-        boxShadow: 2,
-        p: 3,
-        mt: 4
-      }}>
-        <RotaVeiculo />
-      </Box>
+      <RouteMap />
     </Container>
   );
 };

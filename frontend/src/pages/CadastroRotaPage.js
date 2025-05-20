@@ -13,11 +13,12 @@ import {
   MenuItem,
   Grid,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Chip
 } from '@mui/material';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import api from '../services/api';
-import { getCidadesPI } from '../services/cidadesAPI';
+import { getCidadesPI } from '../services/cidadesPI';
 
 const CadastroRotaPage = () => {
   const history = useHistory();
@@ -26,41 +27,26 @@ const CadastroRotaPage = () => {
   const [success, setSuccess] = useState('');
 
   const [formData, setFormData] = useState({
-    cidades: [],
+    identificacao: '',
+    cidadeOrigem: '',
+    cidadeDestino: '',
+    cidadesIntermediariasIda: [],
+    cidadesIntermediariasVolta: [],
     dataSaida: '',
     horarioSaida: '',
     dataRetorno: '',
-    horarioRetorno: '',
-    motorista: '',
-    veiculo: ''
+    horarioRetorno: ''
   });
 
   const [cidades, setCidades] = useState([]);
-  const [motoristas, setMotoristas] = useState([]);
-  const [veiculos, setVeiculos] = useState([]);
+  const [selectedCidadeIda, setSelectedCidadeIda] = useState('');
+  const [selectedCidadeVolta, setSelectedCidadeVolta] = useState('');
 
   useEffect(() => {
     // Carregar cidades do Piauí
     const cidadesPI = getCidadesPI();
     setCidades(cidadesPI);
-
-    // Carregar motoristas e veículos disponíveis
-    carregarMotoristasVeiculos();
   }, []);
-
-  const carregarMotoristasVeiculos = async () => {
-    try {
-      const [motoristasResponse, veiculosResponse] = await Promise.all([
-        api.get('/motoristas'),
-        api.get('/veiculos')
-      ]);
-      setMotoristas(motoristasResponse.data);
-      setVeiculos(veiculosResponse.data);
-    } catch (error) {
-      console.error('Erro ao carregar motoristas e veículos:', error);
-      setError('Erro ao carregar motoristas e veículos. Por favor, tente novamente.');
-    }
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -70,17 +56,37 @@ const CadastroRotaPage = () => {
     }));
   };
 
-  const handleAddCidade = (cidade) => {
+  const handleAddCidadeIda = () => {
+    if (selectedCidadeIda && !formData.cidadesIntermediariasIda.includes(selectedCidadeIda)) {
+      setFormData(prev => ({
+        ...prev,
+        cidadesIntermediariasIda: [...prev.cidadesIntermediariasIda, selectedCidadeIda]
+      }));
+      setSelectedCidadeIda('');
+    }
+  };
+
+  const handleAddCidadeVolta = () => {
+    if (selectedCidadeVolta && !formData.cidadesIntermediariasVolta.includes(selectedCidadeVolta)) {
+      setFormData(prev => ({
+        ...prev,
+        cidadesIntermediariasVolta: [...prev.cidadesIntermediariasVolta, selectedCidadeVolta]
+      }));
+      setSelectedCidadeVolta('');
+    }
+  };
+
+  const handleRemoveCidadeIda = (cidadeId) => {
     setFormData(prev => ({
       ...prev,
-      cidades: [...prev.cidades, cidade]
+      cidadesIntermediariasIda: prev.cidadesIntermediariasIda.filter(id => id !== cidadeId)
     }));
   };
 
-  const handleRemoveCidade = (cidadeId) => {
+  const handleRemoveCidadeVolta = (cidadeId) => {
     setFormData(prev => ({
       ...prev,
-      cidades: prev.cidades.filter(c => c.id !== cidadeId)
+      cidadesIntermediariasVolta: prev.cidadesIntermediariasVolta.filter(id => id !== cidadeId)
     }));
   };
 
@@ -91,15 +97,9 @@ const CadastroRotaPage = () => {
     setSuccess('');
 
     try {
-      // Validar se todas as cidades são diferentes
-      const cidadesUnicas = [...new Set(formData.cidades.map(c => c.id))];
-      if (cidadesUnicas.length !== formData.cidades.length) {
-        throw new Error('Não é permitido selecionar a mesma cidade mais de uma vez.');
-      }
-
-      // Validar se tem pelo menos duas cidades
-      if (formData.cidades.length < 2) {
-        throw new Error('É necessário selecionar pelo menos duas cidades.');
+      // Validar se cidade de origem e destino são diferentes
+      if (formData.cidadeOrigem === formData.cidadeDestino) {
+        throw new Error('A cidade de origem não pode ser igual à cidade de destino.');
       }
 
       // Validar se data de retorno é maior que data de saída
@@ -111,25 +111,29 @@ const CadastroRotaPage = () => {
 
       // Preparar dados para envio
       const rotaData = {
-        cidades: formData.cidades,
+        identificacao: formData.identificacao,
+        cidadeOrigem: formData.cidadeOrigem,
+        cidadeDestino: formData.cidadeDestino,
+        cidadesIntermediariasIda: formData.cidadesIntermediariasIda,
+        cidadesIntermediariasVolta: formData.cidadesIntermediariasVolta,
         dataSaida: format(new Date(`${formData.dataSaida} ${formData.horarioSaida}`), 'yyyy-MM-dd HH:mm:ss'),
-        dataRetorno: format(new Date(`${formData.dataRetorno} ${formData.horarioRetorno}`), 'yyyy-MM-dd HH:mm:ss'),
-        motorista: formData.motorista,
-        veiculo: formData.veiculo
+        dataRetorno: format(new Date(`${formData.dataRetorno} ${formData.horarioRetorno}`), 'yyyy-MM-dd HH:mm:ss')
       };
 
       // Enviar para a API
-      await api.post('/rotas', rotaData);
+      await api.post('/routes', rotaData);
       setSuccess('Rota cadastrada com sucesso!');
       // Limpar formulário após sucesso
       setFormData({
-        cidades: [],
+        identificacao: '',
+        cidadeOrigem: '',
+        cidadeDestino: '',
+        cidadesIntermediariasIda: [],
+        cidadesIntermediariasVolta: [],
         dataSaida: '',
         horarioSaida: '',
         dataRetorno: '',
-        horarioRetorno: '',
-        motorista: '',
-        veiculo: ''
+        horarioRetorno: ''
       });
       // Redirecionar para a página inicial após 2 segundos
       setTimeout(() => {
@@ -141,6 +145,22 @@ const CadastroRotaPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Função para filtrar cidades disponíveis para seleção
+  const getCidadesDisponiveis = (tipo) => {
+    return cidades.filter(cidade => {
+      const id = cidade.id;
+      if (tipo === 'ida') {
+        return id !== formData.cidadeOrigem && 
+               id !== formData.cidadeDestino && 
+               !formData.cidadesIntermediariasIda.includes(id);
+      } else {
+        return id !== formData.cidadeOrigem && 
+               id !== formData.cidadeDestino && 
+               !formData.cidadesIntermediariasVolta.includes(id);
+      }
+    });
   };
 
   return (
@@ -159,155 +179,228 @@ const CadastroRotaPage = () => {
           {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
           <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            {/* Cidades */}
-            <Grid item xs={12}>
-              <Box mb={2}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Cidades da Rota
-                </Typography>
-                <Select
+            <Grid container spacing={3}>
+              {/* Identificação da Rota */}
+              <Grid item xs={12}>
+                <TextField
                   fullWidth
-                  value={formData.cidades.map(c => c.id)}
-                  onChange={(e) => {
-                    const selectedCidadeId = parseInt(e.target.value);
-                    const selectedCidade = cidades.find(c => c.id === selectedCidadeId);
-                    if (selectedCidade) {
-                      handleAddCidade(selectedCidade);
-                    }
-                  }}
-                  renderValue={() => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {formData.cidades.map((cidade) => (
-                        <Button
-                          key={cidade.id}
-                          variant="outlined"
-                          onClick={() => handleRemoveCidade(cidade.id)}
-                          sx={{ mr: 1, mb: 1 }}
+                  label="Identificação da Rota"
+                  name="identificacao"
+                  value={formData.identificacao}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Ex: Rota Teresina-Picos"
+                  helperText="Digite um nome ou código para identificar esta rota"
+                />
+              </Grid>
+
+              {/* Cidade de Origem */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Cidade de Origem</InputLabel>
+                  <Select
+                    name="cidadeOrigem"
+                    value={formData.cidadeOrigem}
+                    onChange={handleInputChange}
+                    label="Cidade de Origem"
+                  >
+                    {cidades.map((cidade) => (
+                      <MenuItem key={cidade.id} value={cidade.id}>
+                        {cidade.nome}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Cidade de Destino */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Cidade de Destino</InputLabel>
+                  <Select
+                    name="cidadeDestino"
+                    value={formData.cidadeDestino}
+                    onChange={handleInputChange}
+                    label="Cidade de Destino"
+                  >
+                    {cidades.map((cidade) => (
+                      <MenuItem key={cidade.id} value={cidade.id}>
+                        {cidade.nome}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Cidades Intermediárias - Ida */}
+              <Grid item xs={12}>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Cidades Intermediárias - Percurso de Ida
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={8}>
+                      <FormControl fullWidth>
+                        <InputLabel>Adicionar Cidade Intermediária</InputLabel>
+                        <Select
+                          value={selectedCidadeIda}
+                          onChange={(e) => setSelectedCidadeIda(e.target.value)}
+                          label="Adicionar Cidade Intermediária"
                         >
-                          {cidade.nome}
-                          <Box component="span" sx={{ ml: 1 }}>
-                            ×
-                          </Box>
-                        </Button>
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {cidades.map((cidade) => (
-                    <MenuItem key={cidade.id} value={cidade.id}>
-                      {cidade.nome}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
-            </Grid>
+                          {getCidadesDisponiveis('ida').map((cidade) => (
+                            <MenuItem key={cidade.id} value={cidade.id}>
+                              {cidade.nome}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Button
+                        variant="contained"
+                        onClick={handleAddCidadeIda}
+                        disabled={!selectedCidadeIda}
+                        fullWidth
+                        sx={{ height: '56px' }}
+                      >
+                        Adicionar Cidade
+                      </Button>
+                    </Grid>
+                  </Grid>
+                  <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {formData.cidadesIntermediariasIda.map((cidadeId) => {
+                      const cidade = cidades.find(c => c.id === cidadeId);
+                      return cidade && (
+                        <Chip
+                          key={cidade.id}
+                          label={cidade.nome}
+                          onDelete={() => handleRemoveCidadeIda(cidade.id)}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      );
+                    })}
+                  </Box>
+                </Box>
+              </Grid>
 
-            {/* Data e Horário de Saída */}
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Data de Saída"
-                type="date"
-                name="dataSaida"
-                value={formData.dataSaida}
-                onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Horário de Saída"
-                type="time"
-                name="horarioSaida"
-                value={formData.horarioSaida}
-                onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
+              {/* Cidades Intermediárias - Volta */}
+              <Grid item xs={12}>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Cidades Intermediárias - Percurso de Volta
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={8}>
+                      <FormControl fullWidth>
+                        <InputLabel>Adicionar Cidade Intermediária</InputLabel>
+                        <Select
+                          value={selectedCidadeVolta}
+                          onChange={(e) => setSelectedCidadeVolta(e.target.value)}
+                          label="Adicionar Cidade Intermediária"
+                        >
+                          {getCidadesDisponiveis('volta').map((cidade) => (
+                            <MenuItem key={cidade.id} value={cidade.id}>
+                              {cidade.nome}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Button
+                        variant="contained"
+                        onClick={handleAddCidadeVolta}
+                        disabled={!selectedCidadeVolta}
+                        fullWidth
+                        sx={{ height: '56px' }}
+                      >
+                        Adicionar Cidade
+                      </Button>
+                    </Grid>
+                  </Grid>
+                  <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {formData.cidadesIntermediariasVolta.map((cidadeId) => {
+                      const cidade = cidades.find(c => c.id === cidadeId);
+                      return cidade && (
+                        <Chip
+                          key={cidade.id}
+                          label={cidade.nome}
+                          onDelete={() => handleRemoveCidadeVolta(cidade.id)}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      );
+                    })}
+                  </Box>
+                </Box>
+              </Grid>
 
-            {/* Data e Horário de Retorno */}
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Data de Retorno"
-                type="date"
-                name="dataRetorno"
-                value={formData.dataRetorno}
-                onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField
-                fullWidth
-                label="Horário de Retorno"
-                type="time"
-                name="horarioRetorno"
-                value={formData.horarioRetorno}
-                onChange={handleInputChange}
-                InputLabelProps={{ shrink: true }}
-                required
-              />
-            </Grid>
-
-            {/* Motorista */}
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Motorista</InputLabel>
-                <Select
-                  name="motorista"
-                  value={formData.motorista}
+              {/* Data e Horário de Saída */}
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Data de Saída"
+                  type="date"
+                  name="dataSaida"
+                  value={formData.dataSaida}
                   onChange={handleInputChange}
-                  label="Motorista"
+                  InputLabelProps={{ shrink: true }}
                   required
-                >
-                  {motoristas.map((motorista) => (
-                    <MenuItem key={motorista.id} value={motorista.id}>
-                      {motorista.nome}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Veículo */}
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Veículo</InputLabel>
-                <Select
-                  name="veiculo"
-                  value={formData.veiculo}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Horário de Saída"
+                  type="time"
+                  name="horarioSaida"
+                  value={formData.horarioSaida}
                   onChange={handleInputChange}
-                  label="Veículo"
+                  InputLabelProps={{ shrink: true }}
                   required
-                >
-                  {veiculos.map((veiculo) => (
-                    <MenuItem key={veiculo.id} value={veiculo.id}>
-                      {veiculo.placa} - {veiculo.modelo}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+                />
+              </Grid>
 
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                <Button
-                  variant="contained"
-                  type="submit"
-                  disabled={loading}
-                  endIcon={loading ? <CircularProgress size={20} /> : null}
-                >
-                  Cadastrar Rota
-                </Button>
-              </Box>
+              {/* Data e Horário de Retorno */}
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Data de Retorno"
+                  type="date"
+                  name="dataRetorno"
+                  value={formData.dataRetorno}
+                  onChange={handleInputChange}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Horário de Retorno"
+                  type="time"
+                  name="horarioRetorno"
+                  value={formData.horarioRetorno}
+                  onChange={handleInputChange}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                  <Button
+                    variant="contained"
+                    type="submit"
+                    disabled={loading}
+                    endIcon={loading ? <CircularProgress size={20} /> : null}
+                  >
+                    Cadastrar Rota
+                  </Button>
+                </Box>
+              </Grid>
             </Grid>
-          </Grid>
           </form>
         </Box>
       </Paper>

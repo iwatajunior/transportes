@@ -34,6 +34,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import TripDetailPage from './pages/TripDetailPage';
 import HomePage from './pages/HomePage';
 import CadastroRotaPage from './pages/CadastroRotaPage';
+import RotasPage from './pages/RotasPage';
 
 const ALL_AUTHENTICATED_ROLES = Object.values(USER_ROLES);
 
@@ -133,6 +134,7 @@ const AppContent = () => {
           <ProtectedRoute path="/relatorio-viagens" component={RelatorioViagensPage} allowedRoles={[USER_ROLES.ADMINISTRADOR]} />
           <ProtectedRoute exact path="/" component={HomePage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
           <ProtectedRoute path="/cadastrar-rota" component={CadastroRotaPage} allowedRoles={[USER_ROLES.ADMINISTRADOR, USER_ROLES.GESTOR]} />
+          <ProtectedRoute path="/rotas" component={RotasPage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
           <ProtectedRoute path="/cadastrar-veiculo" component={AddVehiclePage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
           <ProtectedRoute path="/veiculos" component={VehicleListPage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
           <ProtectedRoute path="/editar-veiculo/:id" component={EditVehiclePage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
