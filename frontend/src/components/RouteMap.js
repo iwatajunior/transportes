@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Paper, Typography, Grid, Chip, Divider, Button, Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Select, FormControl, InputLabel, Snackbar, Alert, IconButton, TextField, Autocomplete, CircularProgress, TableContainer, Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
-import { DirectionsBus, LocationOn, ArrowForward, LocalShipping as LocalShippingIcon, Edit, CalendarToday, Forward as ForwardIcon, Close, Delete as DeleteIcon } from '@mui/icons-material';
+import { DirectionsBus, LocationOn, ArrowForward, LocalShipping as LocalShippingIcon, Edit, CalendarToday, Forward as ForwardIcon, Close, Delete as DeleteIcon, Add as AddIcon, DoubleArrow } from '@mui/icons-material';
 import api from '../services/api';
 import { cidadesPI } from '../services/cidadesPI';
 import { format } from 'date-fns';
@@ -82,12 +82,16 @@ const RouteMap = () => {
     tipo: '',
     quantidade: '',
     peso: '',
-    observacoes: ''
+    observacoes: '',
+    rota_id: '',
+    cidade_origem_id: '',
+    cidade_destino_id: ''
   });
   const [materiais, setMateriais] = useState([]);
   const [editMaterialDialogOpen, setEditMaterialDialogOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [editedMaterial, setEditedMaterial] = useState(null);
+  const [openMaterialDialog, setOpenMaterialDialog] = useState(false);
 
   // Configuração do mapa
   const center = {
@@ -221,37 +225,51 @@ const RouteMap = () => {
     return cidade ? cidade.nome : id;
   };
 
-  const handleInteresseClick = (rota) => {
-    setSelectedRota(rota);
-    setSelectedCidade('');
+  const handleOpenMaterialDialog = () => {
     setMaterialInfo({
       tipo: '',
       quantidade: '',
       peso: '',
-      observacoes: ''
+      observacoes: '',
+      rota_id: '',
+      cidade_origem_id: '',
+      cidade_destino_id: ''
     });
-    setOpenDialog(true);
+    setOpenMaterialDialog(true);
   };
 
-  const handleDialogClose = () => {
-    setOpenDialog(false);
-    setSelectedRota(null);
-    setSelectedCidade('');
+  const handleCloseMaterialDialog = () => {
+    setOpenMaterialDialog(false);
     setMaterialInfo({
       tipo: '',
       quantidade: '',
       peso: '',
-      observacoes: ''
+      observacoes: '',
+      rota_id: '',
+      cidade_origem_id: '',
+      cidade_destino_id: ''
     });
   };
 
   const handleConfirmarInteresse = async () => {
+    if (!materialInfo.rota_id) {
+      setSnackbar({
+        open: true,
+        message: 'Por favor, selecione uma rota',
+        severity: 'warning'
+      });
+      return;
+    }
+
     try {
-      // Aqui você pode fazer uma chamada à API para registrar o interesse do usuário
       const response = await api.post('/materials', {
-        rota_id: selectedRota.id,
-        cidade_id: selectedCidade,
-        ...materialInfo
+        rota_id: materialInfo.rota_id,
+        cidade_origem_id: materialInfo.cidade_origem_id,
+        cidade_destino_id: materialInfo.cidade_destino_id,
+        tipo: materialInfo.tipo,
+        quantidade: materialInfo.quantidade,
+        peso: materialInfo.peso,
+        observacoes: materialInfo.observacoes
       });
 
       if (response.status === 201) {
@@ -260,7 +278,9 @@ const RouteMap = () => {
           message: 'Material registrado com sucesso!', 
           severity: 'success' 
         });
-        handleDialogClose();
+        handleCloseMaterialDialog();
+        // Atualizar a lista de materiais da rota selecionada
+        fetchMateriais(materialInfo.rota_id);
       }
     } catch (error) {
       setSnackbar({ 
@@ -406,7 +426,7 @@ const RouteMap = () => {
   }
 
   return (
-    <Box sx={{ mt: 4 }}>
+    <Box sx={{ mt: 2 }}>
       <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2', textAlign: 'left' }}>
         Rotas Programadas
       </Typography>
@@ -462,13 +482,17 @@ const RouteMap = () => {
                     {/* Percurso de Ida */}
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        Percurso de Ida <ForwardIcon sx={{ fontSize: 24, verticalAlign: 'middle' }} />
+                        Percurso de Ida
                       </Typography>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start' }}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start', alignItems: 'center' }}>
                         <Chip label={getCidadeNome(rota.cidade_origem)} size="small" color="primary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
                         {(rota.cidades_intermediarias_ida || []).map((cid, idx) => (
-                          <Chip key={idx} label={getCidadeNome(cid)} size="small" color="primary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                          <React.Fragment key={idx}>
+                            <DoubleArrow sx={{ fontSize: 16, color: 'primary.main' }} />
+                            <Chip label={getCidadeNome(cid)} size="small" color="primary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                          </React.Fragment>
                         ))}
+                        <DoubleArrow sx={{ fontSize: 16, color: 'primary.main' }} />
                         <Chip label={getCidadeNome(rota.cidade_destino)} size="small" color="primary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
                       </Box>
                     </Box>
@@ -479,13 +503,17 @@ const RouteMap = () => {
                     {/* Percurso de Retorno */}
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                       <Typography variant="subtitle2" color="secondary" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        <ForwardIcon sx={{ fontSize: 24, verticalAlign: 'middle', transform: 'rotate(180deg)' }} /> Percurso de Retorno
+                        Percurso de Retorno
                       </Typography>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end' }}>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
                         <Chip label={getCidadeNome(rota.cidade_origem)} size="small" color="secondary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
                         {(rota.cidades_intermediarias_volta || []).map((cid, idx) => (
-                          <Chip key={idx} label={getCidadeNome(cid)} size="small" color="secondary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                          <React.Fragment key={idx}>
+                            <DoubleArrow sx={{ fontSize: 16, color: 'secondary.main', transform: 'rotate(180deg)' }} />
+                            <Chip label={getCidadeNome(cid)} size="small" color="secondary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                          </React.Fragment>
                         ))}
+                        <DoubleArrow sx={{ fontSize: 16, color: 'secondary.main', transform: 'rotate(180deg)' }} />
                         <Chip label={getCidadeNome(rota.cidade_destino)} size="small" color="secondary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
                       </Box>
                     </Box>
@@ -506,7 +534,6 @@ const RouteMap = () => {
                                 <TableCell>Origem</TableCell>
                                 <TableCell>Destino</TableCell>
                                 <TableCell align="right">Quantidade</TableCell>
-                                <TableCell>Status</TableCell>
                                 <TableCell>Requisitante</TableCell>
                                 <TableCell align="center">Ações</TableCell>
                               </TableRow>
@@ -517,14 +544,7 @@ const RouteMap = () => {
                                   <TableCell>{material.tipo}</TableCell>
                                   <TableCell>{getCidadeNome(material.cidade_origem_id)}</TableCell>
                                   <TableCell>{getCidadeNome(material.cidade_destino_id)}</TableCell>
-                                  <TableCell align="right">{material.quantidade}</TableCell>
-                                  <TableCell>
-                                    <Chip
-                                      label={material.status}
-                                      color={material.status === 'pendente' ? 'warning' : 'success'}
-                                      size="small"
-                                    />
-                                  </TableCell>
+                                  <TableCell align="right">{Number(material.quantidade).toFixed(1)}</TableCell>
                                   <TableCell>{material.requisitante}</TableCell>
                                   <TableCell align="center">
                                     <IconButton
@@ -594,6 +614,84 @@ const RouteMap = () => {
           <Button onClick={() => setEditMaterialDialogOpen(false)}>Cancelar</Button>
           <Button onClick={handleSaveMaterial} variant="contained" color="primary">
             Salvar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openMaterialDialog} onClose={handleCloseMaterialDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Enviar Material</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <FormControl fullWidth required>
+              <InputLabel>Selecione a Rota</InputLabel>
+              <Select
+                value={materialInfo.rota_id}
+                onChange={(e) => {
+                  const selectedRotaId = e.target.value;
+                  const selectedRota = rotas.find(r => r.id === selectedRotaId);
+                  if (selectedRota) {
+                    setMaterialInfo(prev => ({
+                      ...prev,
+                      rota_id: selectedRotaId,
+                      cidade_origem_id: selectedRota.cidade_origem,
+                      cidade_destino_id: selectedRota.cidade_destino
+                    }));
+                  }
+                }}
+                label="Selecione a Rota"
+                displayEmpty
+              >
+                <MenuItem value="" disabled>
+                  <em>Selecione uma rota</em>
+                </MenuItem>
+                {rotas.filter(r => r.status === 'ativo').map((rota) => (
+                  <MenuItem key={rota.id} value={rota.id}>
+                    Rota {rota.identificacao} - {getCidadeNome(rota.cidade_origem)} → {getCidadeNome(rota.cidade_destino)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Tipo"
+              value={materialInfo.tipo}
+              onChange={(e) => setMaterialInfo(prev => ({ ...prev, tipo: e.target.value }))}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Quantidade"
+              type="number"
+              value={materialInfo.quantidade}
+              onChange={(e) => setMaterialInfo(prev => ({ ...prev, quantidade: e.target.value }))}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Peso"
+              type="number"
+              value={materialInfo.peso}
+              onChange={(e) => setMaterialInfo(prev => ({ ...prev, peso: e.target.value }))}
+              fullWidth
+            />
+            <TextField
+              label="Observações"
+              value={materialInfo.observacoes}
+              onChange={(e) => setMaterialInfo(prev => ({ ...prev, observacoes: e.target.value }))}
+              multiline
+              rows={4}
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseMaterialDialog}>Cancelar</Button>
+          <Button 
+            onClick={handleConfirmarInteresse} 
+            variant="contained" 
+            color="primary"
+            disabled={!materialInfo.rota_id || !materialInfo.tipo || !materialInfo.quantidade}
+          >
+            Enviar
           </Button>
         </DialogActions>
       </Dialog>

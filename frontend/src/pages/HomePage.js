@@ -158,341 +158,352 @@ const HomePage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header Section */}
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography 
-          variant="h4" 
-          component="h1" 
-          gutterBottom 
-          sx={{ 
-            fontFamily: "'Exo 2', sans-serif", 
-            fontWeight: 'bold',
-            color: '#1976d2'
-          }}
+    <Box
+      component="main"
+      sx={{
+        flexGrow: 1,
+        p: '2px',
+        mt: '2px'
+      }}
+    >
+      <Container maxWidth="lg" sx={{ py: 1 }}>
+        {/* Header Section */}
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
+          <Typography 
+            variant="h5" 
+            component="h1" 
+            gutterBottom 
+            sx={{ 
+              fontFamily: "'Exo 2', sans-serif", 
+              fontWeight: 'bold',
+              color: '#1976d2',
+              mb: 0.5
+            }}
+          >
+            {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
+          </Typography>
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              fontFamily: "'Exo 2', sans-serif",
+              color: 'text.secondary',
+              mt: 0
+            }}
+          >
+            Gerencie suas viagens e envios de encomendas aqui.
+          </Typography>
+        </Box>
+
+        {/* Main Actions Grid */}
+        <Grid container spacing={2}>
+          {/* Primary Actions */}
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/cadastrar-rota')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Rota</Typography>
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<EditIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/rotas')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Editar Rotas</Typography>
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<AddIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/registrar-viagem')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Viagem</Typography>
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<ListIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/viagens')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Viagens</Typography>
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<DashboardIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/admin/dashboard')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Dashboard</Typography>
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<DirectionsCarIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/veiculos')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Veículos</Typography>
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<PersonIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/usuarios')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Usuários</Typography>
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
+              onClick={() => {
+                if (rotas.length === 0) {
+                  setSnackbar({
+                    open: true,
+                    message: 'Não há rotas disponíveis para envio de material.',
+                    severity: 'warning'
+                  });
+                  return;
+                }
+                handleInteresseClick(rotas[0]);
+              }}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Enviar material</Typography>
+            </Button>
+          </Grid>
+        </Grid>
+
+        <RouteMap />
+
+        {/* Dialog para envio de material */}
+        <Dialog 
+          open={openDialog} 
+          onClose={handleDialogClose}
+          maxWidth="sm"
+          fullWidth
         >
-          {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
-        </Typography>
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            fontFamily: "'Exo 2', sans-serif",
-            color: 'text.secondary'
-          }}
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LocalShippingIcon color="primary" />
+              <Typography variant="h6">Enviar Material</Typography>
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Rota: {selectedRota?.identificacao}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {getCidadeNome(selectedRota?.cidade_origem)} → {getCidadeNome(selectedRota?.cidade_destino)}
+              </Typography>
+            </Box>
+            <Box sx={{ mt: 3 }}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Cidade de Coleta</InputLabel>
+                <Select
+                  value={selectedCidade}
+                  onChange={e => setSelectedCidade(e.target.value)}
+                  label="Cidade de Coleta"
+                >
+                  {selectedRota && (() => {
+                    const cidadesRota = [
+                      { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
+                      ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
+                      { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
+                      ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
+                    ];
+                    const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
+                    return cidadesUnicas.map(cidade => (
+                      <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
+                    ));
+                  })()}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Cidade de Destino</InputLabel>
+                <Select
+                  value={materialInfo.cidade_destino}
+                  onChange={e => setMaterialInfo({...materialInfo, cidade_destino: e.target.value})}
+                  label="Cidade de Destino"
+                >
+                  {selectedRota && (() => {
+                    const cidadesRota = [
+                      { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
+                      ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
+                      { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
+                      ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
+                    ];
+                    const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
+                    return cidadesUnicas.map(cidade => (
+                      <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
+                    ));
+                  })()}
+                </Select>
+              </FormControl>
+
+              <TextField
+                fullWidth
+                label="Tipo de Material"
+                value={materialInfo.tipo}
+                onChange={(e) => setMaterialInfo({...materialInfo, tipo: e.target.value})}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="Quantidade"
+                type="number"
+                value={materialInfo.quantidade}
+                onChange={(e) => setMaterialInfo({...materialInfo, quantidade: e.target.value})}
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="Observações"
+                multiline
+                rows={3}
+                value={materialInfo.observacoes}
+                onChange={(e) => setMaterialInfo({...materialInfo, observacoes: e.target.value})}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDialogClose}>Cancelar</Button>
+            <Button 
+              onClick={handleConfirmarInteresse} 
+              disabled={!isFormValid()} 
+              variant="contained"
+            >
+              Confirmar Envio
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar 
+          open={snackbar.open} 
+          autoHideDuration={4000} 
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
-          Gerencie suas viagens e envios de encomendas aqui.
-        </Typography>
-      </Box>
-
-      {/* Main Actions Grid */}
-      <Grid container spacing={2}>
-        {/* Primary Actions */}
-        <Grid item xs={12} md={4}>
-          <Button 
-            variant="contained" 
-            fullWidth
-            startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
-            onClick={() => history.push('/cadastrar-rota')}
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              textTransform: 'none',
-              borderRadius: 2,
-              mb: 1,
-              '&:hover': {
-                transform: 'scale(1.02)',
-                bgcolor: '#F57C00'
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Rota</Typography>
-          </Button>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Button 
-            variant="contained" 
-            fullWidth
-            startIcon={<EditIcon sx={{ fontSize: 28 }} />}
-            onClick={() => history.push('/rotas')}
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              textTransform: 'none',
-              borderRadius: 2,
-              mb: 1,
-              '&:hover': {
-                transform: 'scale(1.02)',
-                bgcolor: '#F57C00'
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Editar Rotas</Typography>
-          </Button>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Button 
-            variant="contained" 
-            fullWidth
-            startIcon={<AddIcon sx={{ fontSize: 28 }} />}
-            onClick={() => history.push('/registrar-viagem')}
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              textTransform: 'none',
-              borderRadius: 2,
-              mb: 1,
-              '&:hover': {
-                transform: 'scale(1.02)',
-                bgcolor: '#F57C00'
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Viagem</Typography>
-          </Button>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Button 
-            variant="contained" 
-            fullWidth
-            startIcon={<ListIcon sx={{ fontSize: 28 }} />}
-            onClick={() => history.push('/viagens')}
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              textTransform: 'none',
-              borderRadius: 2,
-              mb: 1,
-              '&:hover': {
-                transform: 'scale(1.02)',
-                bgcolor: '#F57C00'
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Viagens</Typography>
-          </Button>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Button 
-            variant="contained" 
-            fullWidth
-            startIcon={<DashboardIcon sx={{ fontSize: 28 }} />}
-            onClick={() => history.push('/admin/dashboard')}
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              textTransform: 'none',
-              borderRadius: 2,
-              mb: 1,
-              '&:hover': {
-                transform: 'scale(1.02)',
-                bgcolor: '#F57C00'
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Dashboard</Typography>
-          </Button>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Button 
-            variant="contained" 
-            fullWidth
-            startIcon={<DirectionsCarIcon sx={{ fontSize: 28 }} />}
-            onClick={() => history.push('/veiculos')}
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              textTransform: 'none',
-              borderRadius: 2,
-              mb: 1,
-              '&:hover': {
-                transform: 'scale(1.02)',
-                bgcolor: '#F57C00'
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Veículos</Typography>
-          </Button>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Button 
-            variant="contained" 
-            fullWidth
-            startIcon={<PersonIcon sx={{ fontSize: 28 }} />}
-            onClick={() => history.push('/usuarios')}
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              textTransform: 'none',
-              borderRadius: 2,
-              mb: 1,
-              '&:hover': {
-                transform: 'scale(1.02)',
-                bgcolor: '#F57C00'
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Usuários</Typography>
-          </Button>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Button 
-            variant="contained" 
-            fullWidth
-            startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
-            onClick={() => {
-              if (rotas.length === 0) {
-                setSnackbar({
-                  open: true,
-                  message: 'Não há rotas disponíveis para envio de material.',
-                  severity: 'warning'
-                });
-                return;
-              }
-              handleInteresseClick(rotas[0]);
-            }}
-            sx={{
-              bgcolor: '#FF9800',
-              color: 'white',
-              textTransform: 'none',
-              borderRadius: 2,
-              mb: 1,
-              '&:hover': {
-                transform: 'scale(1.02)',
-                bgcolor: '#F57C00'
-              }
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Enviar material</Typography>
-          </Button>
-        </Grid>
-      </Grid>
-
-      <RouteMap />
-
-      {/* Dialog para envio de material */}
-      <Dialog 
-        open={openDialog} 
-        onClose={handleDialogClose}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <LocalShippingIcon color="primary" />
-            <Typography variant="h6">Enviar Material</Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              Rota: {selectedRota?.identificacao}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {getCidadeNome(selectedRota?.cidade_origem)} → {getCidadeNome(selectedRota?.cidade_destino)}
-            </Typography>
-          </Box>
-          <Box sx={{ mt: 3 }}>
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Cidade de Coleta</InputLabel>
-              <Select
-                value={selectedCidade}
-                onChange={e => setSelectedCidade(e.target.value)}
-                label="Cidade de Coleta"
-              >
-                {selectedRota && (() => {
-                  const cidadesRota = [
-                    { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
-                    ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
-                    { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
-                    ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
-                  ];
-                  const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
-                  return cidadesUnicas.map(cidade => (
-                    <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
-                  ));
-                })()}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Cidade de Destino</InputLabel>
-              <Select
-                value={materialInfo.cidade_destino}
-                onChange={e => setMaterialInfo({...materialInfo, cidade_destino: e.target.value})}
-                label="Cidade de Destino"
-              >
-                {selectedRota && (() => {
-                  const cidadesRota = [
-                    { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
-                    ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
-                    { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
-                    ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
-                  ];
-                  const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
-                  return cidadesUnicas.map(cidade => (
-                    <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
-                  ));
-                })()}
-              </Select>
-            </FormControl>
-
-            <TextField
-              fullWidth
-              label="Tipo de Material"
-              value={materialInfo.tipo}
-              onChange={(e) => setMaterialInfo({...materialInfo, tipo: e.target.value})}
-              sx={{ mb: 2 }}
-            />
-
-            <TextField
-              fullWidth
-              label="Quantidade"
-              type="number"
-              value={materialInfo.quantidade}
-              onChange={(e) => setMaterialInfo({...materialInfo, quantidade: e.target.value})}
-              sx={{ mb: 2 }}
-            />
-
-            <TextField
-              fullWidth
-              label="Observações"
-              multiline
-              rows={3}
-              value={materialInfo.observacoes}
-              onChange={(e) => setMaterialInfo({...materialInfo, observacoes: e.target.value})}
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose}>Cancelar</Button>
-          <Button 
-            onClick={handleConfirmarInteresse} 
-            disabled={!isFormValid()} 
-            variant="contained"
-          >
-            Confirmar Envio
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={4000} 
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Container>
+          <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Container>
+    </Box>
   );
 };
 

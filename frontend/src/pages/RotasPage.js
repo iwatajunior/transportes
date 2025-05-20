@@ -450,25 +450,17 @@ const RotasPage = () => {
                                 <TableCell>Origem</TableCell>
                                 <TableCell>Destino</TableCell>
                                 <TableCell align="right">Quantidade</TableCell>
-                                <TableCell>Status</TableCell>
                                 <TableCell>Requisitante</TableCell>
                                 <TableCell align="center">Ações</TableCell>
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {(materiaisPorRota[rota.id] || []).map((material) => (
+                              {materiais.map((material) => (
                                 <TableRow key={material.id}>
                                   <TableCell>{material.tipo}</TableCell>
                                   <TableCell>{getCidadeNome(material.cidade_origem_id)}</TableCell>
                                   <TableCell>{getCidadeNome(material.cidade_destino_id)}</TableCell>
-                                  <TableCell align="right">{material.quantidade}</TableCell>
-                                  <TableCell>
-                                    <Chip
-                                      label={material.status}
-                                      color={material.status === 'pendente' ? 'warning' : 'success'}
-                                      size="small"
-                                    />
-                                  </TableCell>
+                                  <TableCell align="right">{Number(material.quantidade).toFixed(1)}</TableCell>
                                   <TableCell>{material.requisitante}</TableCell>
                                   <TableCell align="center">
                                     <IconButton
