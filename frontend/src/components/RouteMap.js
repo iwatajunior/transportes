@@ -1,12 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Paper, Typography, Grid, Chip, Divider, Button, Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Select, FormControl, InputLabel, Snackbar, Alert, IconButton, TextField, Autocomplete } from '@mui/material';
-import { DirectionsBus, LocationOn, ArrowForward, LocalShipping as LocalShippingIcon, Edit, CalendarToday } from '@mui/icons-material';
+import { Box, Paper, Typography, Grid, Chip, Divider, Button, Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Select, FormControl, InputLabel, Snackbar, Alert, IconButton, TextField, Autocomplete, CircularProgress, TableContainer, Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
+import { DirectionsBus, LocationOn, ArrowForward, LocalShipping as LocalShippingIcon, Edit, CalendarToday, Forward as ForwardIcon, Close, Delete as DeleteIcon } from '@mui/icons-material';
 import api from '../services/api';
 import { cidadesPI } from '../services/cidadesPI';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAuth } from '../contexts/AuthContext';
+import { GoogleMap, useJsApiLoader, Polyline, Marker, LoadScript } from '@react-google-maps/api';
+
+// Componente para desenhar a rota no mapa
+const RoutePath = ({ rota, onClick }) => {
+  const getCidadeCoords = (cidadeId) => {
+    const cidade = cidadesPI.find(c => String(c.id) === String(cidadeId));
+    return cidade ? { lat: cidade.latitude, lng: cidade.longitude } : null;
+  };
+
+  const path = [
+    getCidadeCoords(rota.cidade_origem),
+    ...(rota.cidades_intermediarias_ida || []).map(getCidadeCoords).filter(Boolean),
+    getCidadeCoords(rota.cidade_destino),
+    ...(rota.cidades_intermediarias_volta || []).map(getCidadeCoords).filter(Boolean).reverse(),
+    getCidadeCoords(rota.cidade_origem)
+  ].filter(Boolean);
+
+  return (
+    <>
+      <Polyline
+        path={path}
+        options={{
+          strokeColor: '#1976d2',
+          strokeOpacity: 0.8,
+          strokeWeight: 3,
+          clickable: true,
+          onClick: onClick
+        }}
+      />
+      {/* Marcadores para origem e destino */}
+      <Marker
+        position={getCidadeCoords(rota.cidade_origem)}
+        icon={{
+          path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 8,
+          fillColor: '#1976d2',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+          rotation: 90
+        }}
+      />
+      <Marker
+        position={getCidadeCoords(rota.cidade_destino)}
+        icon={{
+          path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          scale: 8,
+          fillColor: '#c2185b',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+          rotation: -90
+        }}
+      />
+    </>
+  );
+};
 
 const RouteMap = () => {
+  const { user } = useAuth();
   const [rotas, setRotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,6 +76,92 @@ const RouteMap = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editedRota, setEditedRota] = useState(null);
   const [cidades, setCidades] = useState(cidadesPI);
+  const [materiaisPorRota, setMateriaisPorRota] = useState({});
+  const [loadingMateriais, setLoadingMateriais] = useState({});
+  const [materialInfo, setMaterialInfo] = useState({
+    tipo: '',
+    quantidade: '',
+    peso: '',
+    observacoes: ''
+  });
+  const [materiais, setMateriais] = useState([]);
+  const [editMaterialDialogOpen, setEditMaterialDialogOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [editedMaterial, setEditedMaterial] = useState(null);
+
+  // Configuração do mapa
+  const center = {
+    lat: -5.08921, // Latitude central do Piauí
+    lng: -42.8096  // Longitude central do Piauí
+  };
+
+  const mapStyles = [
+    {
+      featureType: 'all',
+      elementType: 'labels.text.fill',
+      stylers: [{ color: '#7c93a3' }, { lightness: '-10' }]
+    },
+    {
+      featureType: 'all',
+      elementType: 'labels.text.stroke',
+      stylers: [{ visibility: 'on' }, { color: '#ffffff' }, { lightness: 16 }]
+    },
+    {
+      featureType: 'all',
+      elementType: 'labels.icon',
+      stylers: [{ visibility: 'off' }]
+    },
+    {
+      featureType: 'administrative',
+      elementType: 'geometry.fill',
+      stylers: [{ color: '#000000' }, { lightness: 20 }]
+    },
+    {
+      featureType: 'administrative',
+      elementType: 'geometry.stroke',
+      stylers: [{ color: '#000000' }, { lightness: 17 }, { weight: 1.2 }]
+    },
+    {
+      featureType: 'landscape',
+      elementType: 'geometry',
+      stylers: [{ color: '#000000' }, { lightness: 20 }]
+    },
+    {
+      featureType: 'poi',
+      elementType: 'geometry',
+      stylers: [{ color: '#000000' }, { lightness: 21 }]
+    },
+    {
+      featureType: 'road.highway',
+      elementType: 'geometry.fill',
+      stylers: [{ color: '#000000' }, { lightness: 17 }]
+    },
+    {
+      featureType: 'road.highway',
+      elementType: 'geometry.stroke',
+      stylers: [{ color: '#000000' }, { lightness: 29 }, { weight: 0.2 }]
+    },
+    {
+      featureType: 'road.arterial',
+      elementType: 'geometry',
+      stylers: [{ color: '#000000' }, { lightness: 18 }]
+    },
+    {
+      featureType: 'road.local',
+      elementType: 'geometry',
+      stylers: [{ color: '#000000' }, { lightness: 16 }]
+    },
+    {
+      featureType: 'transit',
+      elementType: 'geometry',
+      stylers: [{ color: '#000000' }, { lightness: 19 }]
+    },
+    {
+      featureType: 'water',
+      elementType: 'geometry',
+      stylers: [{ color: '#000000' }, { lightness: 17 }]
+    }
+  ];
 
   const fetchRotas = async () => {
     try {
@@ -26,6 +171,44 @@ const RouteMap = () => {
     } catch (err) {
       setError('Erro ao carregar rotas');
       setLoading(false);
+    }
+  };
+
+  const fetchMateriais = async (rotaId) => {
+    try {
+      if (!user) {
+        setSnackbar({
+          open: true,
+          message: 'Você precisa estar logado para ver os materiais.',
+          severity: 'warning'
+        });
+        return;
+      }
+
+      console.log('=== fetchMateriais ===');
+      console.log('Token no localStorage:', localStorage.getItem('token'));
+      console.log('Buscando materiais para rota:', rotaId);
+      console.log('URL da API:', `${api.defaults.baseURL}/materials/rota/${rotaId}`);
+      
+      setLoadingMateriais(prev => ({ ...prev, [rotaId]: true }));
+      const response = await api.get(`/materials/rota/${rotaId}`);
+      console.log('Resposta da API para materiais:', response.data);
+      setMateriaisPorRota(prev => {
+        const newState = { ...prev, [rotaId]: response.data };
+        console.log('Novo estado de materiaisPorRota:', newState);
+        return newState;
+      });
+    } catch (error) {
+      console.error('Erro ao buscar materiais:', error);
+      console.error('Detalhes do erro:', error.response?.data);
+      console.error('Status do erro:', error.response?.status);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao buscar materiais: ' + (error.response?.data?.error || error.message || 'Erro desconhecido'),
+        severity: 'error'
+      });
+    } finally {
+      setLoadingMateriais(prev => ({ ...prev, [rotaId]: false }));
     }
   };
 
@@ -41,6 +224,12 @@ const RouteMap = () => {
   const handleInteresseClick = (rota) => {
     setSelectedRota(rota);
     setSelectedCidade('');
+    setMaterialInfo({
+      tipo: '',
+      quantidade: '',
+      peso: '',
+      observacoes: ''
+    });
     setOpenDialog(true);
   };
 
@@ -48,14 +237,38 @@ const RouteMap = () => {
     setOpenDialog(false);
     setSelectedRota(null);
     setSelectedCidade('');
+    setMaterialInfo({
+      tipo: '',
+      quantidade: '',
+      peso: '',
+      observacoes: ''
+    });
   };
 
-  const handleConfirmarInteresse = () => {
-    // Aqui você pode fazer uma chamada à API para registrar o interesse do usuário
-    setSnackbar({ open: true, message: 'Interesse registrado com sucesso!', severity: 'success' });
-    setOpenDialog(false);
-    setSelectedRota(null);
-    setSelectedCidade('');
+  const handleConfirmarInteresse = async () => {
+    try {
+      // Aqui você pode fazer uma chamada à API para registrar o interesse do usuário
+      const response = await api.post('/materials', {
+        rota_id: selectedRota.id,
+        cidade_id: selectedCidade,
+        ...materialInfo
+      });
+
+      if (response.status === 201) {
+        setSnackbar({ 
+          open: true, 
+          message: 'Material registrado com sucesso!', 
+          severity: 'success' 
+        });
+        handleDialogClose();
+      }
+    } catch (error) {
+      setSnackbar({ 
+        open: true, 
+        message: 'Erro ao registrar material: ' + (error.message || 'Erro desconhecido'), 
+        severity: 'error' 
+      });
+    }
   };
 
   const handleSnackbarClose = () => {
@@ -63,6 +276,7 @@ const RouteMap = () => {
   };
 
   const handleEditClick = (rota) => {
+    console.log('Editando rota:', rota);
     setSelectedRota(rota);
     setEditedRota({
       ...rota,
@@ -111,9 +325,73 @@ const RouteMap = () => {
     }
   };
 
+  const handleRotaClick = (rota) => {
+    setSelectedRota(rota);
+  };
+
+  const handleClose = () => {
+    setSelectedRota(null);
+  };
+
+  const handleEditMaterial = (material) => {
+    setSelectedMaterial(material);
+    setEditedMaterial({
+      ...material,
+      tipo: material.tipo,
+      quantidade: material.quantidade,
+      observacoes: material.observacoes || ''
+    });
+    setEditMaterialDialogOpen(true);
+  };
+
+  const handleDeleteMaterial = async (materialId) => {
+    if (window.confirm('Tem certeza que deseja excluir este material?')) {
+      try {
+        await api.delete(`/materials/${materialId}`);
+        setSnackbar({
+          open: true,
+          message: 'Material excluído com sucesso!',
+          severity: 'success'
+        });
+        // Atualizar a lista de materiais
+        if (selectedRota) {
+          fetchMateriais(selectedRota.id);
+        }
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: 'Erro ao excluir material: ' + (error.response?.data?.error || error.message),
+          severity: 'error'
+        });
+      }
+    }
+  };
+
+  const handleSaveMaterial = async () => {
+    try {
+      await api.put(`/materials/${selectedMaterial.id}`, editedMaterial);
+      setSnackbar({
+        open: true,
+        message: 'Material atualizado com sucesso!',
+        severity: 'success'
+      });
+      setEditMaterialDialogOpen(false);
+      // Atualizar a lista de materiais
+      if (selectedRota) {
+        fetchMateriais(selectedRota.id);
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Erro ao atualizar material: ' + (error.response?.data?.error || error.message),
+        severity: 'error'
+      });
+    }
+  };
+
   if (loading) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <Typography>Carregando rotas...</Typography>
       </Box>
     );
@@ -121,292 +399,200 @@ const RouteMap = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
         <Typography color="error">{error}</Typography>
-      </Box>
-    );
-  }
-
-  if (rotas.length === 0) {
-    return (
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LocalShippingIcon sx={{ color: '#1976d2', fontSize: 32 }} />
-          Rotas programadas
-        </Typography>
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            borderRadius: 2,
-            backgroundColor: '#f8f9fa',
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="body1" color="text.secondary">
-            Não há rotas ativas no momento.
-          </Typography>
-        </Paper>
       </Box>
     );
   }
 
   return (
     <Box sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}>
-        <LocalShippingIcon sx={{ color: '#1976d2', fontSize: 32 }} />
-        Rotas programadas
+      <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2', textAlign: 'left' }}>
+        Rotas Programadas
       </Typography>
-      <Grid container spacing={3}>
-        {rotas.map((rota) => {
-          // Montar lista de cidades da rota
-          const cidadesRota = [
-            { id: rota.cidade_origem, nome: getCidadeNome(rota.cidade_origem) },
-            ...((rota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
-            { id: rota.cidade_destino, nome: getCidadeNome(rota.cidade_destino) },
-            ...((rota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
-          ];
-          // Remover duplicatas
-          const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
-          return (
-            <Grid item xs={12} key={rota.id}>
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 3,
-                  borderRadius: 2,
-                  backgroundColor: '#f8f9fa',
-                  '&:hover': {
-                    boxShadow: 6,
-                    transform: 'translateY(-2px)',
-                    transition: 'all 0.3s ease-in-out'
-                  }
-                }}
-              >
-                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                    {rota.identificacao}
-                  </Typography>
-                </Box>
-                <Grid container spacing={2} alignItems="center">
-                  {/* Origem */}
-                  <Grid item xs={12} sm={4}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <LocationOn color="primary" />
-                      <Box>
-                        <Typography variant="subtitle2" color="text.secondary">
-                          Origem
-                        </Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                          {getCidadeNome(rota.cidade_origem)}
-                        </Typography>
+      {rotas.length === 0 ? (
+        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+          Nenhuma rota ativa no momento.
+        </Typography>
+      ) : (
+        <Grid container spacing={3}>
+          {(rotas || []).map((rota) => {
+            const materiais = materiaisPorRota[rota.id] || [];
+            const isLoadingMateriais = loadingMateriais[rota.id];
+            
+            return (
+              <Grid item xs={12} key={rota.id}>
+                <Paper elevation={3} sx={{ p: 3, backgroundColor: '#f8f9fa' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Box sx={{ color: '#666', display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <span style={{ fontSize: 14 }}>
+                        <strong>Rota:</strong> {rota.identificacao}
+                      </span>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, justifyContent: 'center' }}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">Cidade de Origem</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <LocationOn sx={{ color: '#1976d2' }} />
+                          <Typography variant="body1" sx={{ fontWeight: 'medium' }}>{getCidadeNome(rota.cidade_origem)}</Typography>
+                        </Box>
+                      </Box>
+                      <LocalShippingIcon sx={{ color: '#1976d2', mx: 4, mt: 2 }} />
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">Cidade de Destino</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 'medium' }}>{getCidadeNome(rota.cidade_destino)}</Typography>
+                          <LocationOn sx={{ color: '#c2185b' }} />
+                        </Box>
                       </Box>
                     </Box>
-                  </Grid>
-                  {/* Seta */}
-                  <Grid item xs={12} sm={1} sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <ArrowForward sx={{ color: '#666' }} />
-                  </Grid>
-                  {/* Destino */}
-                  <Grid item xs={12} sm={4}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <LocationOn color="secondary" />
-                      <Box>
-                        <Typography variant="subtitle2" color="text.secondary">
-                          Destino
-                        </Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                          {getCidadeNome(rota.cidade_destino)}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Grid>
-                  {/* Datas */}
-                  <Grid item xs={12} sm={3}>
-                    <Box>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        Período
-                      </Typography>
-                      <Typography variant="body2">
+
+                    <Box sx={{ color: '#666', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+                      <span style={{ fontSize: 14 }}>
                         Saída: {new Date(rota.data_saida).toLocaleDateString()}
-                      </Typography>
-                      <Typography variant="body2">
+                      </span>
+                      <span style={{ fontSize: 14 }}>
                         Retorno: {new Date(rota.data_retorno).toLocaleDateString()}
+                      </span>
+                    </Box>
+                  </Box>
+                  <Divider sx={{ my: 2 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 4, mt: 2 }}>
+                    {/* Percurso de Ida */}
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                      <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        Percurso de Ida <ForwardIcon sx={{ fontSize: 24, verticalAlign: 'middle' }} />
                       </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-start' }}>
+                        <Chip label={getCidadeNome(rota.cidade_origem)} size="small" color="primary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                        {(rota.cidades_intermediarias_ida || []).map((cid, idx) => (
+                          <Chip key={idx} label={getCidadeNome(cid)} size="small" color="primary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                        ))}
+                        <Chip label={getCidadeNome(rota.cidade_destino)} size="small" color="primary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                      </Box>
                     </Box>
+
+                    {/* Separador Vertical */}
+                    <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
+
+                    {/* Percurso de Retorno */}
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                      <Typography variant="subtitle2" color="secondary" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        <ForwardIcon sx={{ fontSize: 24, verticalAlign: 'middle', transform: 'rotate(180deg)' }} /> Percurso de Retorno
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end' }}>
+                        <Chip label={getCidadeNome(rota.cidade_origem)} size="small" color="secondary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                        {(rota.cidades_intermediarias_volta || []).map((cid, idx) => (
+                          <Chip key={idx} label={getCidadeNome(cid)} size="small" color="secondary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                        ))}
+                        <Chip label={getCidadeNome(rota.cidade_destino)} size="small" color="secondary" variant="outlined" icon={<LocationOn sx={{ fontSize: 16 }} />} />
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Grid container spacing={1}>
+                    {/* Seção de Materiais */}
+                    <Grid item xs={12}>
+                      {isLoadingMateriais ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 1 }}>
+                          <CircularProgress size={20} />
+                        </Box>
+                      ) : materiais.length > 0 && (
+                        <TableContainer component={Paper} sx={{ mt: 1 }}>
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Tipo</TableCell>
+                                <TableCell>Origem</TableCell>
+                                <TableCell>Destino</TableCell>
+                                <TableCell align="right">Quantidade</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell>Requisitante</TableCell>
+                                <TableCell align="center">Ações</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {materiais.map((material) => (
+                                <TableRow key={material.id}>
+                                  <TableCell>{material.tipo}</TableCell>
+                                  <TableCell>{getCidadeNome(material.cidade_origem_id)}</TableCell>
+                                  <TableCell>{getCidadeNome(material.cidade_destino_id)}</TableCell>
+                                  <TableCell align="right">{material.quantidade}</TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      label={material.status}
+                                      color={material.status === 'pendente' ? 'warning' : 'success'}
+                                      size="small"
+                                    />
+                                  </TableCell>
+                                  <TableCell>{material.requisitante}</TableCell>
+                                  <TableCell align="center">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleEditMaterial(material)}
+                                      color="primary"
+                                    >
+                                      <Edit fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleDeleteMaterial(material.id)}
+                                      color="error"
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
+                    </Grid>
                   </Grid>
-                </Grid>
-                {/* Cidades Intermediárias */}
-                {(rota.cidades_intermediarias_ida?.length > 0 || rota.cidades_intermediarias_volta?.length > 0) && (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Box sx={{ mt: 2 }}>
-                      {rota.cidades_intermediarias_ida?.length > 0 && (
-                        <Box sx={{ mb: 1 }}>
-                          <Typography variant="subtitle2" color="primary" gutterBottom>
-                            Percurso de Ida
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {rota.cidades_intermediarias_ida.map((cidadeId, index) => (
-                              <Chip
-                                key={`ida-${index}`}
-                                label={getCidadeNome(cidadeId)}
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                              />
-                            ))}
-                          </Box>
-                        </Box>
-                      )}
-                      {rota.cidades_intermediarias_volta?.length > 0 && (
-                        <Box>
-                          <Typography variant="subtitle2" color="secondary" gutterBottom>
-                            Percurso de Retorno
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {rota.cidades_intermediarias_volta.map((cidadeId, index) => (
-                              <Chip
-                                key={`volta-${index}`}
-                                label={getCidadeNome(cidadeId)}
-                                size="small"
-                                color="secondary"
-                                variant="outlined"
-                              />
-                            ))}
-                          </Box>
-                        </Box>
-                      )}
-                    </Box>
-                  </>
-                )}
-              </Paper>
-            </Grid>
-          );
-        })}
-      </Grid>
-      {/* Dialog para interesse */}
-      <Dialog open={openDialog} onClose={handleDialogClose}>
-        <DialogTitle>Tenho interesse em enviar material</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Selecione a cidade</InputLabel>
-            <Select
-              value={selectedCidade}
-              onChange={e => setSelectedCidade(e.target.value)}
-              label="Selecione a cidade"
-            >
-              {selectedRota && (() => {
-                // Montar lista de cidades da rota
-                const cidadesRota = [
-                  { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
-                  ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
-                  { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
-                  ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
-                ];
-                // Remover duplicatas
-                const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
-                return cidadesUnicas.map(cidade => (
-                  <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
-                ));
-              })()}
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose}>Cancelar</Button>
-          <Button onClick={handleConfirmarInteresse} disabled={!selectedCidade} variant="contained">Confirmar Interesse</Button>
-        </DialogActions>
-      </Dialog>
+                </Paper>
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
       <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={handleSnackbarClose} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
         <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <Dialog 
-        open={editDialogOpen} 
-        onClose={() => setEditDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Editar Rota</DialogTitle>
+
+      {/* Dialog para edição de material */}
+      <Dialog open={editMaterialDialogOpen} onClose={() => setEditMaterialDialogOpen(false)}>
+        <DialogTitle>Editar Material</DialogTitle>
         <DialogContent>
-          {editedRota && (
-            <Box sx={{ pt: 2 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Identificação"
-                    value={editedRota.identificacao || ''}
-                    onChange={(e) => setEditedRota({...editedRota, identificacao: e.target.value})}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    options={cidades}
-                    getOptionLabel={(option) => option.nome}
-                    value={editedRota.cidade_origem}
-                    onChange={(_, newValue) => setEditedRota({...editedRota, cidade_origem: newValue})}
-                    renderInput={(params) => <TextField {...params} label="Cidade de Origem" />}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    options={cidades}
-                    getOptionLabel={(option) => option.nome}
-                    value={editedRota.cidade_destino}
-                    onChange={(_, newValue) => setEditedRota({...editedRota, cidade_destino: newValue})}
-                    renderInput={(params) => <TextField {...params} label="Cidade de Destino" />}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    type="date"
-                    label="Data de Saída"
-                    value={editedRota.data_saida ? editedRota.data_saida.split('T')[0] : ''}
-                    onChange={(e) => setEditedRota({...editedRota, data_saida: e.target.value})}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    type="date"
-                    label="Data de Retorno"
-                    value={editedRota.data_retorno ? editedRota.data_retorno.split('T')[0] : ''}
-                    onChange={(e) => setEditedRota({...editedRota, data_retorno: e.target.value})}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Autocomplete
-                    multiple
-                    options={cidades}
-                    getOptionLabel={(option) => option.nome}
-                    value={editedRota.cidades_intermediarias_ida}
-                    onChange={(_, newValue) => setEditedRota({...editedRota, cidades_intermediarias_ida: newValue})}
-                    renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Ida" />}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Autocomplete
-                    multiple
-                    options={cidades}
-                    getOptionLabel={(option) => option.nome}
-                    value={editedRota.cidades_intermediarias_volta}
-                    onChange={(_, newValue) => setEditedRota({...editedRota, cidades_intermediarias_volta: newValue})}
-                    renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Retorno" />}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-          )}
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Tipo"
+              value={editedMaterial?.tipo || ''}
+              onChange={(e) => setEditedMaterial({ ...editedMaterial, tipo: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Quantidade"
+              type="number"
+              value={editedMaterial?.quantidade || ''}
+              onChange={(e) => setEditedMaterial({ ...editedMaterial, quantidade: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Observações"
+              value={editedMaterial?.observacoes || ''}
+              onChange={(e) => setEditedMaterial({ ...editedMaterial, observacoes: e.target.value })}
+              multiline
+              rows={4}
+              fullWidth
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
-          <Button onClick={handleSaveEdit} variant="contained" color="primary">
+          <Button onClick={() => setEditMaterialDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={handleSaveMaterial} variant="contained" color="primary">
             Salvar
           </Button>
         </DialogActions>

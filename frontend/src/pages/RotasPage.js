@@ -12,9 +12,29 @@ import {
   Alert,
   IconButton,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Divider,
+  CircularProgress,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Chip,
+  Collapse,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
-import { Save as SaveIcon, Edit as EditIcon } from '@mui/icons-material';
+import { 
+  Save as SaveIcon, 
+  Edit as EditIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  Delete as DeleteIcon
+} from '@mui/icons-material';
 import { cidadesPI } from '../services/cidadesPI';
 import api from '../services/api';
 
@@ -25,6 +45,17 @@ const RotasPage = () => {
   const [cidades, setCidades] = useState(cidadesPI);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [editingRota, setEditingRota] = useState(null);
+  const [materiaisPorRota, setMateriaisPorRota] = useState({});
+  const [loadingMateriais, setLoadingMateriais] = useState({});
+  const [expandedRotas, setExpandedRotas] = useState({});
+  const [editMaterialDialogOpen, setEditMaterialDialogOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [editedMaterial, setEditedMaterial] = useState(null);
+
+  const getCidadeNome = (cidadeId) => {
+    const cidade = cidades.find(c => String(c.id) === String(cidadeId));
+    return cidade ? cidade.nome : 'Cidade não encontrada';
+  };
 
   useEffect(() => {
     fetchRotas();
@@ -34,10 +65,31 @@ const RotasPage = () => {
     try {
       const response = await api.get('/routes');
       setRotas(response.data);
+      // Buscar materiais para cada rota
+      response.data.forEach(rota => {
+        fetchMateriais(rota.id);
+      });
       setLoading(false);
     } catch (err) {
       setError('Erro ao carregar rotas');
       setLoading(false);
+    }
+  };
+
+  const fetchMateriais = async (rotaId) => {
+    try {
+      setLoadingMateriais(prev => ({ ...prev, [rotaId]: true }));
+      const response = await api.get(`/materials/rota/${rotaId}`);
+      setMateriaisPorRota(prev => ({ ...prev, [rotaId]: response.data }));
+    } catch (error) {
+      console.error('Erro ao buscar materiais:', error);
+      setSnackbar({
+        open: true,
+        message: 'Erro ao buscar materiais: ' + (error.response?.data?.error || error.message || 'Erro desconhecido'),
+        severity: 'error'
+      });
+    } finally {
+      setLoadingMateriais(prev => ({ ...prev, [rotaId]: false }));
     }
   };
 
@@ -127,6 +179,69 @@ const RotasPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const handleToggleExpand = (rotaId) => {
+    setExpandedRotas(prev => ({
+      ...prev,
+      [rotaId]: !prev[rotaId]
+    }));
+  };
+
+  const handleEditMaterial = (material) => {
+    setSelectedMaterial(material);
+    setEditedMaterial({
+      ...material,
+      tipo: material.tipo,
+      quantidade: material.quantidade,
+      observacoes: material.observacoes || ''
+    });
+    setEditMaterialDialogOpen(true);
+  };
+
+  const handleDeleteMaterial = async (materialId) => {
+    if (window.confirm('Tem certeza que deseja excluir este material?')) {
+      try {
+        await api.delete(`/materials/${materialId}`);
+        setSnackbar({
+          open: true,
+          message: 'Material excluído com sucesso!',
+          severity: 'success'
+        });
+        // Atualizar a lista de materiais
+        if (selectedMaterial) {
+          fetchMateriais(selectedMaterial.rota_id);
+        }
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: 'Erro ao excluir material: ' + (error.response?.data?.error || error.message),
+          severity: 'error'
+        });
+      }
+    }
+  };
+
+  const handleSaveMaterial = async () => {
+    try {
+      await api.put(`/materials/${selectedMaterial.id}`, editedMaterial);
+      setSnackbar({
+        open: true,
+        message: 'Material atualizado com sucesso!',
+        severity: 'success'
+      });
+      setEditMaterialDialogOpen(false);
+      // Atualizar a lista de materiais
+      if (selectedMaterial) {
+        fetchMateriais(selectedMaterial.rota_id);
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Erro ao atualizar material: ' + (error.response?.data?.error || error.message),
+        severity: 'error'
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -144,10 +259,10 @@ const RotasPage = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
+    <Container maxWidth="md" sx={{ py: 2 }}>
+      <Box sx={{ textAlign: 'center', mb: 2 }}>
         <Typography 
-          variant="h4" 
+          variant="h5" 
           component="h1" 
           gutterBottom 
           sx={{ 
@@ -160,140 +275,230 @@ const RotasPage = () => {
         </Typography>
       </Box>
 
-      <Grid container spacing={3}>
-        {rotas.map((rota) => (
-          <Grid item xs={12} key={rota.id}>
-            <Paper 
-              elevation={3} 
-              sx={{ 
-                p: 3,
-                backgroundColor: '#f8f9fa',
-                '&:hover': {
-                  boxShadow: 6,
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.3s ease-in-out'
-                }
-              }}
-            >
-              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                  Rota {rota.identificacao}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={rota.status === 'ativo'}
-                        onChange={() => handleStatusChange(rota)}
-                        color="primary"
-                      />
-                    }
-                    label={rota.status === 'ativo' ? 'Ativa' : 'Inativa'}
-                  />
-                  {editingRota?.id === rota.id ? (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={<SaveIcon />}
-                      onClick={() => handleSave(editingRota)}
-                    >
-                      Salvar
-                    </Button>
-                  ) : (
+      <Grid container spacing={2}>
+        {rotas.map((rota) => {
+          const materiais = materiaisPorRota[rota.id] || [];
+          const isLoadingMateriais = loadingMateriais[rota.id];
+          const isExpanded = expandedRotas[rota.id];
+          
+          return (
+            <Grid item xs={12} key={rota.id}>
+              <Paper 
+                elevation={2} 
+                sx={{ 
+                  p: 2,
+                  backgroundColor: '#f8f9fa',
+                  '&:hover': {
+                    boxShadow: 4,
+                    transform: 'translateY(-1px)',
+                    transition: 'all 0.3s ease-in-out'
+                  }
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <IconButton 
-                      onClick={() => handleEditClick(rota)}
-                      color="primary"
+                      onClick={() => handleToggleExpand(rota.id)}
+                      size="small"
+                      sx={{ 
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.3s'
+                      }}
                     >
-                      <EditIcon />
+                      <ExpandMoreIcon />
                     </IconButton>
-                  )}
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                      Rota {rota.identificacao}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={rota.status === 'ativo'}
+                          onChange={() => handleStatusChange(rota)}
+                          color="primary"
+                          size="small"
+                        />
+                      }
+                      label={rota.status === 'ativo' ? 'Ativa' : 'Inativa'}
+                    />
+                    {editingRota?.id === rota.id ? (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<SaveIcon />}
+                        onClick={() => handleSave(editingRota)}
+                        size="small"
+                      >
+                        Salvar
+                      </Button>
+                    ) : (
+                      <IconButton 
+                        onClick={() => handleEditClick(rota)}
+                        color="primary"
+                        size="small"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    )}
+                  </Box>
                 </Box>
-              </Box>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Identificação"
-                    value={editingRota?.id === rota.id ? editingRota.identificacao : rota.identificacao}
-                    onChange={(e) => setEditingRota({...editingRota, identificacao: e.target.value})}
-                    disabled={editingRota?.id !== rota.id}
-                  />
-                </Grid>
+                <Collapse in={isExpanded}>
+                  <Grid container spacing={1}>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Identificação"
+                        value={editingRota?.id === rota.id ? editingRota.identificacao : rota.identificacao}
+                        onChange={(e) => setEditingRota({...editingRota, identificacao: e.target.value})}
+                        disabled={editingRota?.id !== rota.id}
+                        size="small"
+                      />
+                    </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    options={cidades}
-                    getOptionLabel={(option) => option.nome}
-                    value={editingRota?.id === rota.id ? editingRota.cidade_origem : cidades.find(c => String(c.id) === String(rota.cidade_origem))}
-                    onChange={(_, newValue) => setEditingRota({...editingRota, cidade_origem: newValue})}
-                    renderInput={(params) => <TextField {...params} label="Cidade de Origem" />}
-                    disabled={editingRota?.id !== rota.id}
-                  />
-                </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Autocomplete
+                        options={cidades}
+                        getOptionLabel={(option) => option.nome}
+                        value={editingRota?.id === rota.id ? editingRota.cidade_origem : cidades.find(c => String(c.id) === String(rota.cidade_origem))}
+                        onChange={(_, newValue) => setEditingRota({...editingRota, cidade_origem: newValue})}
+                        renderInput={(params) => <TextField {...params} label="Cidade de Origem" size="small" />}
+                        disabled={editingRota?.id !== rota.id}
+                      />
+                    </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <Autocomplete
-                    options={cidades}
-                    getOptionLabel={(option) => option.nome}
-                    value={editingRota?.id === rota.id ? editingRota.cidade_destino : cidades.find(c => String(c.id) === String(rota.cidade_destino))}
-                    onChange={(_, newValue) => setEditingRota({...editingRota, cidade_destino: newValue})}
-                    renderInput={(params) => <TextField {...params} label="Cidade de Destino" />}
-                    disabled={editingRota?.id !== rota.id}
-                  />
-                </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Autocomplete
+                        options={cidades}
+                        getOptionLabel={(option) => option.nome}
+                        value={editingRota?.id === rota.id ? editingRota.cidade_destino : cidades.find(c => String(c.id) === String(rota.cidade_destino))}
+                        onChange={(_, newValue) => setEditingRota({...editingRota, cidade_destino: newValue})}
+                        renderInput={(params) => <TextField {...params} label="Cidade de Destino" size="small" />}
+                        disabled={editingRota?.id !== rota.id}
+                      />
+                    </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    type="date"
-                    label="Data de Saída"
-                    value={editingRota?.id === rota.id ? editingRota.data_saida.split('T')[0] : rota.data_saida.split('T')[0]}
-                    onChange={(e) => setEditingRota({...editingRota, data_saida: e.target.value})}
-                    InputLabelProps={{ shrink: true }}
-                    disabled={editingRota?.id !== rota.id}
-                  />
-                </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Data de Saída"
+                        value={editingRota?.id === rota.id ? editingRota.data_saida.split('T')[0] : rota.data_saida.split('T')[0]}
+                        onChange={(e) => setEditingRota({...editingRota, data_saida: e.target.value})}
+                        InputLabelProps={{ shrink: true }}
+                        disabled={editingRota?.id !== rota.id}
+                        size="small"
+                      />
+                    </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    type="date"
-                    label="Data de Retorno"
-                    value={editingRota?.id === rota.id ? editingRota.data_retorno.split('T')[0] : rota.data_retorno.split('T')[0]}
-                    onChange={(e) => setEditingRota({...editingRota, data_retorno: e.target.value})}
-                    InputLabelProps={{ shrink: true }}
-                    disabled={editingRota?.id !== rota.id}
-                  />
-                </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Data de Retorno"
+                        value={editingRota?.id === rota.id ? editingRota.data_retorno.split('T')[0] : rota.data_retorno.split('T')[0]}
+                        onChange={(e) => setEditingRota({...editingRota, data_retorno: e.target.value})}
+                        InputLabelProps={{ shrink: true }}
+                        disabled={editingRota?.id !== rota.id}
+                        size="small"
+                      />
+                    </Grid>
 
-                <Grid item xs={12}>
-                  <Autocomplete
-                    multiple
-                    options={cidades}
-                    getOptionLabel={(option) => option.nome}
-                    value={editingRota?.id === rota.id ? editingRota.cidades_intermediarias_ida : (rota.cidades_intermediarias_ida || []).map(id => cidades.find(c => String(c.id) === String(id))).filter(Boolean)}
-                    onChange={(_, newValue) => setEditingRota({...editingRota, cidades_intermediarias_ida: newValue})}
-                    renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Ida" />}
-                    disabled={editingRota?.id !== rota.id}
-                  />
-                </Grid>
+                    <Grid item xs={12}>
+                      <Autocomplete
+                        multiple
+                        options={cidades}
+                        getOptionLabel={(option) => option.nome}
+                        value={editingRota?.id === rota.id ? editingRota.cidades_intermediarias_ida : (rota.cidades_intermediarias_ida || []).map(id => cidades.find(c => String(c.id) === String(id))).filter(Boolean)}
+                        onChange={(_, newValue) => setEditingRota({...editingRota, cidades_intermediarias_ida: newValue})}
+                        renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Ida" size="small" />}
+                        disabled={editingRota?.id !== rota.id}
+                      />
+                    </Grid>
 
-                <Grid item xs={12}>
-                  <Autocomplete
-                    multiple
-                    options={cidades}
-                    getOptionLabel={(option) => option.nome}
-                    value={editingRota?.id === rota.id ? editingRota.cidades_intermediarias_volta : (rota.cidades_intermediarias_volta || []).map(id => cidades.find(c => String(c.id) === String(id))).filter(Boolean)}
-                    onChange={(_, newValue) => setEditingRota({...editingRota, cidades_intermediarias_volta: newValue})}
-                    renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Retorno" />}
-                    disabled={editingRota?.id !== rota.id}
-                  />
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-        ))}
+                    <Grid item xs={12}>
+                      <Autocomplete
+                        multiple
+                        options={cidades}
+                        getOptionLabel={(option) => option.nome}
+                        value={editingRota?.id === rota.id ? editingRota.cidades_intermediarias_volta : (rota.cidades_intermediarias_volta || []).map(id => cidades.find(c => String(c.id) === String(id))).filter(Boolean)}
+                        onChange={(_, newValue) => setEditingRota({...editingRota, cidades_intermediarias_volta: newValue})}
+                        renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Retorno" size="small" />}
+                        disabled={editingRota?.id !== rota.id}
+                      />
+                    </Grid>
+
+                    {/* Seção de Materiais */}
+                    <Grid item xs={12}>
+                      <Divider sx={{ my: 1 }} />
+                      {isLoadingMateriais[rota.id] ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 1 }}>
+                          <CircularProgress size={20} />
+                        </Box>
+                      ) : !materiaisPorRota[rota.id] || materiaisPorRota[rota.id].length === 0 ? (
+                        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 1 }}>
+                          Nenhum material cadastrado para esta rota.
+                        </Typography>
+                      ) : (
+                        <TableContainer component={Paper} sx={{ mt: 1 }}>
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Tipo</TableCell>
+                                <TableCell>Origem</TableCell>
+                                <TableCell>Destino</TableCell>
+                                <TableCell align="right">Quantidade</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell>Requisitante</TableCell>
+                                <TableCell align="center">Ações</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {(materiaisPorRota[rota.id] || []).map((material) => (
+                                <TableRow key={material.id}>
+                                  <TableCell>{material.tipo}</TableCell>
+                                  <TableCell>{getCidadeNome(material.cidade_origem_id)}</TableCell>
+                                  <TableCell>{getCidadeNome(material.cidade_destino_id)}</TableCell>
+                                  <TableCell align="right">{material.quantidade}</TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      label={material.status}
+                                      color={material.status === 'pendente' ? 'warning' : 'success'}
+                                      size="small"
+                                    />
+                                  </TableCell>
+                                  <TableCell>{material.requisitante}</TableCell>
+                                  <TableCell align="center">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleEditMaterial(material)}
+                                      color="primary"
+                                    >
+                                      <EditIcon fontSize="small" />
+                                    </IconButton>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleDeleteMaterial(material.id)}
+                                      color="error"
+                                    >
+                                      <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
+                    </Grid>
+                  </Grid>
+                </Collapse>
+              </Paper>
+            </Grid>
+          );
+        })}
       </Grid>
 
       <Snackbar 
@@ -306,6 +511,42 @@ const RotasPage = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Dialog para edição de material */}
+      <Dialog open={editMaterialDialogOpen} onClose={() => setEditMaterialDialogOpen(false)}>
+        <DialogTitle>Editar Material</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Tipo"
+              value={editedMaterial?.tipo || ''}
+              onChange={(e) => setEditedMaterial({ ...editedMaterial, tipo: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Quantidade"
+              type="number"
+              value={editedMaterial?.quantidade || ''}
+              onChange={(e) => setEditedMaterial({ ...editedMaterial, quantidade: e.target.value })}
+              fullWidth
+            />
+            <TextField
+              label="Observações"
+              value={editedMaterial?.observacoes || ''}
+              onChange={(e) => setEditedMaterial({ ...editedMaterial, observacoes: e.target.value })}
+              multiline
+              rows={4}
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditMaterialDialogOpen(false)}>Cancelar</Button>
+          <Button onClick={handleSaveMaterial} variant="contained" color="primary">
+            Salvar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

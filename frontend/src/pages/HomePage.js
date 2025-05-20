@@ -1,5 +1,5 @@
-import React from 'react';
-import { Container, Typography, Box, Button, Grid, Link as RouterLink } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Container, Typography, Box, Button, Grid, Link as RouterLink, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, TextField, Snackbar, Alert } from '@mui/material';
 import {
   Add as AddIcon,
   List as ListIcon,
@@ -8,17 +8,154 @@ import {
   Person as PersonIcon,
   DirectionsCar as DirectionsCarIcon,
   DirectionsBus as BusIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  LocationOn,
+  ArrowForward
 } from '@mui/icons-material';
 import { Link, useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import RouteMap from '../components/RouteMap';
+import api from '../services/api';
+import { cidadesPI } from '../services/cidadesPI';
 
 const BUTTON_COLOR = '#FFA500';
 
 const HomePage = () => {
   const { user } = useAuth();
   const history = useHistory();
+  const [rotas, setRotas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedRota, setSelectedRota] = useState(null);
+  const [selectedCidade, setSelectedCidade] = useState('');
+  const [materialInfo, setMaterialInfo] = useState({
+    tipo: '',
+    quantidade: '',
+    observacoes: '',
+    cidade_destino: ''
+  });
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  useEffect(() => {
+    const fetchRotas = async () => {
+      try {
+        const response = await api.get('/routes?home=true');
+        setRotas(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError('Erro ao carregar rotas');
+        setLoading(false);
+      }
+    };
+
+    fetchRotas();
+  }, []);
+
+  const getCidadeNome = (id) => {
+    const cidade = cidadesPI.find(c => String(c.id) === String(id));
+    return cidade ? cidade.nome : id;
+  };
+
+  const handleInteresseClick = (rota) => {
+    console.log('Rota selecionada:', rota);
+    setSelectedRota(rota);
+    setSelectedCidade('');
+    setMaterialInfo({
+      tipo: '',
+      quantidade: '',
+      observacoes: '',
+      cidade_destino: ''
+    });
+    setOpenDialog(true);
+  };
+
+  const handleDialogClose = () => {
+    setOpenDialog(false);
+    setSelectedRota(null);
+    setSelectedCidade('');
+    setMaterialInfo({
+      tipo: '',
+      quantidade: '',
+      observacoes: '',
+      cidade_destino: ''
+    });
+  };
+
+  const isFormValid = () => {
+    const isValid = selectedCidade && 
+                   materialInfo.tipo && 
+                   materialInfo.quantidade && 
+                   materialInfo.cidade_destino;
+    
+    console.log('Validação do formulário:', {
+      selectedCidade,
+      tipo: materialInfo.tipo,
+      quantidade: materialInfo.quantidade,
+      cidade_destino: materialInfo.cidade_destino,
+      isValid
+    });
+    
+    return isValid;
+  };
+
+  const handleConfirmarInteresse = async () => {
+    try {
+      if (!selectedRota || !selectedCidade || !materialInfo.cidade_destino || !materialInfo.tipo || !materialInfo.quantidade) {
+        setSnackbar({
+          open: true,
+          message: 'Por favor, preencha todos os campos obrigatórios',
+          severity: 'warning'
+        });
+        return;
+      }
+
+      const response = await api.post('/materials', {
+        rota_id: selectedRota.id,
+        cidade_origem_id: selectedCidade,
+        cidade_destino_id: materialInfo.cidade_destino,
+        tipo: materialInfo.tipo,
+        quantidade: parseFloat(materialInfo.quantidade),
+        observacoes: materialInfo.observacoes || ''
+      });
+
+      if (response.status === 201) {
+        setSnackbar({ 
+          open: true, 
+          message: 'Material registrado com sucesso!', 
+          severity: 'success' 
+        });
+        handleDialogClose();
+      }
+    } catch (error) {
+      console.error('Erro ao registrar material:', error);
+      setSnackbar({ 
+        open: true, 
+        message: 'Erro ao registrar material: ' + (error.response?.data?.error || error.message || 'Erro desconhecido'), 
+        severity: 'error' 
+      });
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography>Carregando rotas...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -43,7 +180,7 @@ const HomePage = () => {
             color: 'text.secondary'
           }}
         >
-          Requisite e Gerencie Suas Viagens Aqui!
+          Gerencie suas viagens e envios de encomendas aqui.
         </Typography>
       </Box>
 
@@ -210,8 +347,15 @@ const HomePage = () => {
             fullWidth
             startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
             onClick={() => {
-              // Aqui você pode abrir um modal ou redirecionar para uma página onde o usuário escolhe a rota e a cidade
-              alert('Funcionalidade em desenvolvimento: Escolha uma rota e cidade para enviar materiais.');
+              if (rotas.length === 0) {
+                setSnackbar({
+                  open: true,
+                  message: 'Não há rotas disponíveis para envio de material.',
+                  severity: 'warning'
+                });
+                return;
+              }
+              handleInteresseClick(rotas[0]);
             }}
             sx={{
               bgcolor: '#FF9800',
@@ -231,6 +375,123 @@ const HomePage = () => {
       </Grid>
 
       <RouteMap />
+
+      {/* Dialog para envio de material */}
+      <Dialog 
+        open={openDialog} 
+        onClose={handleDialogClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <LocalShippingIcon color="primary" />
+            <Typography variant="h6">Enviar Material</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Rota: {selectedRota?.identificacao}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {getCidadeNome(selectedRota?.cidade_origem)} → {getCidadeNome(selectedRota?.cidade_destino)}
+            </Typography>
+          </Box>
+          <Box sx={{ mt: 3 }}>
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Cidade de Coleta</InputLabel>
+              <Select
+                value={selectedCidade}
+                onChange={e => setSelectedCidade(e.target.value)}
+                label="Cidade de Coleta"
+              >
+                {selectedRota && (() => {
+                  const cidadesRota = [
+                    { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
+                    ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
+                    { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
+                    ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
+                  ];
+                  const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
+                  return cidadesUnicas.map(cidade => (
+                    <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
+                  ));
+                })()}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Cidade de Destino</InputLabel>
+              <Select
+                value={materialInfo.cidade_destino}
+                onChange={e => setMaterialInfo({...materialInfo, cidade_destino: e.target.value})}
+                label="Cidade de Destino"
+              >
+                {selectedRota && (() => {
+                  const cidadesRota = [
+                    { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
+                    ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
+                    { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
+                    ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
+                  ];
+                  const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
+                  return cidadesUnicas.map(cidade => (
+                    <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
+                  ));
+                })()}
+              </Select>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              label="Tipo de Material"
+              value={materialInfo.tipo}
+              onChange={(e) => setMaterialInfo({...materialInfo, tipo: e.target.value})}
+              sx={{ mb: 2 }}
+            />
+
+            <TextField
+              fullWidth
+              label="Quantidade"
+              type="number"
+              value={materialInfo.quantidade}
+              onChange={(e) => setMaterialInfo({...materialInfo, quantidade: e.target.value})}
+              sx={{ mb: 2 }}
+            />
+
+            <TextField
+              fullWidth
+              label="Observações"
+              multiline
+              rows={3}
+              value={materialInfo.observacoes}
+              onChange={(e) => setMaterialInfo({...materialInfo, observacoes: e.target.value})}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancelar</Button>
+          <Button 
+            onClick={handleConfirmarInteresse} 
+            disabled={!isFormValid()} 
+            variant="contained"
+          >
+            Confirmar Envio
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={4000} 
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
