@@ -22,6 +22,22 @@ class LoginAttemptModel {
         }
     }
 
+    static async getAllAttempts(minutes = 60) {
+        const query = `
+            SELECT * FROM tentativas_login 
+            WHERE data_tentativa > NOW() - INTERVAL '${minutes} minutes'
+            ORDER BY data_tentativa DESC
+        `;
+        
+        try {
+            const result = await pool.query(query);
+            return result.rows;
+        } catch (error) {
+            console.error('Erro ao buscar tentativas de login:', error);
+            throw error;
+        }
+    }
+
     static async getRecentAttempts(email, minutes = 5) {
         const query = `
             SELECT * FROM tentativas_login 

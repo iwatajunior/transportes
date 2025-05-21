@@ -1,8 +1,7 @@
 const express = require('express');
-const MaterialController = require('../controllers/materialController');
-const { authenticateToken } = require('../middlewares/authMiddleware');
-
 const router = express.Router();
+const { authenticateToken } = require('../middleware/authMiddleware');
+const materialController = require('../controllers/materialController');
 
 // Middleware de logging
 router.use((req, res, next) => {
@@ -19,15 +18,15 @@ router.use((req, res, next) => {
 router.use(authenticateToken);
 
 // Criar novo material
-router.post('/', MaterialController.create);
+router.post('/', materialController.create);
 
 // Buscar materiais por rota
-router.get('/rota/:rotaId', MaterialController.getByRotaId);
+router.get('/rota/:rotaId', materialController.getByRotaId);
 
 // Atualizar material
-router.put('/:id', MaterialController.update);
+router.put('/:id', materialController.update);
 
 // Deletar material
-router.delete('/:id', MaterialController.delete);
+router.delete('/:id', materialController.delete);
 
 module.exports = router; 

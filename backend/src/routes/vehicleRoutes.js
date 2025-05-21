@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const vehicleController = require('../controllers/vehicleController');
-const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
+const { authenticateToken, authorizeRoles } = require('../middleware/authMiddleware');
 
 // Rotas Públicas (ou protegidas apenas por autenticação básica)
 // GET /api/v1/vehicles - Listar todos os veículos (acessível a qualquer usuário autenticado)

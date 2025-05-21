@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const loginAttemptModel = require('../models/loginAttemptModel');
-const { authenticateToken, isAdmin } = require('../middleware/auth');
+const { authenticateToken, authorizeRoles } = require('../middleware/authMiddleware');
+const { USER_ROLES } = require('../utils/userConstants');
 
 // POST /api/v1/auth/register - Registrar um novo usuário (a lógica de permissão pode ser adicionada depois)
 router.post('/register', authController.registerUser);
@@ -23,22 +24,11 @@ router.post('/forgot-password', authController.forgotPassword);
 router.post('/reset-password/:token', authController.resetPassword);
 
 // Rotas administrativas
-router.get('/login-attempts', authenticateToken, isAdmin, async (req, res) => {
+router.get('/login-attempts', authenticateToken, authorizeRoles(USER_ROLES.ADMINISTRADOR, USER_ROLES.GESTOR), async (req, res) => {
     try {
-        const { email, minutes = 5 } = req.query;
-        
-        if (!email) {
-            return res.status(400).json({ message: 'Email é obrigatório para consulta.' });
-        }
-
-        const attempts = await loginAttemptModel.getRecentAttempts(email, parseInt(minutes));
-        const failedCount = await loginAttemptModel.getFailedAttemptsCount(email, parseInt(minutes));
-
-        res.json({
-            attempts,
-            failedCount,
-            period: `${minutes} minutos`
-        });
+        const { minutes = 60 } = req.query;
+        const attempts = await loginAttemptModel.getAllAttempts(parseInt(minutes));
+        res.json({ attempts });
     } catch (error) {
         console.error('Erro ao consultar tentativas de login:', error);
         res.status(500).json({ message: 'Erro ao consultar tentativas de login.' });

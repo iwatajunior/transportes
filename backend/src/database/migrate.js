@@ -16,18 +16,36 @@ async function runMigration() {
     try {
         console.log('Iniciando migração...');
         
-        // Lê o arquivo de migração
-        const migrationPath = path.join(__dirname, 'migrations', '20240321000000_add_status_to_usuarios.sql');
-        const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+        // Lê todos os arquivos SQL do diretório database_scripts
+        const scriptsDir = path.join(__dirname, '..', '..', 'database_scripts');
+        const files = fs.readdirSync(scriptsDir)
+            .filter(file => file.endsWith('.sql'))
+            .sort(); // Ordena os arquivos para garantir a ordem correta
         
-        // Executa a migração
-        await client.query('BEGIN');
-        await client.query(migrationSQL);
-        await client.query('COMMIT');
+        for (const file of files) {
+            console.log(`Executando script: ${file}`);
+            const scriptPath = path.join(scriptsDir, file);
+            const scriptSQL = fs.readFileSync(scriptPath, 'utf8');
+            
+            try {
+                await client.query('BEGIN');
+                await client.query(scriptSQL);
+                await client.query('COMMIT');
+                console.log(`Script ${file} executado com sucesso!`);
+            } catch (error) {
+                await client.query('ROLLBACK');
+                // Ignora erros de tipos já existentes ou tabelas já existentes
+                if (error.code === '42710' || error.code === '42P07') {
+                    console.log(`Ignorando erro de tipo/tabela já existente em ${file}`);
+                    continue;
+                }
+                console.error(`Erro ao executar script ${file}:`, error);
+                throw error;
+            }
+        }
         
         console.log('Migração executada com sucesso!');
     } catch (error) {
-        await client.query('ROLLBACK');
         console.error('Erro ao executar migração:', error);
         throw error;
     } finally {

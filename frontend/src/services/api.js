@@ -252,3 +252,13 @@ export const updateUserProfile = async (profileData) => {
         throw error.response ? error.response.data : new Error('Network error or server unreachable when updating user profile');
     }
 };
+
+export const getLoginAttempts = async (minutes = 60) => {
+  try {
+    const response = await apiClient.get(`/auth/login-attempts?minutes=${minutes}`);
+    return response.data.attempts;
+  } catch (error) {
+    console.error('Error fetching login attempts:', error.response ? error.response.data : error.message);
+    throw error.response ? error.response.data : new Error('Network error or server unreachable when fetching login attempts');
+  }
+};

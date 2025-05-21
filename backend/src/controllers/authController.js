@@ -126,9 +126,9 @@ exports.loginUser = async (req, res) => {
         }
 
         // Verificar senha
-        const isMatch = await bcrypt.compare(senhaToUse, user.senha);
-        
-        if (!isMatch) {
+            const isMatch = await bcrypt.compare(senhaToUse, user.senha);
+
+            if (!isMatch) {
             attemptData.motivo = 'Senha incorreta';
             try {
                 await loginAttemptModel.create(attemptData);
@@ -136,8 +136,8 @@ exports.loginUser = async (req, res) => {
                 console.error('Erro ao registrar tentativa de login:', error);
                 // Não bloqueia o fluxo em caso de erro ao registrar a tentativa
             }
-            return res.status(400).json({ message: 'Credenciais inválidas (senha incorreta).' });
-        }
+                return res.status(400).json({ message: 'Credenciais inválidas (senha incorreta).' });
+            }
 
         // Login bem-sucedido
         attemptData.status = true;
@@ -149,27 +149,27 @@ exports.loginUser = async (req, res) => {
         }
 
         // Gerar token JWT
-        const payload = {
-            userId: user.userid,
-            email: user.email,
+            const payload = {
+                userId: user.userid,
+                email: user.email,
             perfil: user.perfil.toLowerCase(),
-            nome: user.nome,
-            fotoperfilurl: user.fotoperfilurl
-        };
+                nome: user.nome,
+                fotoperfilurl: user.fotoperfilurl
+            };
 
-        const token = jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '1d' }
-        );
-        
-        const { senha: removedPassword, ...userWithoutPassword } = user;
+            const token = jwt.sign(
+                payload,
+                process.env.JWT_SECRET,
+                { expiresIn: '1d' }
+            );
+            
+            const { senha: removedPassword, ...userWithoutPassword } = user;
 
-        return res.status(200).json({
-            message: 'Login bem-sucedido!',
-            token,
-            user: userWithoutPassword
-        });
+            return res.status(200).json({
+                message: 'Login bem-sucedido!',
+                token,
+                user: userWithoutPassword
+            });
 
     } catch (err) {
         console.error('[AUTH CONTROLLER] Erro principal no loginUser:', err);

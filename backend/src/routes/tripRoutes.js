@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const tripController = require('../controllers/tripController');
-const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware'); // Corrigido para pegar ambos
+const { authenticateToken, authorizeRoles } = require('../middleware/authMiddleware');
 
 // Todas as rotas de viagem requerem autenticação
 router.use(authenticateToken);

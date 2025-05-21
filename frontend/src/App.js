@@ -35,6 +35,7 @@ import TripDetailPage from './pages/TripDetailPage';
 import HomePage from './pages/HomePage';
 import CadastroRotaPage from './pages/CadastroRotaPage';
 import RotasPage from './pages/RotasPage';
+import LoginAttemptsPage from './pages/LoginAttemptsPage';
 
 const ALL_AUTHENTICATED_ROLES = Object.values(USER_ROLES);
 
@@ -169,6 +170,12 @@ const AppContent = () => {
             component={EditProfilePage}
             isAuthenticated={isAuthenticated}
             allowedRoles={ALL_AUTHENTICATED_ROLES}
+          />
+          <ProtectedRoute
+            path="/admin/login-attempts"
+            component={LoginAttemptsPage}
+            isAuthenticated={isAuthenticated}
+            allowedRoles={[USER_ROLES.ADMINISTRADOR, USER_ROLES.GESTOR]}
           />
         </Switch>
       </main>

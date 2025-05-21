@@ -6,7 +6,7 @@ import {
   Grid, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, History as HistoryIcon } from '@mui/icons-material';
 import { getUsers } from '../services/api';
 import { USER_ROLES } from '../utils/userConstants';
 // import './UserListPage.css'; // Pode ser removido se não houver estilos personalizados essenciais
@@ -26,20 +26,20 @@ const UserListPage = () => {
     user.userid.toString().includes(searchTerm)
   );
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const data = await getUsers();
-      setUsers(data || []); // Garante que users seja sempre um array
-      setError(null);
-    } catch (err) {
-      console.error("Erro ao buscar usuários:", err);
-      setError(err.message || 'Falha ao carregar usuários. Verifique o console para mais detalhes.');
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const data = await getUsers();
+        setUsers(data || []); // Garante que users seja sempre um array
+        setError(null);
+      } catch (err) {
+        console.error("Erro ao buscar usuários:", err);
+        setError(err.message || 'Falha ao carregar usuários. Verifique o console para mais detalhes.');
+        setUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   useEffect(() => {
     fetchUsers();
@@ -92,15 +92,23 @@ const UserListPage = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 sx={{ maxWidth: 400 }}
               />
+              <Box>
+                <Button
+                  variant="outlined"
+                  startIcon={<HistoryIcon />}
+                  onClick={() => history.push('/admin/login-attempts')}
+                  sx={{ mr: 2 }}
+                >
+                  Tentativas de Login
+                </Button>
               <Button 
                 variant="contained" 
                 startIcon={<AddIcon />} 
-                component={RouterLink} 
-                to="/admin/create-user"
-                sx={{ textTransform: 'none' }}
+                  onClick={() => history.push('/admin/users/new')}
               >
-                Criar Novo Usuário
+                  Novo Usuário
               </Button>
+              </Box>
             </Box>
           </Grid>
           <Grid item xs={12}>

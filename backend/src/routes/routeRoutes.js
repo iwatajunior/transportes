@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, authorizeRoles } = require('../middlewares/authMiddleware');
+const { authenticateToken, authorizeRoles } = require('../middleware/authMiddleware');
 const routeController = require('../controllers/routeController');
 
 // POST /api/v1/routes - Cadastrar uma nova rota
