@@ -506,6 +506,54 @@ const userController = {
             console.error('Erro no controller ao buscar motoristas:', error);
             res.status(500).json({ message: 'Erro interno do servidor ao buscar motoristas.' });
         }
+    },
+
+    async updateUserStatus(req, res) {
+        try {
+            const { id } = req.params;
+            const { status } = req.body;
+
+            console.log(`[userController.updateUserStatus] Recebida requisição para atualizar status do usuário ${id}`);
+            console.log(`[userController.updateUserStatus] Dados recebidos:`, { id, status });
+
+            // Validar o ID
+            if (!id || isNaN(parseInt(id))) {
+                console.log(`[userController.updateUserStatus] ID inválido: ${id}`);
+                return res.status(400).json({ message: 'ID de usuário inválido' });
+            }
+
+            // Validar o status
+            if (typeof status !== 'boolean') {
+                console.log(`[userController.updateUserStatus] Status inválido:`, status);
+                return res.status(400).json({ message: 'Status inválido' });
+            }
+
+            // Verificar se o usuário existe antes de atualizar
+            const existingUser = await userModel.findById(id);
+            if (!existingUser) {
+                console.log(`[userController.updateUserStatus] Usuário não encontrado: ${id}`);
+                return res.status(404).json({ message: 'Usuário não encontrado' });
+            }
+
+            console.log(`[userController.updateUserStatus] Usuário encontrado:`, existingUser);
+            console.log(`[userController.updateUserStatus] Atualizando status para:`, status);
+
+            const user = await userModel.updateStatus(id, status);
+            
+            if (!user) {
+                console.log(`[userController.updateUserStatus] Falha ao atualizar usuário: ${id}`);
+                return res.status(500).json({ message: 'Falha ao atualizar status do usuário' });
+            }
+
+            console.log(`[userController.updateUserStatus] Usuário atualizado com sucesso:`, user);
+            res.json(user);
+        } catch (error) {
+            console.error('[userController.updateUserStatus] Erro ao atualizar status do usuário:', error);
+            res.status(500).json({ 
+                message: 'Erro ao atualizar status do usuário',
+                error: error.message 
+            });
+        }
     }
 };
 

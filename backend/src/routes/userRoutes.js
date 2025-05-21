@@ -69,5 +69,7 @@ router.get(
     }
 );
 
+// Rota para atualizar status do usuário
+router.patch('/:id/status', authenticateToken, userController.updateUserStatus);
 
 module.exports = router;

@@ -18,13 +18,13 @@ const pool = new Pool({
  * @returns {Promise<object|null>} O objeto do usuário se encontrado, ou null caso contrário.
  */
 const findByEmail = async (email) => {
-    const query = 'SELECT userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, senha FROM usuarios WHERE email = $1'; // Colunas em minúsculas, tabela usuarios, incluí senha para consistência
+    const query = 'SELECT userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, senha, status FROM usuarios WHERE email = $1';
     try {
         const result = await pool.query(query, [email]);
-        return result.rows[0] || null; // Retorna o primeiro usuário encontrado ou null
+        return result.rows[0] || null;
     } catch (error) {
         console.error('Erro ao buscar usuário por email no banco de dados:', error);
-        throw error; // Re-lança o erro para ser tratado pelo controller
+        throw error;
     }
 };
 
@@ -47,15 +47,16 @@ const create = async (userData) => {
         perfil,
         setor,
         fotoperfilurl, // Nome do campo exatamente como está no banco
+        status = true,
     } = userData;
 
     const query = `
-        INSERT INTO usuarios (nome, email, senha, perfil, setor, fotoperfilurl, ativo, datacadastro)
-        VALUES ($1, $2, $3, $4, $5, $6, TRUE, CURRENT_TIMESTAMP)
+        INSERT INTO usuarios (nome, email, senha, perfil, setor, fotoperfilurl, ativo, datacadastro, status)
+        VALUES ($1, $2, $3, $4, $5, $6, TRUE, CURRENT_TIMESTAMP, $7)
         RETURNING userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro;
     `;
     // Os valores de fotoperfilurl e setor podem ser null se não forem fornecidos
-    const values = [nome, email, senha, perfil, setor || null, fotoperfilurl || null]; // Usando o mesmo nome do banco
+    const values = [nome, email, senha, perfil, setor || null, fotoperfilurl || null, status]; // Usando o mesmo nome do banco
 
     try {
         const result = await pool.query(query, values);
@@ -73,16 +74,16 @@ const create = async (userData) => {
  * @returns {Promise<object|null>} O objeto do usuário se encontrado, ou null caso contrário.
  */
 const findById = async (id) => {
-    const query = 'SELECT userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro FROM usuarios WHERE userid = $1'; // Tabela e colunas minúsculas
+    const query = 'SELECT userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, status FROM usuarios WHERE userid = $1';
     try {
         console.log('[userModel.findById] Buscando usuário:', id);
         console.log('[userModel.findById] Query:', query);
         const result = await pool.query(query, [id]);
         console.log('[userModel.findById] Resultado:', result.rows[0]);
-        return result.rows[0] || null; // Retorna o primeiro usuário encontrado ou null
+        return result.rows[0] || null;
     } catch (error) {
         console.error('Erro ao buscar usuário por ID no banco de dados:', error);
-        throw error; // Re-lança o erro para ser tratado pelo controller
+        throw error;
     }
 };
 
@@ -91,7 +92,7 @@ const findById = async (id) => {
  * @returns {Promise<Array<object>>} Uma lista de todos os usuários (sem a senha).
  */
 const getAll = async () => {
-    const query = 'SELECT userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro FROM usuarios ORDER BY nome ASC'; // Tabela e colunas minúsculas
+    const query = 'SELECT userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, status FROM usuarios ORDER BY nome ASC';
     try {
         const result = await pool.query(query);
         return result.rows;
@@ -105,7 +106,7 @@ const update = async (userId, fieldsToUpdate) => {
     console.log('[userModel.update] Recebido userId:', userId);
     console.log('[userModel.update] Recebido fieldsToUpdate:', JSON.stringify(fieldsToUpdate, null, 2));
 
-    const validFields = ['nome', 'email', 'senha', 'perfil', 'setor', 'fotoperfilurl', 'ativo'];
+    const validFields = ['nome', 'email', 'senha', 'perfil', 'setor', 'fotoperfilurl', 'ativo', 'status'];
     let query = 'UPDATE usuarios SET ';
     const values = [];
     let fieldIndex = 1;
@@ -181,7 +182,7 @@ const update = async (userId, fieldsToUpdate) => {
 
     // Remove a última vírgula e espaço
     query = query.slice(0, -2);
-    query += ` WHERE userid = $${fieldIndex} RETURNING userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro;`;
+    query += ` WHERE userid = $${fieldIndex} RETURNING userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, status;`;
     values.push(userId);
 
     console.log('[userModel.update] Query construída:', query);
@@ -232,7 +233,7 @@ const update = async (userId, fieldsToUpdate) => {
                 
                 // Remover a última vírgula e espaço
                 newQuery = newQuery.slice(0, -2);
-                newQuery += ` WHERE userid = $${newFieldIndex} RETURNING userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro;`;
+                newQuery += ` WHERE userid = $${newFieldIndex} RETURNING userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, status;`;
                 newValues.push(userId);
                 
                 console.log('[userModel.update] Nova query com perfil garantido:', newQuery);
@@ -382,5 +383,45 @@ module.exports = {
     updateSelfProfile,
     setResetPasswordToken,
     findByResetPasswordToken,
-    findDrivers // Exporta a nova função
+    findDrivers, // Exporta a nova função
+    updateStatus: async (userId, status) => {
+        console.log(`[userModel.updateStatus] Iniciando atualização do status do usuário ${userId} para ${status}`);
+        
+        // Primeiro, verificar se o usuário existe
+        const checkQuery = 'SELECT userid FROM usuarios WHERE userid = $1';
+        const checkResult = await pool.query(checkQuery, [userId]);
+        
+        if (checkResult.rows.length === 0) {
+            console.log(`[userModel.updateStatus] Usuário ${userId} não encontrado`);
+            return null;
+        }
+
+        // Atualizar o status
+        const updateQuery = `
+            UPDATE usuarios 
+            SET status = $1 
+            WHERE userid = $2 
+            RETURNING userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, status
+        `;
+        
+        try {
+            console.log(`[userModel.updateStatus] Executando query de atualização:`, {
+                query: updateQuery,
+                values: [status, userId]
+            });
+            
+            const result = await pool.query(updateQuery, [status, userId]);
+            
+            if (result.rows.length === 0) {
+                console.log(`[userModel.updateStatus] Nenhum registro atualizado para o usuário ${userId}`);
+                return null;
+            }
+            
+            console.log(`[userModel.updateStatus] Usuário atualizado com sucesso:`, result.rows[0]);
+            return result.rows[0];
+        } catch (error) {
+            console.error(`[userModel.updateStatus] Erro ao atualizar status:`, error);
+            throw error;
+        }
+    }
 };

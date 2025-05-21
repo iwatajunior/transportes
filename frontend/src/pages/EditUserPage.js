@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { getUserById, updateUser } from '../services/api';
+import { getUserById, updateUser, updateUserStatus } from '../services/api';
 import UserForm from '../components/users/UserForm';
 import { Typography, Paper, CircularProgress, Alert, Container, Box } from '@mui/material'; // Adicionar imports do Material-UI
 import { normalizePerfil } from '../utils/userConstants';
@@ -15,43 +15,36 @@ const EditUserPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
+    const [user, setUser] = useState(null);
 
     useEffect(() => {
         const loadUserData = async () => {
             if (userId) {
                 setLoading(true);
                 try {
-                    console.log('[EditUserPage] User ID from params:', userId);
+                    console.log('[EditUserPage] Carregando dados do usuário:', userId);
                     const response = await getUserById(userId);
-                    console.log('[EditUserPage] Dados recebidos da API:', response);
+                    console.log('[EditUserPage] Dados recebidos:', response);
                     
                     if (!response) {
-                        console.error('[EditUserPage] Dados do usuário não encontrados');
-                        setError('Dados do usuário não encontrados.');
-                        return;
+                        throw new Error('Dados do usuário não encontrados');
                     }
 
-                    // Normalizar o valor do perfil para garantir compatibilidade com o enum
-                    const originalPerfil = response.perfil || '';
-                    console.log('[EditUserPage] Perfil original:', originalPerfil);
-                    
-                    // Usar a função normalizePerfil para garantir um valor válido
-                    const normalizedPerfil = normalizePerfil(originalPerfil);
-                    console.log(`[EditUserPage] Perfil normalizado: "${originalPerfil}" -> "${normalizedPerfil}"`);
-                    
                     const userData = {
                         nome: response.nome || '',
                         email: response.email || '',
-                        perfil: normalizedPerfil,
+                        perfil: normalizePerfil(response.perfil),
                         setor: response.setor || '',
-                        // ativo: response.ativo !== undefined ? response.ativo : true, // UserForm não lida com 'ativo' diretamente
-                        fotoUrl: response.fotoperfilurl || '' // Corrigido para fotoperfilurl (minúsculas)
+                        fotoUrl: response.fotoperfilurl || '',
+                        status: response.status ?? true
                     };
-                    console.log('[EditUserPage] Dados mapeados para UserForm:', userData);
+                    
+                    console.log('[EditUserPage] Dados mapeados:', userData);
                     setInitialUserData(userData);
+                    setUser(userData);
                 } catch (err) {
-                    console.error(`[EditUserPage] Error fetching user data for ${userId}:`, err);
-                    setError(err.message || 'Falha ao carregar dados do usuário.');
+                    console.error('[EditUserPage] Erro ao carregar dados:', err);
+                    setError(err.message || 'Falha ao carregar dados do usuário');
                 } finally {
                     setLoading(false);
                 }
@@ -64,104 +57,66 @@ const EditUserPage = () => {
     }, [userId]);
 
     // handleSubmit agora recebe FormData do UserForm
-    const handleFormSubmit = async (formDataWithFile) => {
-        setError('');
-        setSuccessMessage('');
-        setLoading(true);
-
+    const handleFormSubmit = async (formData) => {
         try {
-            // Verificar e corrigir o valor do perfil no FormData
-            const perfilValue = formDataWithFile.get('perfil');
-            console.log('[EditUserPage] Valor do perfil no FormData:', perfilValue);
-            
-            if (perfilValue) {
-                // Usar a função normalizePerfil para garantir um valor válido
-                const normalizedPerfil = normalizePerfil(perfilValue);
-                
-                if (normalizedPerfil !== perfilValue) {
-                    console.log(`[EditUserPage] Perfil normalizado no FormData: "${perfilValue}" -> "${normalizedPerfil}"`);
-                    // Atualizar o valor no FormData
-                    formDataWithFile.set('perfil', normalizedPerfil);
-                } else {
-                    console.log('[EditUserPage] Perfil já está normalizado:', normalizedPerfil);
-                }
-            }
-            
-            // FormData já está pronto para ser enviado
-            const result = await updateUser(userId, formDataWithFile);
-            setSuccessMessage(result.message || 'Usuário atualizado com sucesso!');
-            
-            // Opcional: atualizar initialUserData se a API retornar o usuário atualizado com a nova fotoUrl
-            if (result.user) {
-                setInitialUserData(prev => ({ 
-                    ...prev,
-                    nome: result.user.nome || '',
-                    email: result.user.email || '',
-                    perfil: result.user.perfil || '',
-                    setor: result.user.setor || '',
-                    fotoUrl: result.user.fotoperfilurl || prev.fotoUrl // Corrigido para fotoperfilurl (minúsculas)
-                }));
-            }
-
-            setTimeout(() => {
-                // Considerar redirecionar para a página de perfil do usuário ou lista, dependendo da UX
-                history.push('/admin/users'); 
-            }, 2000);
-
+            setError(null);
+            const result = await updateUser(userId, formData);
+            setUser(result);
+            history.push('/admin/users');
         } catch (err) {
-            console.error("[EditUserPage] Erro ao atualizar usuário:", err);
+            setError('Erro ao atualizar usuário');
+            console.error('Erro ao atualizar usuário:', err);
+        }
+    };
+
+    const handleStatusChange = async (newStatus) => {
+        try {
+            setError(null);
+            console.log(`[EditUserPage] Iniciando atualização do status do usuário ${userId} para ${newStatus}`);
             
-            // Verificar se o erro é um objeto ou uma string
-            if (typeof err === 'object') {
-                console.log('[EditUserPage] Tipo do erro:', typeof err);
-                console.log('[EditUserPage] Propriedades do erro:', Object.keys(err));
-                
-                if (err.message) {
-                    console.log('[EditUserPage] Mensagem de erro:', err.message);
-                    setError(err.message);
-                } else if (err.errors && Array.isArray(err.errors)) {
-                    const errorMsg = err.errors.map(e => e.message).join(', ');
-                    console.log('[EditUserPage] Erros:', errorMsg);
-                    setError(errorMsg);
-                } else {
-                    console.log('[EditUserPage] Erro sem mensagem ou estrutura conhecida');
-                    setError('Falha ao atualizar usuário. Verifique os campos ou tente novamente.');
-                }
-            } else {
-                console.log('[EditUserPage] Erro é do tipo:', typeof err);
-                setError(String(err) || 'Falha ao atualizar usuário. Verifique os campos ou tente novamente.');
+            // Verificar se o usuário existe antes de tentar atualizar
+            if (!user) {
+                throw new Error('Usuário não encontrado');
             }
+
+            // Garantir que o status é um booleano
+            const statusValue = Boolean(newStatus);
+            console.log(`[EditUserPage] Status convertido para booleano:`, statusValue);
+
+            const updatedUser = await updateUserStatus(userId, statusValue);
+            console.log(`[EditUserPage] Resposta da API após atualização:`, updatedUser);
             
-            // Mesmo com erro, vamos tentar buscar os dados do usuário novamente
-            // para garantir que a interface está sincronizada com o backend
-            try {
-                console.log('[EditUserPage] Tentando buscar dados atualizados após erro...');
-                const refreshedUser = await getUserById(userId);
-                
-                if (refreshedUser) {
-                    console.log('[EditUserPage] Dados do usuário obtidos após erro:', refreshedUser);
-                    
-                    // Normalizar o perfil do usuário atualizado
-                    const normalizedPerfil = normalizePerfil(refreshedUser.perfil || '');
-                    console.log(`[EditUserPage] Perfil normalizado do usuário atualizado: "${refreshedUser.perfil}" -> "${normalizedPerfil}"`);
-                    
-                    setInitialUserData({
-                        nome: refreshedUser.nome || '',
-                        email: refreshedUser.email || '',
-                        perfil: normalizedPerfil,
-                        setor: refreshedUser.setor || '',
-                        fotoUrl: refreshedUser.fotoperfilurl || ''
-                    });
-                    
-                    // Se conseguimos obter os dados atualizados, talvez a atualização tenha funcionado
-                    // apesar do erro de comunicação
-                    setSuccessMessage('Os dados foram obtidos do servidor. Verifique se as informações estão corretas.');
-                }
-            } catch (refreshError) {
-                console.error('[EditUserPage] Erro ao tentar atualizar dados após erro:', refreshError);
+            if (!updatedUser) {
+                throw new Error('Falha ao atualizar status do usuário');
             }
-        } finally {
-            setLoading(false);
+
+            // Atualizar o estado local com os dados atualizados
+            setUser(prevUser => ({
+                ...prevUser,
+                status: statusValue
+            }));
+            
+            setInitialUserData(prev => ({
+                ...prev,
+                status: statusValue
+            }));
+            
+            setSuccessMessage('Status do usuário atualizado com sucesso!');
+            
+            // Log do estado atualizado
+            console.log(`[EditUserPage] Estado atualizado:`, {
+                user: {
+                    ...user,
+                    status: statusValue
+                },
+                initialUserData: {
+                    ...initialUserData,
+                    status: statusValue
+                }
+            });
+        } catch (err) {
+            console.error('[EditUserPage] Erro ao atualizar status:', err);
+            setError(err.message || 'Erro ao atualizar status do usuário');
         }
     };
 
@@ -221,6 +176,7 @@ const EditUserPage = () => {
                             isLoading={loading} 
                             initialData={initialUserData} 
                             isEditMode={true} 
+                            onStatusChange={handleStatusChange}
                         />
                     )}
                 </Box>

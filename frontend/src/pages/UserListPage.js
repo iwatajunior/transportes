@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory, Link as RouterLink } from 'react-router-dom';
+import { useHistory, Link as RouterLink, useLocation } from 'react-router-dom';
 import {
   Container, Typography, Button, CircularProgress, Alert, Box,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
@@ -18,6 +18,7 @@ const UserListPage = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const history = useHistory();
+  const location = useLocation();
 
   const filteredUsers = users.filter(user =>
     user.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -25,26 +26,31 @@ const UserListPage = () => {
     user.userid.toString().includes(searchTerm)
   );
 
-
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await getUsers();
+      setUsers(data || []); // Garante que users seja sempre um array
+      setError(null);
+    } catch (err) {
+      console.error("Erro ao buscar usuários:", err);
+      setError(err.message || 'Falha ao carregar usuários. Verifique o console para mais detalhes.');
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const data = await getUsers();
-        setUsers(data || []); // Garante que users seja sempre um array
-        setError(null);
-      } catch (err) {
-        console.error("Erro ao buscar usuários:", err);
-        setError(err.message || 'Falha ao carregar usuários. Verifique o console para mais detalhes.');
-        setUsers([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
+
+  // Atualiza a lista quando o usuário retorna da página de edição
+  useEffect(() => {
+    if (location.pathname === '/admin/users') {
+      fetchUsers();
+    }
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -112,7 +118,7 @@ const UserListPage = () => {
                       <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>Perfil</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }}>Setor</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Ativo</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
                       <TableCell sx={{ fontWeight: 'bold' }} align="center">Ações</TableCell>
                     </TableRow>
                   </TableHead>
@@ -133,11 +139,11 @@ const UserListPage = () => {
                           <Typography
                             variant="body1"
                             sx={{
-                              color: user.ativo ? 'success.main' : 'error.main',
-                              fontWeight: user.ativo ? 'bold' : 'normal'
+                              color: user.status ? 'success.main' : 'error.main',
+                              fontWeight: user.status ? 'bold' : 'normal'
                             }}
                           >
-                            {user.ativo ? 'Sim' : 'Não'}
+                            {user.status ? 'Ativo' : 'Inativo'}
                           </Typography>
                         </TableCell>
                         <TableCell align="center">

@@ -10,7 +10,9 @@ import {
     Select,
     TextField,
     Typography,
-    Avatar
+    Avatar,
+    Switch,
+    FormControlLabel
 } from '@mui/material';
 import { USER_ROLES, normalizePerfil } from '../../utils/userConstants';
 
@@ -34,7 +36,8 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
         confirmarSenha: '',
         perfil: initialData.perfil || 'Requisitante', // Valor correto do enum com primeira letra maiúscula
         setor: initialData.setor || '',
-        fotoUrl: initialData.fotoUrl || ''
+        fotoUrl: initialData.fotoUrl || '',
+        status: initialData.status ?? true
     });
     const [formErrors, setFormErrors] = useState({});
 
@@ -47,7 +50,8 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
                 email: initialData.email || '',
                 perfil: initialData.perfil || USER_ROLES_OPTIONS[0]?.value || '',
                 setor: initialData.setor || '',
-                fotoUrl: initialData.fotoUrl || ''
+                fotoUrl: initialData.fotoUrl || '',
+                status: initialData.status ?? true
             }));
         }
 
@@ -108,15 +112,30 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
     };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        const { name, value, checked } = e.target;
+        console.log(`[UserForm.handleChange] Campo: ${name}, Valor: ${name === 'status' ? checked : value}`);
+        
+        // Se for o campo status, garantir que é um booleano
+        const newValue = name === 'status' ? checked : value;
+        
+        setFormData(prev => {
+            const updated = {
+                ...prev,
+                [name]: newValue
+            };
+            console.log(`[UserForm.handleChange] Estado atualizado:`, updated);
+            return updated;
+        });
+
         if (formErrors[name]) {
             setFormErrors(prevErrors => ({ ...prevErrors, [name]: null }));
         }
     };
+
+    // Adicionar um useEffect para monitorar mudanças no status
+    useEffect(() => {
+        console.log(`[UserForm] Status atualizado:`, formData.status);
+    }, [formData.status]);
 
     const validateForm = () => {
         const errors = {};
@@ -139,50 +158,30 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm()) {
-            // Normalizar o valor do perfil para garantir que seja um dos valores válidos do enum
-            console.log('[UserForm] Valor original do perfil:', formData.perfil);
-            
-            // Usar a função normalizePerfil para garantir um valor válido
-            const normalizedPerfil = normalizePerfil(formData.perfil);
-            
-            console.log(`[UserForm] Perfil normalizado: ${formData.perfil} -> ${normalizedPerfil}`);
-            console.log('[UserForm] Perfil final a ser enviado:', normalizedPerfil);
+            console.log('[UserForm.handleSubmit] Dados do formulário:', formData);
             
             const submitData = {
                 nome: formData.nome.trim(),
                 email: formData.email.trim(),
                 senha: formData.senha,
-                // Garantir que o perfil seja um dos valores exatos do enum
-                perfil: normalizedPerfil
+                perfil: normalizePerfil(formData.perfil),
+                status: formData.status
             };
 
             if (formData.setor && formData.setor.trim()) {
                 submitData.setor = formData.setor.trim();
             }
 
-            // Se houver foto, criar FormData e adicionar todos os campos
+            console.log('[UserForm.handleSubmit] Dados a serem enviados:', submitData);
+
             if (selectedFile) {
                 const formDataWithFile = new FormData();
-                
-                // Primeiro adiciona os dados do usuário
                 Object.entries(submitData).forEach(([key, value]) => {
                     formDataWithFile.append(key, value);
                 });
-
-                // Depois adiciona a foto
                 formDataWithFile.append('foto', selectedFile);
-
-                // Log dos dados que serão enviados
-                const formDataEntries = Array.from(formDataWithFile.entries());
-                console.log('Dados do formulário (FormData):', {
-                    ...submitData,
-                    foto: selectedFile.name,
-                    entries: formDataEntries.map(([key, value]) => `${key}: ${value instanceof File ? value.name : value}`)
-                });
-
                 onSubmit(formDataWithFile);
             } else {
-                console.log('Dados do formulário (JSON):', submitData);
                 onSubmit(submitData);
             }
         }
@@ -311,6 +310,22 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
                         onChange={handleChange}
                     />
                 </Grid>
+
+                {isEditMode && (
+                    <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={formData.status}
+                                    onChange={handleChange}
+                                    name="status"
+                                    color="primary"
+                                />
+                            }
+                            label="Usuário Ativo"
+                        />
+                    </Grid>
+                )}
             </Grid>
 
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>

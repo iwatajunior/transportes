@@ -190,6 +190,23 @@ export const updateUser = async (userId, formData) => {
     }
   }
 };
+
+export const updateUserStatus = async (userId, status) => {
+    try {
+        console.log(`[api.updateUserStatus] Iniciando atualização do status do usuário ${userId} para ${status}`);
+        const response = await apiClient.patch(`/users/${userId}/status`, { status });
+        console.log(`[api.updateUserStatus] Resposta da API:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`[api.updateUserStatus] Erro ao atualizar status:`, error);
+        if (error.response) {
+            console.error(`[api.updateUserStatus] Status do erro:`, error.response.status);
+            console.error(`[api.updateUserStatus] Dados do erro:`, error.response.data);
+        }
+        throw error.response ? error.response.data : new Error('Erro ao atualizar status do usuário');
+    }
+};
+
 // Add other API functions here as needed
 // export const getUsers = async () => { ... };
 

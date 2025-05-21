@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto'); // Adicionado para gerar token
 const userModel = require('../models/userModel');
+const loginAttemptModel = require('../models/loginAttemptModel');
 const { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } = require('../validators/authSchemas'); // Adicionado forgotPasswordSchema e resetPasswordSchema
 
 // Registrar novo usuário
@@ -63,6 +64,7 @@ exports.registerUser = async (req, res) => {
 exports.loginUser = async (req, res) => {
     console.log('!!!! AUTHCONTROLLER: CHEGOU NO INÍCIO DA FUNÇÃO loginUser !!!!');
     console.log('DEBUG - Dados recebidos no login:', req.body);
+    
     // Validar os dados de entrada
     const { error, value } = loginSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
     if (error) {
@@ -72,90 +74,103 @@ exports.loginUser = async (req, res) => {
     }
 
     const { email, senha, password } = req.body;
-    const senhaToUse = senha || password; // Usar senha se existir, senão usar password // Usar 'value'
+    const senhaToUse = senha || password;
 
     try {
         // Verificar se o usuário existe
         const user = await userModel.findByEmail(email);
+        
+        // Preparar dados da tentativa de login
+        const attemptData = {
+            userid: user ? user.userid : null,
+            email: email,
+            ip_address: req.ip,
+            user_agent: req.headers['user-agent'],
+            status: false,
+            motivo: null
+        };
+
         if (!user) {
+            attemptData.motivo = 'Usuário não encontrado';
+            try {
+                await loginAttemptModel.create(attemptData);
+            } catch (error) {
+                console.error('Erro ao registrar tentativa de login:', error);
+                // Não bloqueia o fluxo em caso de erro ao registrar a tentativa
+            }
             return res.status(400).json({ message: 'Credenciais inválidas (usuário não encontrado).' });
         }
 
         // Verificar se o usuário está ativo
         if (!user.ativo) {
+            attemptData.motivo = 'Usuário inativo';
+            try {
+                await loginAttemptModel.create(attemptData);
+            } catch (error) {
+                console.error('Erro ao registrar tentativa de login:', error);
+                // Não bloqueia o fluxo em caso de erro ao registrar a tentativa
+            }
             return res.status(403).json({ message: 'Usuário inativo. Contate o administrador.' });
         }
 
-        console.log(`[DEBUG AuthController Login] Perfil retornado pelo findByEmail para ${user.email}: '${user.perfil}'`);
-
-
-        // LOGS ADICIONAIS PARA DEPURAR bcrypt.compare
-        console.log(`[DEBUG bcrypt] ANTES de bcrypt.compare.`);
-        console.log(`[DEBUG bcrypt] Email do usuário: ${user.email}`);
-        console.log(`[DEBUG bcrypt] Senha da requisição (tipo): ${typeof senha}`);
-        console.log(`[DEBUG bcrypt] user.senha do banco (tipo): ${typeof user.senha}`);
-        if (user && typeof user.senha === 'string') {
-            console.log(`[DEBUG bcrypt] user.senha (hash parcial): ${user.senha.substring(0, 10)}... (length: ${user.senha.length})`);
-        } else {
-            console.log(`[DEBUG bcrypt] user.senha está ausente, não é string ou user é inválido.`);
-        }
-
-        try { // Envolver bcrypt.compare em seu próprio try-catch para isolar o erro
-            const isMatch = await bcrypt.compare(senhaToUse, user.senha);
-            console.log(`[DEBUG bcrypt] DEPOIS de bcrypt.compare. isMatch: ${isMatch}`);
-
-            if (!isMatch) {
-                console.log(`[DEBUG AuthController Login] SENHA INCORRETA para ${email}.`);
-                return res.status(400).json({ message: 'Credenciais inválidas (senha incorreta).' });
+        // Verificar se o usuário está com status ativo
+        if (!user.status) {
+            attemptData.motivo = 'Usuário bloqueado';
+            try {
+                await loginAttemptModel.create(attemptData);
+            } catch (error) {
+                console.error('Erro ao registrar tentativa de login:', error);
+                // Não bloqueia o fluxo em caso de erro ao registrar a tentativa
             }
-
-            console.log(`[DEBUG AuthController Login] Senha CORRETA para ${user.email}. Gerando token com perfil: ${user.perfil}`);
-            
-            // Usuário autenticado, gerar token JWT
-            console.log('DEBUG - Dados do usuário:', {
-                userid: user.userid,
-                email: user.email,
-                nome: user.nome,
-                perfil: user.perfil,
-                fotoperfilurl: user.fotoperfilurl
-            });
-
-            const payload = {
-                userId: user.userid,
-                email: user.email,
-                perfil: user.perfil.toLowerCase(), // Converter para minúsculo
-                nome: user.nome,
-                fotoperfilurl: user.fotoperfilurl
-            };
-
-            console.log('DEBUG - Token payload:', payload);
-
-            const token = jwt.sign(
-                payload,
-                process.env.JWT_SECRET,
-                { expiresIn: '1d' }
-            );
-            
-            const { senha: removedPassword, ...userWithoutPassword } = user;
-
-            console.log(`[DEBUG AuthController Login] Dados completos do usuário:`, {
-                ...userWithoutPassword,
-                token: token ? 'GERADO' : 'FALHOU GERAÇÃO'
-            });
-
-            console.log(`[DEBUG AuthController Login] Preparando para enviar resposta de SUCESSO. Token: ${token ? 'GERADO' : 'FALHOU GERAÇÃO'}, UserData (sem senha):`, userWithoutPassword);
-
-            return res.status(200).json({
-                message: 'Login bem-sucedido!',
-                token,
-                user: userWithoutPassword
-            });
-
-        } catch (bcryptError) {
-            console.error('[DEBUG bcrypt] ERRO DURANTE bcrypt.compare:', bcryptError);
-            // Este return é importante para que o erro de bcrypt não caia no catch principal sem contexto
-            return res.status(500).json({ message: 'Erro interno durante a verificação da senha.', errorDetail: bcryptError.message });
+            return res.status(403).json({ message: 'Usuário bloqueado. Sua tentativa foi registrada!' });
         }
+
+        // Verificar senha
+        const isMatch = await bcrypt.compare(senhaToUse, user.senha);
+        
+        if (!isMatch) {
+            attemptData.motivo = 'Senha incorreta';
+            try {
+                await loginAttemptModel.create(attemptData);
+            } catch (error) {
+                console.error('Erro ao registrar tentativa de login:', error);
+                // Não bloqueia o fluxo em caso de erro ao registrar a tentativa
+            }
+            return res.status(400).json({ message: 'Credenciais inválidas (senha incorreta).' });
+        }
+
+        // Login bem-sucedido
+        attemptData.status = true;
+        try {
+            await loginAttemptModel.create(attemptData);
+        } catch (error) {
+            console.error('Erro ao registrar tentativa de login:', error);
+            // Não bloqueia o fluxo em caso de erro ao registrar a tentativa
+        }
+
+        // Gerar token JWT
+        const payload = {
+            userId: user.userid,
+            email: user.email,
+            perfil: user.perfil.toLowerCase(),
+            nome: user.nome,
+            fotoperfilurl: user.fotoperfilurl
+        };
+
+        const token = jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+        
+        const { senha: removedPassword, ...userWithoutPassword } = user;
+
+        return res.status(200).json({
+            message: 'Login bem-sucedido!',
+            token,
+            user: userWithoutPassword
+        });
+
     } catch (err) {
         console.error('[AUTH CONTROLLER] Erro principal no loginUser:', err);
         if (err.isJoi) {

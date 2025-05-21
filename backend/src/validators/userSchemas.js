@@ -79,7 +79,10 @@ const updateUserSchema = Joi.object({
         'string.min': 'Setor deve ter no mínimo {#limit} caracteres.',
         'string.max': 'Setor deve ter no máximo {#limit} caracteres.'
     }),
-    ativo: Joi.boolean().optional()
+    ativo: Joi.boolean().optional(),
+    status: Joi.boolean().optional().messages({
+        'boolean.base': 'Status deve ser um valor booleano (true/false).'
+    })
 }).min(1).messages({
     'object.min': 'Pelo menos um campo deve ser fornecido para atualização.'
 }); // Exige que pelo menos um campo seja enviado para atualização
