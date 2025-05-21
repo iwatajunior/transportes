@@ -98,7 +98,7 @@ exports.loginUser = async (req, res) => {
                 console.error('Erro ao registrar tentativa de login:', error);
                 // Não bloqueia o fluxo em caso de erro ao registrar a tentativa
             }
-            return res.status(400).json({ message: 'Credenciais inválidas (usuário não encontrado).' });
+            return res.status(400).json({ message: 'Credenciais inválidas. Sua tentativa de acesso foi registrada!' });
         }
 
         // Verificar se o usuário está ativo

@@ -27,7 +27,7 @@ const TripListPage = () => {
     const theme = useTheme();
     const [trips, setTrips] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(6);
     const [filteredTrips, setFilteredTrips] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
@@ -540,7 +540,7 @@ const TripListPage = () => {
                     }}
                     labelRowsPerPage="Itens por página"
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
-                    rowsPerPageOptions={[5, 10, 25, 50]}
+                    rowsPerPageOptions={[6, 12, 24, 48]}
                     sx={{
                         borderTop: 1,
                         borderColor: 'divider'
