@@ -10,7 +10,8 @@ import {
   DirectionsBus as BusIcon,
   Edit as EditIcon,
   LocationOn,
-  ArrowForward
+  ArrowForward,
+  Send as SendIcon
 } from '@mui/icons-material';
 import { Link, useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,8 +27,9 @@ const HomePage = () => {
   const [rotas, setRotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedRota, setSelectedRota] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [openEncomendaDialog, setOpenEncomendaDialog] = useState(false);
+  const [selectedRota, setSelectedRota] = useState('');
   const [selectedCidade, setSelectedCidade] = useState('');
   const [materialInfo, setMaterialInfo] = useState({
     tipo: '',
@@ -35,7 +37,6 @@ const HomePage = () => {
     observacoes: '',
     cidade_destino: ''
   });
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     const fetchRotas = async () => {
@@ -57,21 +58,16 @@ const HomePage = () => {
     return cidade ? cidade.nome : id;
   };
 
-  const handleInteresseClick = (rota) => {
-    console.log('Rota selecionada:', rota);
-    setSelectedRota(rota);
-    setSelectedCidade('');
-    setMaterialInfo({
-      tipo: '',
-      quantidade: '',
-      observacoes: '',
-      cidade_destino: ''
-    });
-    setOpenDialog(true);
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleEncomendaClick = () => {
+    setOpenEncomendaDialog(true);
   };
 
   const handleDialogClose = () => {
-    setOpenDialog(false);
+    setOpenEncomendaDialog(false);
     setSelectedRota(null);
     setSelectedCidade('');
     setMaterialInfo({
@@ -82,24 +78,23 @@ const HomePage = () => {
     });
   };
 
-  const isFormValid = () => {
-    const isValid = selectedCidade && 
-                   materialInfo.tipo && 
-                   materialInfo.quantidade && 
-                   materialInfo.cidade_destino;
-    
-    console.log('Validação do formulário:', {
-      selectedCidade,
-      tipo: materialInfo.tipo,
-      quantidade: materialInfo.quantidade,
-      cidade_destino: materialInfo.cidade_destino,
-      isValid
-    });
-    
-    return isValid;
+  const handleRotaChange = (event) => {
+    setSelectedRota(event.target.value);
+    setSelectedCidade('');
   };
 
-  const handleConfirmarInteresse = async () => {
+  const handleCidadeChange = (event) => {
+    setSelectedCidade(event.target.value);
+  };
+
+  const handleMaterialChange = (event) => {
+    setMaterialInfo({
+      ...materialInfo,
+      [event.target.name]: event.target.value
+    });
+  };
+
+  const handleConfirmarEncomenda = async () => {
     try {
       if (!selectedRota || !selectedCidade || !materialInfo.cidade_destino || !materialInfo.tipo || !materialInfo.quantidade) {
         setSnackbar({
@@ -112,11 +107,12 @@ const HomePage = () => {
 
       const response = await api.post('/materials', {
         rota_id: selectedRota.id,
-        cidade_origem_id: selectedCidade,
+        cidade_origem_id: selectedRota.cidade_origem,
         cidade_destino_id: materialInfo.cidade_destino,
         tipo: materialInfo.tipo,
         quantidade: parseFloat(materialInfo.quantidade),
-        observacoes: materialInfo.observacoes || ''
+        observacoes: materialInfo.observacoes || '',
+        user_id: user.userId
       });
 
       if (response.status === 201) {
@@ -137,8 +133,48 @@ const HomePage = () => {
     }
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbar({ ...snackbar, open: false });
+  const isFormValid = () => {
+    const isValid = selectedCidade && 
+                   materialInfo.tipo && 
+                   materialInfo.quantidade && 
+                   materialInfo.cidade_destino;
+    
+    console.log('Validação do formulário:', {
+      selectedCidade,
+      tipo: materialInfo.tipo,
+      quantidade: materialInfo.quantidade,
+      cidade_destino: materialInfo.cidade_destino,
+      isValid
+    });
+    
+    return isValid;
+  };
+
+  const handleInteresseClick = (rota) => {
+    console.log('Rota selecionada:', rota);
+    setSelectedRota(rota);
+    setSelectedCidade('');
+    setMaterialInfo({
+      tipo: '',
+      quantidade: '',
+      observacoes: '',
+      cidade_destino: ''
+    });
+    setOpenEncomendaDialog(true);
+  };
+
+  const getCidadesRota = (rota) => {
+    if (!rota) return [];
+    
+    const cidadesRota = [
+      { id: rota.cidade_origem, nome: getCidadeNome(rota.cidade_origem) },
+      ...((rota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
+      { id: rota.cidade_destino, nome: getCidadeNome(rota.cidade_destino) },
+      ...((rota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
+    ];
+    
+    // Remove duplicatas mantendo apenas a primeira ocorrência
+    return cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
   };
 
   if (loading) {
@@ -355,18 +391,8 @@ const HomePage = () => {
             <Button 
               variant="contained" 
               fullWidth
-              startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
-              onClick={() => {
-                if (rotas.length === 0) {
-                  setSnackbar({
-                    open: true,
-                    message: 'Não há rotas disponíveis para envio de material.',
-                    severity: 'warning'
-                  });
-                  return;
-                }
-                handleInteresseClick(rotas[0]);
-              }}
+              startIcon={<SendIcon sx={{ fontSize: 28 }} />}
+              onClick={handleEncomendaClick}
               sx={{
                 bgcolor: '#FF9800',
                 color: 'white',
@@ -379,16 +405,16 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Enviar material</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Envie Encomendas</Typography>
             </Button>
           </Grid>
         </Grid>
 
         <RouteMap />
 
-        {/* Dialog para envio de material */}
+        {/* Dialog para Envio de Encomendas */}
         <Dialog 
-          open={openDialog} 
+          open={openEncomendaDialog} 
           onClose={handleDialogClose}
           maxWidth="sm"
           fullWidth
@@ -410,46 +436,57 @@ const HomePage = () => {
             </Box>
             <Box sx={{ mt: 3 }}>
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Cidade de Coleta</InputLabel>
+                <InputLabel>Rota</InputLabel>
                 <Select
-                  value={selectedCidade}
-                  onChange={e => setSelectedCidade(e.target.value)}
-                  label="Cidade de Coleta"
+                  value={selectedRota?.id || ''}
+                  onChange={(e) => {
+                    const rota = rotas.find(r => r.id === e.target.value);
+                    setSelectedRota(rota);
+                    setSelectedCidade('');
+                    setMaterialInfo({
+                      tipo: '',
+                      quantidade: '',
+                      observacoes: '',
+                      cidade_destino: ''
+                    });
+                  }}
+                  label="Rota"
                 >
-                  {selectedRota && (() => {
-                    const cidadesRota = [
-                      { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
-                      ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
-                      { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
-                      ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
-                    ];
-                    const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
-                    return cidadesUnicas.map(cidade => (
-                      <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
-                    ));
-                  })()}
+                  {rotas.map((rota) => (
+                    <MenuItem key={rota.id} value={rota.id}>
+                      {rota.identificacao}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
 
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Cidade de Destino</InputLabel>
+                <InputLabel>Cidade de Coleta do Material</InputLabel>
+                <Select
+                  value={selectedCidade}
+                  onChange={e => setSelectedCidade(e.target.value)}
+                  label="Cidade de Coleta do Material"
+                >
+                  {selectedRota && getCidadesRota(selectedRota).map(cidade => (
+                    <MenuItem key={cidade.id} value={cidade.id}>
+                      {cidade.nome}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Cidade de Destino do Material</InputLabel>
                 <Select
                   value={materialInfo.cidade_destino}
                   onChange={e => setMaterialInfo({...materialInfo, cidade_destino: e.target.value})}
-                  label="Cidade de Destino"
+                  label="Cidade de Destino do Material"
                 >
-                  {selectedRota && (() => {
-                    const cidadesRota = [
-                      { id: selectedRota.cidade_origem, nome: getCidadeNome(selectedRota.cidade_origem) },
-                      ...((selectedRota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
-                      { id: selectedRota.cidade_destino, nome: getCidadeNome(selectedRota.cidade_destino) },
-                      ...((selectedRota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
-                    ];
-                    const cidadesUnicas = cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
-                    return cidadesUnicas.map(cidade => (
-                      <MenuItem key={cidade.id} value={cidade.id}>{cidade.nome}</MenuItem>
-                    ));
-                  })()}
+                  {selectedRota && getCidadesRota(selectedRota).map(cidade => (
+                    <MenuItem key={cidade.id} value={cidade.id}>
+                      {cidade.nome}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
 
@@ -483,7 +520,7 @@ const HomePage = () => {
           <DialogActions>
             <Button onClick={handleDialogClose}>Cancelar</Button>
             <Button 
-              onClick={handleConfirmarInteresse} 
+              onClick={handleConfirmarEncomenda} 
               disabled={!isFormValid()} 
               variant="contained"
             >
