@@ -4,24 +4,34 @@ const userModel = require('../models/userModel'); // Para verificar se o usuári
 
 // Criar novo veículo
 exports.createVehicle = async (req, res) => {
-    console.log('API HINT: Dentro de exports.createVehicle'); // Log 1
+    console.log('API HINT: Dentro de exports.createVehicle');
+    console.log('API HINT: Dados recebidos:', JSON.stringify(req.body, null, 2));
+    console.log('API HINT: Usuário logado:', JSON.stringify(req.user, null, 2));
+    
+    if (!req.user || !req.user.userId) {
+        return res.status(401).json({ message: 'Usuário não autenticado.' });
+    }
+
+    // Adicionar o ID do usuário logado como usuário responsável
+    const vehicleData = {
+        ...req.body,
+        usuario_responsavel_id: req.user.userId
+    };
+
+    console.log('API HINT: Dados do veículo com usuário:', JSON.stringify(vehicleData, null, 2));
+
     // Validar os dados de entrada
-    const { error, value } = vehicleSchema.validate(req.body, { abortEarly: false, stripUnknown: true });
+    const { error, value } = vehicleSchema.validate(vehicleData, { abortEarly: false, stripUnknown: true });
     if (error) {
+        console.log('API HINT: Erro de validação:', JSON.stringify(error.details, null, 2));
         const errorMessages = error.details.map(detail => detail.message);
         return res.status(400).json({ message: "Erro de validação nos dados do veículo.", details: errorMessages });
     }
 
-    // Desestruturar placa e usuario_responsavel_id aqui APENAS se precisar deles individualmente ANTES do try/catch para alguma lógica específica
-    // Geralmente, se 'value' já contém tudo o que vehicleModel.create precisa, não é estritamente necessário desestruturar aqui.
-    // const { placa, usuario_responsavel_id } = value; // Removido daqui para evitar confusão se não usado imediatamente
-
-    console.log('API HINT: Dados validados (value):', JSON.stringify(value, null, 2)); // Log 2
+    console.log('API HINT: Dados validados (value):', JSON.stringify(value, null, 2));
 
     try {
-        // É importante que 'value' contenha 'placa' e 'usuario_responsavel_id' para as verificações abaixo.
-        // Se 'value' não os contiver diretamente (por exemplo, se a validação os removeu ou aninhou), ajuste aqui.
-        const { placa, usuario_responsavel_id } = value; // Desestruturando dentro do try, mais próximo de onde são usados
+        const { placa } = value;
 
         // Verificar se a placa já existe
         const existingVehicle = await vehicleModel.findByPlate(placa);
@@ -30,32 +40,21 @@ exports.createVehicle = async (req, res) => {
         }
 
         // Verificar se o usuário responsável existe e está ativo
-        // Certifique-se de que usuario_responsavel_id está presente em 'value'
-        if (usuario_responsavel_id === undefined || usuario_responsavel_id === null) {
-             console.error('API HINT: usuario_responsavel_id não foi fornecido ou é nulo em "value" antes da checagem do usuário.');
-             // Decide se isso é um erro ou se é opcional. Pelo schema, parece ser obrigatório.
-             return res.status(400).json({ message: 'ID do usuário responsável não fornecido.' });
-        }
-        const responsibleUser = await userModel.findById(usuario_responsavel_id);
+        const responsibleUser = await userModel.findById(req.user.userId);
         if (!responsibleUser) {
-            return res.status(400).json({ message: `Usuário responsável com ID ${usuario_responsavel_id} não encontrado.` });
+            return res.status(400).json({ message: `Usuário responsável não encontrado.` });
         }
         if (!responsibleUser.ativo) {
-            return res.status(400).json({ message: `Usuário responsável com ID ${usuario_responsavel_id} está inativo.` });
+            return res.status(400).json({ message: `Usuário responsável está inativo.` });
         }
 
-        console.log('API HINT: Antes de chamar vehicleModel.create com value:', JSON.stringify(value, null, 2)); // Log 3 (mostrando 'value' completo)
-        const newVehicle = await vehicleModel.create(value); // 'value' deve conter todos os campos validados
+        console.log('API HINT: Antes de chamar vehicleModel.create com value:', JSON.stringify(value, null, 2));
+        const newVehicle = await vehicleModel.create(value);
         res.status(201).json({ message: 'Veículo cadastrado com sucesso!', vehicle: newVehicle });
     } catch (err) {
         console.error('Erro ao criar veículo:', err);
-        // Tratar outros erros específicos do banco se necessário (ex: FK constraint)
-        // A desestruturação de usuario_responsavel_id aqui pode falhar se err ocorreu antes de value ser definido
-        // Vamos garantir que ele venha do 'value' que foi validado
-        const validated_usuario_id = value && value.usuario_responsavel_id ? value.usuario_responsavel_id : 'ID não disponível (erro antes da validação completa)';
-
         if (err.code === '23503' && err.constraint && err.constraint.includes('veiculos_usuario_responsavel_id_fkey')) {
-             return res.status(400).json({ message: `Usuário responsável com ID ${validated_usuario_id} não encontrado ou inválido (referência de chave estrangeira falhou).` });
+            return res.status(400).json({ message: `Erro ao associar usuário responsável ao veículo.` });
         }
         res.status(500).json({ message: 'Erro interno no servidor ao tentar cadastrar veículo.' });
     }

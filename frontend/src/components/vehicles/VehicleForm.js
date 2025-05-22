@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
     TextField,
@@ -10,82 +9,50 @@ import {
     Grid,
     Box,
     CircularProgress,
-    Alert,
-    Switch, // Adicionado
-    FormControlLabel // Adicionado
+    Alert
 } from '@mui/material';
-
-// Simulating fetching current user ID (e.g., from context or auth service)
-// Replace this with your actual user ID fetching logic
-const getCurrentUserId = async () => {
-    // Placeholder: In a real app, this would come from your auth system
-    return 1; // Assuming user ID 1 for now (e.g., a manager)
-};
+import axios from 'axios';
 
 const VehicleForm = ({ onSubmit, initialData = {} }) => {
     const [formData, setFormData] = useState({
         placa: initialData.placa || '',
         marca: initialData.marca || '',
         modelo: initialData.modelo || '',
-        ano_fabricacao: initialData.ano_fabricacao || '',
-        tipo_veiculo: initialData.tipo_veiculo || 'Carro', // Default to 'Carro'
+        ano: initialData.ano || '',
+        tipo: initialData.tipo || 'Carro',
+        capacidade: initialData.capacidade || '',
         tipo_uso: initialData.tipo_uso || '',
-        capacidade_passageiros: initialData.capacidade_passageiros || '',
-        km_atual: initialData.km_atual || '',
-        data_ultima_revisao: initialData.data_ultima_revisao || '',
-        data_proxima_revisao: initialData.data_proxima_revisao || '',
+        quilometragematual: initialData.quilometragematual || '',
         observacoes: initialData.observacoes || '',
-        usuario_responsavel_id: initialData.usuario_responsavel_id || '',
+        status: initialData.status || 'Disponível'
     });
+
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [isVehicleActive, setIsVehicleActive] = useState(true); // Estado para o switch Ativo/Inativo
 
     useEffect(() => {
-        let isMounted = true; // Flag para rastrear se o componente está montado
-
-        // Lógica para usuario_responsavel_id
-        if (!initialData.veiculoid) { // Apenas se for um novo veículo
-            const fetchUserId = async () => {
-                try {
-                    const userId = await getCurrentUserId();
-                    if (isMounted) { // Só atualiza o estado se ainda estiver montado
-                        setFormData(prevData => ({ ...prevData, usuario_responsavel_id: userId }));
-                    }
-                } catch (err) {
-                    // Opcional: só logar erro se montado, ou sempre logar
-                    // if (isMounted) { console.error("Failed to fetch user ID", err); }
-                    // Por ora, vamos manter o log do erro independentemente do estado de montagem,
-                    // pois o erro em si ainda pode ser relevante.
-                    console.error("Failed to fetch user ID", err);
-                }
-            };
-            fetchUserId();
+        if (initialData) {
+            setFormData(prevData => ({
+                ...prevData,
+                placa: initialData.placa || '',
+                marca: initialData.marca || '',
+                modelo: initialData.modelo || '',
+                ano: initialData.ano || '',
+                tipo: initialData.tipo || 'Carro',
+                capacidade: initialData.capacidade || '',
+                tipo_uso: initialData.tipo_uso || '',
+                quilometragematual: initialData.quilometragematual || '',
+                observacoes: initialData.observacoes || '',
+                status: initialData.status || 'Disponível'
+            }));
         }
-
-        // Lógica para o status do veículo (isVehicleActive) - síncrona, não precisa de isMounted aqui
-        // Esta parte é síncrona em relação ao useEffect, então isMounted não é estritamente necessário para ela,
-        // mas as chamadas setIsVehicleActive em si devem ocorrer apenas se o componente estiver montado.
-        // No entanto, como o React lida com chamadas setState em componentes desmontados de forma graciosa (no-op com warning),
-        // e esta parte não envolve uma promise longa, o risco é menor.
-        // Para consistência, poderíamos adicionar if (isMounted) antes de cada setIsVehicleActive,
-        // mas vamos focar no async fetchUserId que é a causa mais provável do warning.
-        if (initialData && typeof initialData.status !== 'undefined') {
-            if (isMounted) setIsVehicleActive(initialData.status === 'Disponível');
-        } else {
-            if (isMounted) setIsVehicleActive(true);
-        }
-
-        return () => { // Função de limpeza
-            isMounted = false; // Define como falso quando o componente desmontar
-        };
-    }, [initialData]); // Depende de initialData para reavaliar quando ele mudar
+    }, [initialData]);
 
     const handleChange = (e) => {
-        const { name, value, type } = e.target;
+        const { name, value } = e.target;
         setFormData(prevData => ({
             ...prevData,
-            [name]: value, // MUI TextField type=number handles conversion internally for display
+            [name]: value
         }));
     };
 
@@ -94,17 +61,15 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
         setIsLoading(true);
         setError(null);
         try {
+            // Garantir que os campos numéricos sejam números
             const dataToSubmit = {
                 ...formData,
-                ano_fabricacao: formData.ano_fabricacao ? parseInt(formData.ano_fabricacao, 10) : null,
-                capacidade_passageiros: formData.capacidade_passageiros ? parseInt(formData.capacidade_passageiros, 10) : null,
-                km_atual: formData.km_atual ? parseInt(formData.km_atual, 10) : null,
-                data_ultima_revisao: formData.data_ultima_revisao || null,
-                data_proxima_revisao: formData.data_proxima_revisao || null,
-                observacoes: formData.observacoes || null,
+                ano: parseInt(formData.ano, 10),
+                capacidade: parseInt(formData.capacidade, 10),
+                quilometragematual: parseInt(formData.quilometragematual, 10),
                 tipo_uso: formData.tipo_uso || null,
-                // usuario_responsavel_id is already in formData
-                status: isVehicleActive ? 'Disponível' : 'Indisponível', // Adicionar status com base no switch
+                observacoes: formData.observacoes || null,
+                placa: formData.placa.toUpperCase().replace(/-/g, '') // Remove hífen e converte para maiúsculas
             };
             await onSubmit(dataToSubmit);
         } catch (err) {
@@ -114,11 +79,12 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
         }
     };
 
-    const vehicleTypes = ['Carro', 'Van', 'Ônibus', 'Moto']; // Valores correspondentes ao ENUM tipo_veiculo no banco de dados
-    const usageTypes = ['Carga', 'Passeio', 'Misto']; // Valores correspondentes aos tipos de uso permitidos no schema de validação
+    const vehicleTypes = ['Carro', 'Van', 'Ônibus', 'Moto'];
+    const usageTypes = ['Carga', 'Passeio', 'Misto'];
+    const statusTypes = ['Disponível', 'Em Manutenção', 'Em Viagem', 'Indisponível'];
 
     return (
-        <Box component="form" onSubmit={handleSubmit} noValidate>
+        <Box component="form" onSubmit={handleSubmit}>
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
             <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
@@ -131,6 +97,8 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
                         value={formData.placa}
                         onChange={handleChange}
                         autoFocus
+                        inputProps={{ maxLength: 8 }}
+                        helperText="Formato: AAA-1234 ou AAA1B34"
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -142,6 +110,7 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
                         label="Marca"
                         value={formData.marca}
                         onChange={handleChange}
+                        inputProps={{ minLength: 2, maxLength: 50 }}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -153,29 +122,30 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
                         label="Modelo"
                         value={formData.modelo}
                         onChange={handleChange}
+                        inputProps={{ minLength: 1, maxLength: 50 }}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <TextField
                         required
                         fullWidth
-                        id="ano_fabricacao"
-                        name="ano_fabricacao"
-                        label="Ano de Fabricação"
+                        id="ano"
+                        name="ano"
+                        label="Ano"
                         type="number"
-                        value={formData.ano_fabricacao}
+                        value={formData.ano}
                         onChange={handleChange}
                         InputProps={{ inputProps: { min: 1900, max: new Date().getFullYear() + 1 } }}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <FormControl fullWidth required>
-                        <InputLabel id="tipo_veiculo-label">Tipo de Veículo</InputLabel>
+                        <InputLabel id="tipo-label">Tipo de Veículo</InputLabel>
                         <Select
-                            labelId="tipo_veiculo-label"
-                            id="tipo_veiculo"
-                            name="tipo_veiculo"
-                            value={formData.tipo_veiculo}
+                            labelId="tipo-label"
+                            id="tipo"
+                            name="tipo"
+                            value={formData.tipo}
                             label="Tipo de Veículo"
                             onChange={handleChange}
                         >
@@ -207,54 +177,26 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
                     <TextField
                         required
                         fullWidth
-                        id="capacidade_passageiros"
-                        name="capacidade_passageiros"
-                        label="Capacidade de Passageiros"
+                        id="capacidade"
+                        name="capacidade"
+                        label="Capacidade"
                         type="number"
-                        value={formData.capacidade_passageiros}
+                        value={formData.capacidade}
                         onChange={handleChange}
-                        InputProps={{ inputProps: { min: 1 } }}
+                        InputProps={{ inputProps: { min: 1, max: 100 } }}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                     <TextField
                         required
                         fullWidth
-                        id="km_atual"
-                        name="km_atual"
+                        id="quilometragematual"
+                        name="quilometragematual"
                         label="Quilometragem Atual"
                         type="number"
-                        value={formData.km_atual}
+                        value={formData.quilometragematual}
                         onChange={handleChange}
                         InputProps={{ inputProps: { min: 0 } }}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        id="data_ultima_revisao"
-                        name="data_ultima_revisao"
-                        label="Data da Última Revisão"
-                        type="date"
-                        value={formData.data_ultima_revisao}
-                        onChange={handleChange}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        fullWidth
-                        id="data_proxima_revisao"
-                        name="data_proxima_revisao"
-                        label="Data da Próxima Revisão"
-                        type="date"
-                        value={formData.data_proxima_revisao}
-                        onChange={handleChange}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
                     />
                 </Grid>
                 <Grid item xs={12}>
@@ -267,32 +209,41 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
                         rows={4}
                         value={formData.observacoes}
                         onChange={handleChange}
+                        inputProps={{ maxLength: 500 }}
                     />
                 </Grid>
-
-
-            {/* Switch para Ativar/Inativar Veículo */}
-            <Grid item xs={12}>
-                <FormControlLabel
-                    control={<Switch checked={isVehicleActive} onChange={(e) => setIsVehicleActive(e.target.checked)} name="isVehicleActive" />}
-                    label={isVehicleActive ? "Veículo Ativo" : "Veículo Inativo"}
-                />
+                <Grid item xs={12}>
+                    <FormControl fullWidth>
+                        <InputLabel id="status-label">Status do Veículo</InputLabel>
+                        <Select
+                            labelId="status-label"
+                            id="status"
+                            name="status"
+                            value={formData.status}
+                            label="Status do Veículo"
+                            onChange={handleChange}
+                        >
+                            {statusTypes.map(status => (
+                                <MenuItem key={status} value={status}>{status}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        disabled={isLoading}
+                        sx={{ mt: 2 }}
+                    >
+                        {isLoading ? <CircularProgress size={24} /> : 'Cadastrar Veículo'}
+                    </Button>
+                </Grid>
             </Grid>
-
-            <Grid item xs={12} sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button 
-                    type="submit" 
-                    variant="contained" 
-                    color="primary" 
-                    disabled={isLoading}
-                    startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : null}
-                >
-                    {isLoading ? 'Salvando...' : (initialData.veiculoid ? 'Atualizar Veículo' : 'Salvar Veículo')}
-                </Button>
-            </Grid> {/* Fecha o Grid item dos botões */}
-        </Grid> {/* Fecha o Grid container principal */}
-    </Box> /* Fecha o Box do formulário */
-);
+        </Box>
+    );
 };
 
 export default VehicleForm;
