@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Você precisará ter o axios instalado: npm install axios ou yarn add axios
+import {
+    Container,
+    Paper,
+    Typography,
+    TextField,
+    Button,
+    Box,
+    Alert,
+    CircularProgress
+} from '@mui/material';
+import { useHistory } from 'react-router-dom';
+import api from '../services/api';
+import senacLogo from '../Senac_logo.png';
 
 const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const history = useHistory();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -20,42 +33,103 @@ const ForgotPasswordPage = () => {
         }
 
         try {
-            // Adapte a URL da API conforme necessário
-            const response = await axios.post('/api/v1/auth/forgot-password', { email });
-            setMessage(response.data.message || 'Se um email cadastrado for encontrado, um link de redefinição será enviado.');
+            const response = await api.post('/auth/forgot-password', { email });
+            setMessage('Se o email estiver cadastrado, você receberá um link para redefinir sua senha.');
+            
+            // Redireciona para a página de login após 5 segundos
+            setTimeout(() => {
+                history.push('/login');
+            }, 5000);
         } catch (err) {
-            const errorMessage = err.response && err.response.data && err.response.data.message
-                ? err.response.data.message
-                : 'Ocorreu um erro. Tente novamente.';
+            const errorMessage = err.response?.data?.message || 'Ocorreu um erro. Tente novamente.';
             setError(errorMessage);
-            console.error("Erro ao solicitar redefinição de senha:", err.response ? err.response.data : err.message);
+            console.error("Erro ao solicitar redefinição de senha:", err);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '5px' }}>
-            <h2>Esqueci Minha Senha</h2>
-            <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: '15px' }}>
-                    <label htmlFor="email">Email:</label>
-                    <input
-                        type="email"
+        <Container component="main" maxWidth="xs">
+            <Box
+                sx={{
+                    marginTop: 8,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                }}
+            >
+                <Box
+                    component="img"
+                    src={senacLogo}
+                    alt="Senac Logo"
+                    sx={{ height: 60, mb: 3 }}
+                />
+                <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+                    <Typography component="h1" variant="h5" align="center" gutterBottom sx={{
+                        fontFamily: "'Exo 2', sans-serif",
+                        fontWeight: 'bold',
+                        color: 'primary.main'
+                    }}>
+                        Recuperação de Senha
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
+                        Digite seu email cadastrado para receber um link de redefinição de senha.
+                    </Typography>
+
+                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
                         id="email"
+                            label="Email"
+                            name="email"
+                            autoComplete="email"
+                            autoFocus
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '8px', marginTop: '5px', boxSizing: 'border-box' }}
+                            error={!!error}
                     />
-                </div>
-                {message && <p style={{ color: 'green' }}>{message}</p>}
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit" disabled={loading} style={{ padding: '10px 15px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>
-                    {loading ? 'Enviando...' : 'Enviar Link de Redefinição'}
-                </button>
-            </form>
-        </div>
+
+                        {message && (
+                            <Alert severity="success" sx={{ mt: 2 }}>
+                                {message}
+                            </Alert>
+                        )}
+
+                        {error && (
+                            <Alert severity="error" sx={{ mt: 2 }}>
+                                {error}
+                            </Alert>
+                        )}
+
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2 }}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <CircularProgress size={24} color="inherit" />
+                            ) : (
+                                'Enviar Link de Redefinição'
+                            )}
+                        </Button>
+
+                        <Button
+                            fullWidth
+                            variant="text"
+                            onClick={() => history.push('/login')}
+                            sx={{ mt: 1 }}
+                        >
+                            Voltar para o Login
+                        </Button>
+                    </Box>
+                </Paper>
+            </Box>
+        </Container>
     );
 };
 

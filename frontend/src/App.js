@@ -148,13 +148,18 @@ const AppContent = () => {
             allowedRoles={[USER_ROLES.ADMINISTRADOR]}
           />
           <ProtectedRoute
-            path="/usuarios"
+            path="/admin/users/new"
+            component={CreateUserPage}
+            allowedRoles={[USER_ROLES.ADMINISTRADOR]}
+          />
+          <ProtectedRoute
+            path="/admin/users"
             component={UserListPage}
             isAuthenticated={isAuthenticated}
             allowedRoles={[USER_ROLES.ADMINISTRADOR]}
           />
           <ProtectedRoute
-            path="/admin/users"
+            path="/usuarios"
             component={UserListPage}
             isAuthenticated={isAuthenticated}
             allowedRoles={[USER_ROLES.ADMINISTRADOR]}

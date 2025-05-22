@@ -7,7 +7,14 @@ const routeController = require('../controllers/routeController');
 router.post('/', authenticateToken, routeController.createRoute);
 
 // GET /api/v1/routes - Listar todas as rotas
-router.get('/', authenticateToken, routeController.listRoutes);
+router.get('/', (req, res, next) => {
+    // Se for uma requisição da home page, não requer autenticação
+    if (req.query.home === 'true') {
+        return routeController.listRoutes(req, res, next);
+    }
+    // Caso contrário, requer autenticação
+    authenticateToken(req, res, next);
+}, routeController.listRoutes);
 
 // GET /api/v1/routes/:id - Buscar uma rota específica
 router.get('/:id', authenticateToken, routeController.getRouteById);

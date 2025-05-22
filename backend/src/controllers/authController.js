@@ -5,6 +5,7 @@ const crypto = require('crypto'); // Adicionado para gerar token
 const userModel = require('../models/userModel');
 const loginAttemptModel = require('../models/loginAttemptModel');
 const { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } = require('../validators/authSchemas'); // Adicionado forgotPasswordSchema e resetPasswordSchema
+const { sendPasswordResetEmail } = require('../utils/emailService');
 
 // Registrar novo usuário
 exports.registerUser = async (req, res) => {
@@ -186,86 +187,74 @@ exports.loginUser = async (req, res) => {
 
 // Solicitar redefinição de senha
 exports.forgotPassword = async (req, res) => {
-    const { error, value } = forgotPasswordSchema.validate(req.body);
-    if (error) {
-        return res.status(400).json({ message: "Email inválido ou não fornecido.", details: error.details.map(d => d.message) });
-    }
-    const { email } = value;
-
     try {
-        const user = await userModel.findByEmail(email);
+        const { email } = req.body;
 
-        // Importante: Não revelar se o email existe ou não no sistema por segurança.
-        // Envie uma resposta de sucesso mesmo que o email não seja encontrado ou usuário inativo.
-        // O email só será enviado se o usuário for encontrado e ativo.
-        if (user && user.ativo) {
-            const resetToken = crypto.randomBytes(32).toString('hex');
-            const passwordResetExpires = new Date(Date.now() + 3600000); // Token expira em 1 hora
-
-            await userModel.setResetPasswordToken(user.userid, resetToken, passwordResetExpires);
-
-            // Em um ambiente de produção, aqui você enviaria um email
-            // Por agora, vamos logar o link no console
-            const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/reset-password/${resetToken}`;
-            console.log('Link para redefinição de senha (simulado):', resetUrl);
-            // Para o frontend, seria algo como: `https://seusite.com/reset-password/${resetToken}`
+        // Validação básica do email
+        if (!email) {
+            return res.status(400).json({ message: 'Email é obrigatório' });
         }
 
-        res.status(200).json({ message: 'Se um usuário com este email existir e estiver ativo, um link de redefinição de senha será enviado.' });
+        // Busca o usuário pelo email
+        const user = await userModel.findByEmail(email);
+        
+        // Se o usuário existir e estiver ativo, gera o token de redefinição
+        if (user && user.ativo) {
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hora
 
-    } catch (err) {
-        console.error('Erro em forgotPassword:', err);
-        // Não envie detalhes do erro para o cliente em produção por segurança
-        res.status(500).json({ message: 'Erro interno no servidor ao tentar processar a solicitação de redefinição de senha.' });
+            // Salva o token no banco de dados
+            await userModel.setResetPasswordToken(user.userid, resetToken, resetTokenExpires);
+
+            // Envia o email com o link de redefinição
+            try {
+                await sendPasswordResetEmail(email, resetToken);
+            } catch (emailError) {
+                console.error('Erro ao enviar email de redefinição:', emailError);
+                // Não retorna erro para o cliente para não revelar se o email existe
+            }
+        }
+
+        // Sempre retorna sucesso para não revelar se o email existe
+        res.json({ 
+            message: 'Se o email estiver cadastrado, você receberá as instruções para redefinir sua senha.' 
+        });
+    } catch (error) {
+        console.error('Erro ao processar solicitação de redefinição de senha:', error);
+        res.status(500).json({ message: 'Erro ao processar solicitação de redefinição de senha' });
     }
 };
 
-// Redefinir a senha
+// Redefinir senha
 exports.resetPassword = async (req, res) => {
-    const { token } = req.params;
-    const { error, value } = resetPasswordSchema.validate(req.body);
-    if (error) {
-        return res.status(400).json({ message: "Dados inválidos para redefinição de senha.", details: error.details.map(d => d.message) });
-    }
-    const { senha } = value;
-
     try {
+        const { token } = req.params;
+        const { senha } = req.body;
+
+        // Validação básica da senha
+        if (!senha || senha.length < 8) {
+            return res.status(400).json({ message: 'A senha deve ter pelo menos 8 caracteres' });
+        }
+
+        // Busca o usuário pelo token
         const user = await userModel.findByResetPasswordToken(token);
 
-        if (!user) {
-            return res.status(400).json({ message: 'Token de redefinição de senha inválido, expirado ou usuário inativo.' });
+        // Verifica se o token é válido e não expirou
+        if (!user || !user.reset_token_expires || new Date(user.reset_token_expires) < new Date()) {
+            return res.status(400).json({ message: 'Token inválido ou expirado' });
         }
 
-        // Hashear a nova senha
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(senha, salt);
+        // Hash da nova senha
+        const hashedPassword = await bcrypt.hash(senha, 10);
 
-        // Atualizar a senha e limpar o token de redefinição
-        // A função update do userModel precisa ser capaz de setar campos para null.
-        const fieldsToUpdate = {
-            senha: hashedPassword,
-            reset_password_token: null,
-            reset_password_expires: null
-        };
+        // Atualiza a senha e limpa os campos de redefinição
+        await userModel.updatePassword(user.userid, hashedPassword);
+        await userModel.clearResetPasswordToken(user.userid);
 
-        const updatedUser = await userModel.update(user.userid, fieldsToUpdate);
-
-        if (!updatedUser) {
-             // Isso seria inesperado se o userModel.update retornar null mesmo com sucesso (se não retornar o usuário)
-             // ou se a atualização falhar por algum motivo não capturado antes.
-            console.error('Falha ao atualizar usuário após redefinição de senha, usuário não retornado por userModel.update');
-            return res.status(500).json({ message: 'Erro ao finalizar a redefinição da senha.'});
-        }
-
-        // Logar o usuário ou apenas enviar mensagem de sucesso
-        // Por simplicidade, apenas enviamos uma mensagem de sucesso.
-        // Se quisesse logar o usuário, geraria um novo JWT token aqui.
-
-        res.status(200).json({ message: 'Senha redefinida com sucesso!' });
-
-    } catch (err) {
-        console.error('Erro em resetPassword:', err);
-        res.status(500).json({ message: 'Erro interno no servidor ao tentar redefinir a senha.' });
+        res.json({ message: 'Senha redefinida com sucesso' });
+    } catch (error) {
+        console.error('Erro ao redefinir senha:', error);
+        res.status(500).json({ message: 'Erro ao redefinir senha' });
     }
 };
 

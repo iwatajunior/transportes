@@ -71,8 +71,8 @@ app.use('/api/v1/users', userRoutes); // <-- Uso das rotas de usuário
 app.use('/api/v1/routes', routeRoutes); // <-- Uso das rotas de rotas
 app.use('/api/v1/materials', materialRoutes); // <-- Uso das rotas de materiais
 
-const PORT = process.env.PORT || 3002;
+const PORT = 3001;
 
-app.listen(PORT, '10.1.1.42', () => {
-  console.log(`Servidor backend rodando em http://10.1.1.42:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Servidor backend rodando em http://localhost:${PORT}`);
 });

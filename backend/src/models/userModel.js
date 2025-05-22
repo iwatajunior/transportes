@@ -256,6 +256,51 @@ const update = async (userId, fieldsToUpdate) => {
     }
 };
 
+/**
+ * Atualiza a senha de um usuário.
+ * @param {number} userId - ID do usuário
+ * @param {string} newPassword - Nova senha (já hasheada)
+ * @returns {Promise<object>} Usuário atualizado
+ */
+const updatePassword = async (userId, newPassword) => {
+    const query = `
+        UPDATE usuarios 
+        SET senha = $1
+        WHERE userid = $2 
+        RETURNING userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, status;
+    `;
+
+    try {
+        const result = await pool.query(query, [newPassword, userId]);
+        return result.rows[0];
+    } catch (error) {
+        console.error('Erro ao atualizar senha:', error);
+        throw error;
+    }
+};
+
+/**
+ * Limpa o token de redefinição de senha de um usuário.
+ * @param {number} userId - ID do usuário
+ * @returns {Promise<object>} Usuário atualizado
+ */
+const clearResetPasswordToken = async (userId) => {
+    const query = `
+        UPDATE usuarios 
+        SET reset_token = NULL, 
+            reset_token_expires = NULL
+        WHERE userid = $1 
+        RETURNING userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, status;
+    `;
+
+    try {
+        const result = await pool.query(query, [userId]);
+        return result.rows[0];
+    } catch (error) {
+        console.error('Erro ao limpar token de redefinição de senha:', error);
+        throw error;
+    }
+};
 
 /**
  * Atualiza a senha do próprio usuário.
@@ -315,16 +360,14 @@ const updateSelfProfile = async (userId, data) => {
  */
 const setResetPasswordToken = async (userId, token, expires) => {
     const query = `
-        UPDATE usuarios
-        SET reset_password_token = $1, reset_password_expires = $2
-        WHERE userid = $3
-        RETURNING userid, email, reset_password_token, reset_password_expires;
+        UPDATE usuarios 
+        SET reset_token = $1, reset_token_expires = $2 
+        WHERE userid = $3 
+        RETURNING userid, email, nome, perfil, setor, fotoperfilurl, ativo, datacadastro, status
     `;
-    // Os nomes das colunas `reset_password_token` e `reset_password_expires` devem corresponder aos que você adicionou ao BD.
-    const values = [token, expires, userId];
     try {
-        const result = await pool.query(query, values);
-        return result.rows[0] || null;
+        const result = await pool.query(query, [token, expires, userId]);
+        return result.rows[0];
     } catch (error) {
         console.error('Erro ao definir token de redefinição de senha:', error);
         throw error;
@@ -339,17 +382,15 @@ const setResetPasswordToken = async (userId, token, expires) => {
  */
 const findByResetPasswordToken = async (token) => {
     const query = `
-        SELECT userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, senha, reset_password_token, reset_password_expires
-        FROM usuarios
-        WHERE reset_password_token = $1 AND reset_password_expires > NOW() AND ativo = TRUE;
+        SELECT userid, email, nome, perfil, setor, fotoperfilurl, ativo, datacadastro, status, reset_token_expires
+        FROM usuarios 
+        WHERE reset_token = $1 AND ativo = true
     `;
-    // A query verifica se o token existe, não expirou (reset_password_expires > NOW()) e se o usuário está ativo.
-    // Incluí a senha para que o controller possa usá-la para verificar a senha antiga se necessário, ou simplesmente para ter o objeto completo.
     try {
         const result = await pool.query(query, [token]);
         return result.rows[0] || null;
     } catch (error) {
-        console.error('Erro ao buscar usuário por token de redefinição de senha:', error);
+        console.error('Erro ao buscar usuário por token de redefinição:', error);
         throw error;
     }
 };
@@ -380,6 +421,8 @@ module.exports = {
     findById,
     getAll,
     update,
+    updatePassword,
+    clearResetPasswordToken,
     updateSelfProfile,
     setResetPasswordToken,
     findByResetPasswordToken,
