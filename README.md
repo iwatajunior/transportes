@@ -40,12 +40,3 @@ TRANSPORTES/
 7.  Testes.
 8.  Deploy.
 
-NOTA DE VALIDAÇÃO DA ÁREA DE NEGÓCIO:
-identificar ida e retorno na solicitação da viagem
-Pesquisa de satisfação do usuário, escala de satisfação e observação, obrigatoriedade para novas viagens, avaliar a ultima concluida (permissão para visualizar comentário das avaliações apenas gestor, média pode ser visualizada por motoristas)
-Adicionar despesas da rota
-Augusto: inserir alocação de recurso de viagem, alterar status da viagem
-
-Carla
-Atribuições de rotas, contran ou gecop?
-modelos de relatórios
