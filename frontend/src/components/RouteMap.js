@@ -431,9 +431,40 @@ const RouteMap = () => {
         Rotas Programadas
       </Typography>
       {rotas.length === 0 ? (
-        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-          Nenhuma rota ativa no momento.
-        </Typography>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          py: 4,
+          px: 2,
+          backgroundColor: 'background.paper',
+          borderRadius: 2,
+          boxShadow: 1
+        }}>
+          <LocalShippingIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+          <Typography 
+            variant="h6" 
+            color="text.secondary" 
+            sx={{ 
+              textAlign: 'center',
+              fontWeight: 500,
+              mb: 1
+            }}
+          >
+            Nenhuma rota ativa no momento
+          </Typography>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              textAlign: 'center',
+              maxWidth: '400px'
+            }}
+          >
+            Aguarde até que uma nova rota seja cadastrada.
+          </Typography>
+        </Box>
       ) : (
         <Grid container spacing={3}>
           {(rotas || []).map((rota) => {

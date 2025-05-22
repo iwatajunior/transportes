@@ -88,8 +88,6 @@ const RelatorioViagensPage = () => {
             case 'Pendente':
                 return { bg: '#ff9800', text: 'white' };
             case 'Agendada':
-                return { bg: '#ff9800', text: 'white' };
-            case 'Aprovada':
                 return { bg: '#4caf50', text: 'white' };
             case 'Recusada':
                 return { bg: '#f44336', text: 'white' };

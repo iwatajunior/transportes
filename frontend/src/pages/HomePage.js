@@ -273,7 +273,7 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Editar Rotas</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Rotas</Typography>
             </Button>
           </Grid>
 

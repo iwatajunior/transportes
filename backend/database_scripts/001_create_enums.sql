@@ -21,13 +21,12 @@ CREATE TYPE status_veiculo AS ENUM (
 );
 
 CREATE TYPE status_viagem AS ENUM (
-    'Solicitada',
-    'Aprovada',
-    'Rejeitada',
-    'Alocada',
-    'Em Andamento',
-    'Concluída',
-    'Cancelada'
+    'Pendente',
+    'Agendada',
+    'Andamento',
+    'Concluida',
+    'Cancelada',
+    'Recusada'
 );
 
 -- Adicionar um tipo para Setor, se for uma lista finita e conhecida

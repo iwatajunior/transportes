@@ -128,10 +128,8 @@ const TripListPage = () => {
         switch (status) {
             case 'Pendente':
                 return { color: 'warning', icon: <HelpOutlineIcon /> };
-            case 'Aprovada':
-                return { color: 'success', icon: <CheckCircleIcon /> };
             case 'Agendada':
-                return { color: 'warning', icon: <EventIcon /> };
+                return { color: 'success', icon: <EventIcon /> };
             case 'Em Andamento':
                 return { color: 'info', icon: <AccessTimeIcon /> };
             case 'Concluida':
@@ -257,7 +255,7 @@ const TripListPage = () => {
                                 >
                                     <MenuItem value="">Todos</MenuItem>
                                     <MenuItem value="Pendente">Pendente</MenuItem>
-                                    <MenuItem value="Aprovada">Aprovada</MenuItem>
+                                    <MenuItem value="Agendada">Agendada</MenuItem>
                                     <MenuItem value="Em Andamento">Em Andamento</MenuItem>
                                     <MenuItem value="Concluída">Concluída</MenuItem>
                                     <MenuItem value="Cancelada">Cancelada</MenuItem>
