@@ -22,19 +22,38 @@ class LoginAttemptModel {
         }
     }
 
-    static async getAllAttempts(minutes = 60) {
+    static async getAllAttempts(page = 1, limit = 50) {
+        console.log('[loginAttemptModel] Buscando tentativas de login...');
+        const offset = (page - 1) * limit;
+        
         const query = `
             SELECT * FROM tentativas_login 
-            WHERE data_tentativa > NOW() - INTERVAL '${minutes} minutes'
             ORDER BY data_tentativa DESC
+            LIMIT $1 OFFSET $2
+        `;
+        
+        const countQuery = `
+            SELECT COUNT(*) FROM tentativas_login
         `;
         
         try {
-            const result = await pool.query(query);
-            return result.rows;
+            console.log('[loginAttemptModel] Executando query:', query);
+            const [result, countResult] = await Promise.all([
+                pool.query(query, [limit, offset]),
+                pool.query(countQuery)
+            ]);
+            
+            console.log('[loginAttemptModel] Tentativas encontradas:', result.rows.length);
+            return {
+                attempts: result.rows,
+                total: parseInt(countResult.rows[0].count),
+                page,
+                limit,
+                totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit)
+            };
         } catch (error) {
-            console.error('Erro ao buscar tentativas de login:', error);
-            throw error;
+            console.error('[loginAttemptModel] Erro ao buscar tentativas de login:', error);
+            throw new Error(`Erro ao buscar tentativas de login: ${error.message}`);
         }
     }
 

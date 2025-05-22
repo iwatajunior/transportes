@@ -26,12 +26,20 @@ router.post('/reset-password/:token', authController.resetPassword);
 // Rotas administrativas
 router.get('/login-attempts', authenticateToken, authorizeRoles(USER_ROLES.ADMINISTRADOR, USER_ROLES.GESTOR), async (req, res) => {
     try {
-        const { minutes = 60 } = req.query;
-        const attempts = await loginAttemptModel.getAllAttempts(parseInt(minutes));
-        res.json({ attempts });
+        console.log('[authRoutes] Buscando tentativas de login...');
+        const { page = 1, limit = 50 } = req.query;
+        console.log('[authRoutes] Parâmetros:', { page, limit });
+        
+        const result = await loginAttemptModel.getAllAttempts(parseInt(page), parseInt(limit));
+        console.log('[authRoutes] Tentativas encontradas:', result.attempts.length);
+        
+        res.json(result);
     } catch (error) {
-        console.error('Erro ao consultar tentativas de login:', error);
-        res.status(500).json({ message: 'Erro ao consultar tentativas de login.' });
+        console.error('[authRoutes] Erro ao consultar tentativas de login:', error);
+        res.status(500).json({ 
+            message: 'Erro ao consultar tentativas de login.',
+            error: error.message 
+        });
     }
 });
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link as RouterLink } from 'react-router-dom';
+import { useParams, Link as RouterLink, useHistory } from 'react-router-dom';
 import api from '../services/api';
 import { 
     Container, 
@@ -34,6 +34,7 @@ import FlagIcon from '@mui/icons-material/Flag'; // Para finalidade
 import EngineeringIcon from '@mui/icons-material/Engineering'; // Para Motorista e Alocação
 import GroupIcon from '@mui/icons-material/Group'; // Adicionado de volta
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../contexts/AuthContext';  // Importar contexto de autenticação
 
 // Função para obter a cor do status
@@ -85,7 +86,8 @@ const getStatusChipColor = (status) => {
 };
 
 const TripDetailPage = () => {
-    const { id } = useParams(); // Pega o ID da URL
+    const { id } = useParams();
+    const history = useHistory();
     const [trip, setTrip] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -116,7 +118,10 @@ const TripDetailPage = () => {
     // Compara IDs como números para segurança
     const isCurrentTripDriver = user && trip && Number(trip.motorista_usuarioid) === Number(user.userId);
 
-    const canAllocate = user && (user.perfil === 'Gestor' || user.perfil === 'Administrador' || user.perfil === 'Motorista'); // Motorista incluído TEMPORARIAMENTE para teste
+    const canAllocate = user && (user.perfil === 'Gestor' || user.perfil === 'Administrador' || user.perfil === 'Motorista');
+
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
     // Busca dados da viagem, veículos e motoristas
     useEffect(() => {
@@ -125,6 +130,8 @@ const TripDetailPage = () => {
             setError('');
             setErrorVehicles('');
             setErrorDrivers('');
+            setSelectedVehicle('');
+            setSelectedDriver('');
 
             try {
                 // 1. Buscar detalhes da viagem
@@ -143,46 +150,34 @@ const TripDetailPage = () => {
                     throw err;
                 }
 
-                // REMOVIDO: Pré-seleção movida para useEffects dedicados abaixo
-                /*
-                if (fetchedTrip.veiculo_alocado_id) {
-                    console.log('DEBUG: Pré-selecionando veículo:', fetchedTrip.veiculo_alocado_id);
-                    setSelectedVehicle(fetchedTrip.veiculo_alocado_id);
-                }
-                if (fetchedTrip.motorista_usuarioid) {
-                    console.log('DEBUG: Pré-selecionando motorista:', fetchedTrip.motorista_usuarioid);
-                    setSelectedDriver(fetchedTrip.motorista_usuarioid);
-                }
-                */
-
-                // 2. Buscar veículos disponíveis (sempre busca, a API restringe se não for Admin/Gestor)
+                // 2. Buscar veículos disponíveis
                 try {
                     console.log('DEBUG: Buscando veículos disponíveis');
                     const vehiclesResponse = await api.get('/vehicles/available');
                     console.log('DEBUG: Resposta veículos:', vehiclesResponse.data);
-                    setVehicles(vehiclesResponse.data.vehicles || []); // Mantém state 'vehicles'
+                    const vehiclesData = vehiclesResponse.data.vehicles || [];
+                    setVehicles(vehiclesData);
                 } catch (vehiclesErr) {
                     console.error('Erro ao buscar veículos disponíveis:', vehiclesErr);
-                    if (vehiclesErr.response?.status !== 403) { // Não mostra erro se for proibido (motorista)
+                    if (vehiclesErr.response?.status !== 403) {
                        setErrorVehicles('Falha ao carregar veículos.');
                        setAllocationError('Falha parcial ao carregar dados para alocação.');
                     }
                 }
 
-                // 3. Buscar motoristas disponíveis (sempre busca, a API restringe se não for Admin/Gestor)
+                // 3. Buscar motoristas disponíveis
                 try {
                     console.log('DEBUG: Buscando motoristas disponíveis');
                     const driversResponse = await api.get('/users/drivers');
                     console.log('DEBUG: Resposta motoristas:', driversResponse.data);
-                    const receivedDrivers = driversResponse.data || [];
-                    console.log('DEBUG: Lista de motoristas recebida e sendo setada:', receivedDrivers);
-                    setDrivers(receivedDrivers); // Mantém state 'drivers'
+                    const driversData = driversResponse.data || [];
+                    setDrivers(driversData);
                 } catch (driversErr) {
                     console.error('Erro ao buscar motoristas disponíveis:', driversErr);
-                     if (driversErr.response?.status !== 403) { // Não mostra erro se for proibido (motorista)
+                    if (driversErr.response?.status !== 403) {
                         setErrorDrivers('Falha ao carregar motoristas.');
                         setAllocationError('Falha parcial ao carregar dados para alocação.');
-                     }
+                    }
                 }
 
             } catch (err) {
@@ -195,34 +190,28 @@ const TripDetailPage = () => {
         };
 
         fetchData();
-    }, [id]); // Depende apenas do ID da viagem
-
-    // useEffect para pré-selecionar o veículo APÓS trip E vehicles carregarem
-    useEffect(() => {
-        // Só executa se trip e vehicles tiverem dados e o veículo ainda não foi setado pelo usuário
-        if (trip?.veiculo_alocado_id && vehicles.length > 0 && selectedVehicle === '') {
-            console.log('DEBUG (useEffect): Pré-selecionando veículo:', trip.veiculo_alocado_id);
-            setSelectedVehicle(trip.veiculo_alocado_id);
-        }
-    }, [trip, vehicles, selectedVehicle]); // Depende de trip, vehicles, e selectedVehicle para evitar loop
+    }, [id]);
 
     // useEffect para pré-selecionar o motorista APÓS trip E drivers carregarem
     useEffect(() => {
-        // Só executa se trip e drivers tiverem dados e o motorista ainda não foi setado pelo usuário
-        // Converte para string para garantir consistência com MenuItem value
-        if (trip?.motorista_usuarioid && drivers.length > 0 && selectedDriver === '') {
-            const driverIdStr = String(trip.motorista_usuarioid); // Converte para string
-            console.log('DEBUG (useEffect): Pré-selecionando motorista (string):', driverIdStr);
-            setSelectedDriver(driverIdStr); // Seta como string
+        if (trip?.motorista_usuarioid && drivers?.length > 0) {
+            const driverIdStr = String(trip.motorista_usuarioid);
+            setSelectedDriver(driverIdStr);
         }
+    }, [trip, drivers]);
 
-    }, [trip, drivers, selectedDriver]);
+    // useEffect para pré-selecionar o veículo APÓS trip E vehicles carregarem
+    useEffect(() => {
+        if (trip?.veiculo_alocado_id && vehicles?.length > 0) {
+            setSelectedVehicle(trip.veiculo_alocado_id);
+        }
+    }, [trip, vehicles]);
 
     // useEffect para popular KM com dados da viagem
     useEffect(() => {
         if (trip) {
-            setInitialKm(trip.km_inicial !== null && trip.km_inicial !== undefined ? String(trip.km_inicial) : '');
-            setFinalKm(trip.km_final !== null && trip.km_final !== undefined ? String(trip.km_final) : '');
+            setInitialKm(trip.km_inicial != null ? String(trip.km_inicial) : '');
+            setFinalKm(trip.km_final != null ? String(trip.km_final) : '');
         }
     }, [trip]);
 
@@ -312,6 +301,33 @@ const TripDetailPage = () => {
         }
     };
 
+    // Função para deletar a viagem
+    const handleDeleteTrip = async () => {
+        try {
+            setDeleteLoading(true);
+            await api.delete(`/trips/${id}`);
+            setSnackbar({ 
+                open: true, 
+                message: 'Viagem excluída com sucesso!', 
+                severity: 'success' 
+            });
+            // Redireciona para a lista de viagens após 1 segundo
+            setTimeout(() => {
+                history.push('/viagens');
+            }, 1000);
+        } catch (error) {
+            console.error('Erro ao deletar viagem:', error);
+            setSnackbar({ 
+                open: true, 
+                message: error.response?.data?.message || 'Erro ao excluir viagem', 
+                severity: 'error' 
+            });
+        } finally {
+            setDeleteLoading(false);
+            setDeleteDialogOpen(false);
+        }
+    };
+
     if (loading) {
         return (
             <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -383,7 +399,7 @@ const TripDetailPage = () => {
                 backgroundColor: 'background.paper',
                 boxShadow: (theme) => theme.shadows[3]
             }}>
-                {/* Cabeçalho com Título e Botão Voltar */}
+                {/* Cabeçalho com Título e Botões */}
                 <Box sx={{
                     display: 'flex',
                     flexDirection: { xs: 'column', sm: 'row' },
@@ -395,15 +411,28 @@ const TripDetailPage = () => {
                     <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', fontFamily: "'Exo 2', sans-serif" }}>
                         Detalhes da Viagem <Typography component="span" variant="h4" color="primary">{trip.viagemid}</Typography>
                     </Typography>
-                     <Button 
-                        variant="outlined" 
-                        component={RouterLink} 
-                        to="/viagens"
-                        startIcon={<ArrowBackIcon />}
-                        sx={{ textTransform: 'none' }}
-                    >
-                        Voltar para Lista
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button 
+                            variant="outlined" 
+                            component={RouterLink} 
+                            to="/viagens"
+                            startIcon={<ArrowBackIcon />}
+                            sx={{ textTransform: 'none' }}
+                        >
+                            Voltar para Lista
+                        </Button>
+                        {isManager && (
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                startIcon={<DeleteIcon />}
+                                onClick={() => setDeleteDialogOpen(true)}
+                                disabled={deleteLoading}
+                            >
+                                Excluir Viagem
+                            </Button>
+                        )}
+                    </Box>
                 </Box>
                 
                 <Divider sx={{ mb: 3 }} />
@@ -627,18 +656,24 @@ const TripDetailPage = () => {
                                                     label="Veículo Disponível"
                                                     disabled={isAllocating}
                                                 >
-                                                    {/* Placeholder Item */}
                                                     <MenuItem value="">
                                                         <em>Selecione um Veículo</em>
                                                     </MenuItem>
-                                                    {console.log('DEBUG: Rendering vehicle dropdown with vehicles state:', vehicles)}
-                                                    {errorVehicles && <MenuItem disabled value=""><em>{errorVehicles}</em></MenuItem>}
-                                                    {!errorVehicles && vehicles.length === 0 && <MenuItem disabled value=""><em>Carregando veículos...</em></MenuItem>}
-                                                    {!errorVehicles && vehicles.map((vehicle) => (
-                                                        <MenuItem key={vehicle.veiculoid} value={vehicle.veiculoid}>
-                                                            {vehicle.marca} {vehicle.modelo} ({vehicle.placa}) - ID: {vehicle.veiculoid}
+                                                    {errorVehicles ? (
+                                                        <MenuItem disabled value="">
+                                                            <em>{errorVehicles}</em>
                                                         </MenuItem>
-                                                    ))}
+                                                    ) : !vehicles || vehicles.length === 0 ? (
+                                                        <MenuItem disabled value="">
+                                                            <em>Carregando veículos...</em>
+                                                        </MenuItem>
+                                                    ) : (
+                                                        vehicles.map((vehicle) => (
+                                                            <MenuItem key={vehicle.veiculoid} value={vehicle.veiculoid}>
+                                                                {vehicle.marca} {vehicle.modelo} ({vehicle.placa}) - ID: {vehicle.veiculoid}
+                                                            </MenuItem>
+                                                        ))
+                                                    )}
                                                 </Select>
                                             </FormControl>
                                         </Grid>
@@ -647,34 +682,34 @@ const TripDetailPage = () => {
                                         <Grid item xs={12} sm={6}>
                                             <FormControl fullWidth variant="outlined" size="small">
                                                 <InputLabel id="select-driver-label">Motorista Disponível</InputLabel>
-                                                {drivers.length > 0 ? (
                                                 <Select
                                                     labelId="driver-select-label"
                                                     id="driver-select"
-                                                    value={selectedDriver} 
+                                                    value={selectedDriver}
                                                     label="Motorista Alocado"
-                                                    onChange={(e) => setSelectedDriver(e.target.value)} 
-                                                    disabled={isAllocating || !canAllocate} 
+                                                    onChange={(e) => setSelectedDriver(e.target.value)}
+                                                    disabled={isAllocating || !canAllocate}
                                                 >
                                                     <MenuItem value="">
                                                         <em>Selecione um Motorista</em>
                                                     </MenuItem>
-                                                    {console.log('DEBUG: Rendering driver dropdown with drivers state:', drivers)}
-                                                    {errorDrivers && <MenuItem disabled value=""><em>{errorDrivers}</em></MenuItem>}
-                                                    {!errorDrivers && drivers.map((driver) => (
-                                                        <MenuItem key={driver.userid} value={String(driver.userid)}> 
-                                                            {driver.nome}
+                                                    {errorDrivers ? (
+                                                        <MenuItem disabled value="">
+                                                            <em>{errorDrivers}</em>
                                                         </MenuItem>
-                                                    ))}
+                                                    ) : !drivers || drivers.length === 0 ? (
+                                                        <MenuItem disabled value="">
+                                                            <em>Carregando motoristas...</em>
+                                                        </MenuItem>
+                                                    ) : (
+                                                        drivers.map((driver) => (
+                                                            <MenuItem key={driver.userid} value={String(driver.userid)}>
+                                                                {driver.nome}
+                                                            </MenuItem>
+                                                        ))
+                                                    )}
                                                 </Select>
-                                             ) : (
-                                                <Select disabled value="" label="Motorista Alocado">
-                                                     <MenuItem value="">
-                                                        <em>{errorDrivers ? errorDrivers : 'Carregando motoristas...'}</em>
-                                                     </MenuItem>
-                                                </Select>
-                                             )}
-                                         </FormControl>
+                                            </FormControl>
                                         </Grid>
                                     </Grid>
 
@@ -858,6 +893,35 @@ const TripDetailPage = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            {/* Dialog de confirmação de exclusão */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+            >
+                <DialogTitle>Confirmar Exclusão</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Tem certeza que deseja excluir esta viagem? Esta ação não pode ser desfeita.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button 
+                        onClick={() => setDeleteDialogOpen(false)}
+                        disabled={deleteLoading}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button 
+                        onClick={handleDeleteTrip}
+                        color="error"
+                        disabled={deleteLoading}
+                        startIcon={deleteLoading ? <CircularProgress size={20} /> : <DeleteIcon />}
+                    >
+                        {deleteLoading ? 'Excluindo...' : 'Confirmar Exclusão'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 };

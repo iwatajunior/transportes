@@ -253,12 +253,25 @@ export const updateUserProfile = async (profileData) => {
     }
 };
 
-export const getLoginAttempts = async (minutes = 60) => {
+export const getLoginAttempts = async (page = 1, limit = 50) => {
   try {
-    const response = await apiClient.get(`/auth/login-attempts?minutes=${minutes}`);
-    return response.data.attempts;
+    console.log('[api.getLoginAttempts] Iniciando busca de tentativas de login...');
+    const response = await apiClient.get(`/auth/login-attempts?page=${page}&limit=${limit}`);
+    console.log('[api.getLoginAttempts] Resposta da API:', response.data);
+    
+    if (!response.data || !response.data.attempts) {
+      console.error('[api.getLoginAttempts] Resposta inválida:', response.data);
+      throw new Error('Formato de resposta inválido do servidor');
+    }
+    
+    return response.data;
   } catch (error) {
-    console.error('Error fetching login attempts:', error.response ? error.response.data : error.message);
-    throw error.response ? error.response.data : new Error('Network error or server unreachable when fetching login attempts');
+    console.error('[api.getLoginAttempts] Erro:', error);
+    if (error.response) {
+      console.error('[api.getLoginAttempts] Status do erro:', error.response.status);
+      console.error('[api.getLoginAttempts] Dados do erro:', error.response.data);
+      throw new Error(error.response.data.message || 'Erro ao buscar tentativas de login');
+    }
+    throw new Error('Erro de rede ou servidor indisponível ao buscar tentativas de login');
   }
 };

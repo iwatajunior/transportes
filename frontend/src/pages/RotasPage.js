@@ -323,30 +323,32 @@ const RotasPage = () => {
                       }
                       label={rota.status === 'ativo' ? 'Ativa' : 'Inativa'}
                     />
-                    {editingRota?.id === rota.id ? (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<SaveIcon />}
-                        onClick={() => handleSave(editingRota)}
-                        size="small"
-                      >
-                        Salvar
-                      </Button>
-                    ) : (
-                      <IconButton 
-                        onClick={() => handleEditClick(rota)}
-                        color="primary"
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    )}
                   </Box>
                 </Box>
 
                 <Collapse in={isExpanded}>
                   <Grid container spacing={1}>
+                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                      {editingRota?.id === rota.id ? (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          startIcon={<SaveIcon />}
+                          onClick={() => handleSave(editingRota)}
+                          size="small"
+                        >
+                          Salvar
+                        </Button>
+                      ) : (
+                        <IconButton 
+                          onClick={() => handleEditClick(rota)}
+                          color="primary"
+                          size="small"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      )}
+                    </Grid>
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
