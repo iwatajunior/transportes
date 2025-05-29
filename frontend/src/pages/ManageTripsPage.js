@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { Container, Typography, Box, Paper, Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, CircularProgress } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
@@ -6,6 +7,7 @@ import api from '../services/api';
 import { getStatusColor } from '../utils/statusUtils';
 
 const ManageTripsPage = () => {
+    const { id } = useParams();
     const [trips, setTrips] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -19,6 +21,7 @@ const ManageTripsPage = () => {
             setLoading(true);
             setError(null);
             const response = await api.get('/trips');
+            console.log('Dados retornados pela API:', response.data);
             setTrips(response.data);
         } catch (err) {
             setError('Erro ao carregar as viagens');
@@ -112,7 +115,7 @@ const ManageTripsPage = () => {
                             {trips.map((trip) => (
                                 <TableRow key={trip.viagemid}>
                                     <TableCell>
-                                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{trip.viagemid}</Typography>
+                                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{trip.tripid}</Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2" sx={{ color: getStatusColor(trip.status_viagem) }}>{trip.status_viagem}</Typography>

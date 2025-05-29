@@ -409,7 +409,7 @@ const TripDetailPage = () => {
                     mb: 3
                 }}>
                     <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', fontFamily: "'Exo 2', sans-serif" }}>
-                        Detalhes da Viagem <Typography component="span" variant="h4" color="primary">{trip.viagemid}</Typography>
+                        Detalhes da Viagem <Typography component="span" variant="h4" color="primary">#{id}</Typography>
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <Button 
