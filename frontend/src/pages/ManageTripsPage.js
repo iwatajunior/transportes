@@ -21,8 +21,23 @@ const ManageTripsPage = () => {
             setLoading(true);
             setError(null);
             const response = await api.get('/trips');
+            // Definindo a ordem dos status
+            const statusOrder = {
+                'Pendente': 1,
+                'Agendada': 2,
+                'Em Andamento': 3,
+                'Concluida': 4,
+                'Recusada': 5,
+                'Cancelada': 6
+            };
+            
+            // Ordenando os dados pelo status usando a ordem definida
+            const orderedTrips = [...response.data].sort((a, b) => {
+                return (statusOrder[a.status_viagem] || 7) - (statusOrder[b.status_viagem] || 7);
+            });
+            
+            setTrips(orderedTrips);
             console.log('Dados retornados pela API:', response.data);
-            setTrips(response.data);
         } catch (err) {
             setError('Erro ao carregar as viagens');
             console.error('Erro:', err);
