@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Typography, Box, Paper, Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, CircularProgress } from '@mui/material';
+import { Container, Typography, Box, Paper, Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, CircularProgress, Pagination } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 import api from '../services/api';
@@ -11,6 +11,9 @@ const ManageTripsPage = () => {
     const [trips, setTrips] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [page, setPage] = useState(1);
+    const itemsPerPage = 3;
+    const totalPages = Math.ceil(trips.length / itemsPerPage);
 
     useEffect(() => {
         fetchTrips();
@@ -104,16 +107,20 @@ const ManageTripsPage = () => {
                     <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
                         Gerenciar Viagens
                     </Typography>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        component={RouterLink}
-                        to="/viagens/novo"
-                        sx={{ textTransform: 'none' }}
-                    >
-                        Nova Viagem
-                    </Button>
+                    <Pagination
+                        count={totalPages}
+                        page={page}
+                        onChange={(event, value) => setPage(value)}
+                        color="primary"
+                        size="small"
+                    />
                 </Box>
+
+                {totalPages > 1 && (
+                    <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                        Página {page} de {totalPages}
+                    </Typography>
+                )}
 
                 <TableContainer>
                     <Table>
@@ -127,7 +134,9 @@ const ManageTripsPage = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {trips.map((trip) => (
+                            {trips
+                                .slice((page - 1) * itemsPerPage, page * itemsPerPage)
+                                .map((trip) => (
                                 <TableRow key={trip.viagemid}>
                                     <TableCell>
                                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{trip.tripid}</Typography>
