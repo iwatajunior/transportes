@@ -153,15 +153,23 @@ const ManageTripsPage = () => {
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <IconButton
-                                            component={RouterLink}
-                                            to={`/viagens/${trip.viagemid}`}
+                                        <Button
+                                            variant="contained"
                                             color="primary"
+                                            component={RouterLink}
+                                            to={`/viagens/${trip.tripid}`}
+                                            startIcon={<EditIcon />}
                                             size="small"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                textTransform: 'none',
+                                                mr: 1,
+                                                '&:hover': {
+                                                    bgcolor: 'primary.dark'
+                                                }
+                                            }}
                                         >
-                                            <EditIcon />
-                                        </IconButton>
+                                            Gerenciar
+                                        </Button>
                                         <IconButton
                                             onClick={() => handleDeleteTrip(trip.viagemid)}
                                             color="error"
