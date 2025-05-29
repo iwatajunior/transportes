@@ -674,11 +674,19 @@ const TripDetailPage = () => {
                                                             <em>Carregando veículos...</em>
                                                         </MenuItem>
                                                     ) : (
-                                                        vehicles.map((vehicle) => (
-                                                            <MenuItem key={vehicle.veiculoid} value={vehicle.veiculoid}>
-                                                                {vehicle.marca} {vehicle.modelo} ({vehicle.placa}) - ID: {vehicle.veiculoid}
+                                                        // Inclui o veículo já alocado, se houver
+                                                        trip.veiculo_alocado_id && (
+                                                            <MenuItem key={trip.veiculo_alocado_id} value={trip.veiculo_alocado_id}>
+                                                                {trip.veiculo_alocado_marca} {trip.veiculo_alocado_modelo} ({trip.veiculo_alocado_placa}) - ID: {trip.veiculo_alocado_id}
                                                             </MenuItem>
-                                                        ))
+                                                        ) || (
+                                                            // Se não houver veículo alocado, mostra os disponíveis
+                                                            vehicles.map((vehicle) => (
+                                                                <MenuItem key={vehicle.veiculoid} value={vehicle.veiculoid}>
+                                                                    {vehicle.marca} {vehicle.modelo} ({vehicle.placa}) - ID: {vehicle.veiculoid}
+                                                                </MenuItem>
+                                                            ))
+                                                        )
                                                     )}
                                                 </Select>
                                             </FormControl>
