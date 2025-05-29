@@ -36,6 +36,7 @@ import GroupIcon from '@mui/icons-material/Group'; // Adicionado de volta
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../contexts/AuthContext';  // Importar contexto de autenticação
+import { USER_ROLES } from '../utils/userConstants';  // Importar constantes de perfis
 
 // Função para obter a cor do status
 const getStatusColor = (status) => {
@@ -94,6 +95,12 @@ const TripDetailPage = () => {
     const [statusLoading, setStatusLoading] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const { user: authUser } = useAuth();  // Obter informações do usuário logado
+    const user = authUser;  // Usar o usuário do contexto
+    
+    // Verificar se o usuário está logado e tem perfil válido
+    // Verificar se o usuário é Gestor ou Administrador
+    const hasValidRole = user && (user.perfil === USER_ROLES.GESTOR || user.perfil === USER_ROLES.ADMINISTRADOR);
+    
     const [vehicles, setVehicles] = useState([]);
     const [drivers, setDrivers] = useState([]);
     const [selectedVehicle, setSelectedVehicle] = useState('');
@@ -111,14 +118,12 @@ const TripDetailPage = () => {
     const [kmSuccess, setKmSuccess] = useState('');
     const [isSavingKm, setIsSavingKm] = useState(false);
 
-    // TODO: Obter o usuário logado do contexto
-    const user = { userId: 8, perfil: 'Gestor' }; // SIMULAÇÃO para teste de KM
-
     // Determina se o usuário atual é o motorista alocado
     // Compara IDs como números para segurança
     const isCurrentTripDriver = user && trip && Number(trip.motorista_usuarioid) === Number(user.userId);
 
-    const canAllocate = user && (user.perfil === 'Gestor' || user.perfil === 'Administrador' || user.perfil === 'Motorista');
+    // Card de alocação visível apenas para Gestor e Administrador
+    const canAllocate = hasValidRole;
 
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -639,7 +644,7 @@ const TripDetailPage = () => {
                     {/* === Card de Alocação (Condicional) === */}
                     {canAllocate && (
                         <Grid item xs={12}>
-                            <Card elevation={2} sx={{ mt: 2 }}>
+                            <Card elevation={2} sx={{ mt: 2, display: hasValidRole ? 'block' : 'none' }}>
                                 <CardHeader 
                                     avatar={<Avatar sx={{ bgcolor: 'secondary.main' }}><EngineeringIcon /></Avatar>}
                                     title={<Typography variant="h6">Alocar Recursos</Typography>}
@@ -744,12 +749,12 @@ const TripDetailPage = () => {
                                     {/* Campos e Botões para Gerenciar KM (Apenas para Gestor/Admin) */}
                                     {user && (user.perfil === 'Gestor' || user.perfil === 'Administrador') && (
                                         <Box mt={3} pt={2} borderTop={1} borderColor="divider">
-                                            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
+                                            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium', display: hasValidRole ? 'block' : 'none' }}>
                                                 Gerenciar Quilometragem da Viagem
                                             </Typography>
-                                            {kmError && <Alert severity="error" sx={{ mb: 2 }}>{kmError}</Alert>}
-                                            {kmSuccess && <Alert severity="success" sx={{ mb: 2 }}>{kmSuccess}</Alert>}
-                                            <Grid container spacing={2} alignItems="flex-start">
+                                            {kmError && <Alert severity="error" sx={{ mb: 2, display: hasValidRole ? 'block' : 'none' }}>{kmError}</Alert>}
+                                            {kmSuccess && <Alert severity="success" sx={{ mb: 2, display: hasValidRole ? 'block' : 'none' }}>{kmSuccess}</Alert>}
+                                            <Grid container spacing={2} alignItems="flex-start" sx={{ display: hasValidRole ? 'flex' : 'none' }}>
                                                 <Grid item xs={12} sm={6} md={3}>
                                                     <TextField
                                                         fullWidth
@@ -773,7 +778,7 @@ const TripDetailPage = () => {
                                                         onClick={handleManageInitialKm}
                                                         disabled={isSavingKm || !initialKm.trim() || (trip?.km_inicial !== null && Number(initialKm) === Number(trip.km_inicial))}
                                                         size="medium"
-                                                        sx={{ height: '40px' }}
+                                                        sx={{ height: '40px', display: hasValidRole ? 'block' : 'none' }}
                                                     >
                                                         {isSavingKm ? <CircularProgress size={24} /> : "Salvar KM Inicial"}
                                                     </Button>
@@ -801,7 +806,7 @@ const TripDetailPage = () => {
                                                         onClick={handleManageFinalKm}
                                                         disabled={isSavingKm || !finalKm.trim() || trip?.km_inicial === null || trip?.km_inicial === undefined || (trip?.km_final !== null && Number(finalKm) === Number(trip.km_final)) || (Number(finalKm) < Number(trip?.km_inicial || 0))}
                                                         size="medium"
-                                                        sx={{ height: '40px' }}
+                                                        sx={{ height: '40px', display: hasValidRole ? 'block' : 'none' }}
                                                     >
                                                         {isSavingKm ? <CircularProgress size={24} /> : "Salvar KM Final"}
                                                     </Button>
