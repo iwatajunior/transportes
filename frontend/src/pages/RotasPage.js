@@ -70,6 +70,8 @@ const RotasPage = () => {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [editedMaterial, setEditedMaterial] = useState(null);
 
+
+
   const getCidadeNome = (cidadeId) => {
     const cidade = cidades.find(c => String(c.id) === String(cidadeId));
     return cidade ? cidade.nome : 'Cidade não encontrada';
@@ -220,23 +222,21 @@ const RotasPage = () => {
     setEditMaterialDialogOpen(true);
   };
 
-  const handleDeleteMaterial = async (materialId) => {
+  const handleDeleteMaterial = async (material) => {
     if (window.confirm('Tem certeza que deseja excluir este material?')) {
       try {
-        await api.delete(`/materials/${materialId}`);
+        await api.delete(`/materials/${material.id}`);
+        await fetchMateriais(material.rota_id);
         setSnackbar({
           open: true,
           message: 'Material excluído com sucesso!',
           severity: 'success'
         });
-        // Atualizar a lista de materiais
-        if (selectedMaterial) {
-          fetchMateriais(selectedMaterial.rota_id);
-        }
       } catch (error) {
+        console.error('Erro ao deletar material:', error);
         setSnackbar({
           open: true,
-          message: 'Erro ao excluir material: ' + (error.response?.data?.error || error.message),
+          message: 'Erro ao deletar material: ' + (error.response?.data?.error || error.message || 'Erro desconhecido'),
           severity: 'error'
         });
       }
@@ -245,21 +245,24 @@ const RotasPage = () => {
 
   const handleSaveMaterial = async () => {
     try {
-      await api.put(`/materials/${selectedMaterial.id}`, editedMaterial);
+      await api.put(`/materials/${editedMaterial.id}`, {
+        tipo: editedMaterial.tipo,
+        quantidade: editedMaterial.quantidade,
+        observacoes: editedMaterial.observacoes
+      });
+      await fetchMateriais(editedMaterial.rota_id);
       setSnackbar({
         open: true,
         message: 'Material atualizado com sucesso!',
         severity: 'success'
       });
       setEditMaterialDialogOpen(false);
-      // Atualizar a lista de materiais
-      if (selectedMaterial) {
-        fetchMateriais(selectedMaterial.rota_id);
-      }
+      setEditedMaterial(null);
     } catch (error) {
+      console.error('Erro ao atualizar material:', error);
       setSnackbar({
         open: true,
-        message: 'Erro ao atualizar material: ' + (error.response?.data?.error || error.message),
+        message: 'Erro ao atualizar material: ' + (error.response?.data?.error || error.message || 'Erro desconhecido'),
         severity: 'error'
       });
     }
