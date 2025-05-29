@@ -41,20 +41,16 @@ import { USER_ROLES } from '../utils/userConstants';  // Importar constantes de 
 // Função para obter a cor do status
 const getStatusColor = (status) => {
     switch (status) {
-        case 'Pendente':
-            return 'warning';
-        case 'Aprovada':
-            return 'success';
         case 'Agendada':
             return 'warning';
-        case 'Em Andamento':
+        case 'Andamento':
             return 'info';
         case 'Concluida':
             return 'success';
         case 'Recusada':
             return 'error';
         case 'Cancelada':
-            return 'warning';
+            return 'error';
         default:
             return 'default';
     }
@@ -81,7 +77,7 @@ const getStatusChipColor = (status) => {
     const lowerStatus = status?.toLowerCase() || '';
     if (lowerStatus.includes('concluída') || lowerStatus.includes('realizada')) return 'success';
     if (lowerStatus.includes('andamento') || lowerStatus.includes('iniciada')) return 'info';
-    if (lowerStatus.includes('pendente') || lowerStatus.includes('agendada')) return 'warning';
+    if (lowerStatus.includes('agendada')) return 'warning';
     if (lowerStatus.includes('cancelada')) return 'error';
     return 'default';
 };
@@ -828,28 +824,20 @@ const TripDetailPage = () => {
                                                 disabled={statusLoading}
                                             >
                                                 <Button
-                                                    onClick={() => handleStatusChange('Aprovada')}
-                                                    disabled={trip.status_viagem === 'Aprovada'}
-                                                    color="success"
-                                                    startIcon={<ChangeCircleIcon />}
-                                                >
-                                                    Aprovar
-                                                </Button>
-                                                <Button
                                                     onClick={() => handleStatusChange('Agendada')}
                                                     disabled={trip.status_viagem === 'Agendada'}
-                                                    color="primary"
+                                                    color="warning"
                                                     startIcon={<ChangeCircleIcon />}
                                                 >
                                                     Agendar
                                                 </Button>
                                                 <Button
-                                                    onClick={() => handleStatusChange('Em Andamento')}
-                                                    disabled={trip.status_viagem === 'Em Andamento'}
+                                                    onClick={() => handleStatusChange('Andamento')}
+                                                    disabled={trip.status_viagem === 'Andamento'}
                                                     color="info"
                                                     startIcon={<ChangeCircleIcon />}
                                                 >
-                                                    Em Andamento
+                                                    Andamento
                                                 </Button>
                                                 <Button
                                                     onClick={() => handleStatusChange('Concluida')}

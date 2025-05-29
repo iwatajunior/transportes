@@ -129,8 +129,10 @@ const TripListPage = () => {
             case 'Pendente':
                 return { color: 'warning', icon: <HelpOutlineIcon /> };
             case 'Agendada':
-                return { color: 'success', icon: <EventIcon /> };
+                return { color: 'warning', icon: <EventIcon /> };
             case 'Em Andamento':
+                return { color: 'info', icon: <AccessTimeIcon /> };
+            case 'Andamento':
                 return { color: 'info', icon: <AccessTimeIcon /> };
             case 'Concluida':
                 return { color: 'success', icon: <TaskAltIcon /> };

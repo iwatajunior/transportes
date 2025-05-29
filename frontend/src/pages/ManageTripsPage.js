@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Typography, Box, Paper, Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, CircularProgress, Pagination } from '@mui/material';
+import { Container, Typography, Box, Paper, Grid, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, CircularProgress, Pagination, Chip } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 import api from '../services/api';
-import { getStatusColor } from '../utils/statusUtils';
+import { getStatusColor, getStatusChipColor } from '../utils/statusUtils';
 
 const ManageTripsPage = () => {
     const { id } = useParams();
@@ -19,6 +19,14 @@ const ManageTripsPage = () => {
         fetchTrips();
     }, []);
 
+    // Atualiza automaticamente quando o status de uma viagem é alterada
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchTrips();
+        }, 5000); // Atualiza a cada 5 segundos
+        return () => clearInterval(interval);
+    }, []);
+
     const fetchTrips = async () => {
         try {
             setLoading(true);
@@ -28,7 +36,7 @@ const ManageTripsPage = () => {
             const statusOrder = {
                 'Pendente': 1,
                 'Agendada': 2,
-                'Em Andamento': 3,
+                'Andamento': 3,
                 'Concluida': 4,
                 'Recusada': 5,
                 'Cancelada': 6
@@ -142,7 +150,12 @@ const ManageTripsPage = () => {
                                         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{trip.tripid}</Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Typography variant="body2" sx={{ color: getStatusColor(trip.status_viagem) }}>{trip.status_viagem}</Typography>
+                                        <Chip 
+                                            label={trip.status_viagem}
+                                            color={getStatusChipColor(trip.status_viagem)}
+                                            size="small"
+                                            sx={{ alignSelf: 'flex-start' }}
+                                        />
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2">{trip.finalidade}</Typography>
