@@ -29,9 +29,8 @@ class Material {
       console.log('Model: Tipo do rotaId:', typeof rotaId);
       
       const materials = await knex('materials')
-        .select('materials.*', 'usuarios.nome as requisitante')
-        .leftJoin('usuarios', 'materials.user_id', 'usuarios.userid')
-        .where('materials.rota_id', rotaId);
+        .select('*')
+        .where('rota_id', rotaId);
       
       console.log('Model: Query executada com sucesso');
       console.log('Model: Materiais encontrados:', materials);

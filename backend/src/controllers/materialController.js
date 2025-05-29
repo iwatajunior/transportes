@@ -17,7 +17,6 @@ class MaterialController {
         tipo,
         quantidade,
         observacoes,
-        status: 'pendente',
         user_id
       };
 
@@ -25,7 +24,13 @@ class MaterialController {
       return res.status(201).json(material);
     } catch (error) {
       console.error('Erro ao criar material:', error);
-      return res.status(500).json({ error: 'Erro ao criar material' });
+      console.error('Stack trace:', error.stack);
+      
+      // Tentar extrair uma mensagem mais específica do erro
+      const errorMessage = error.message || 'Erro interno do servidor';
+      console.error('Mensagem de erro:', errorMessage);
+      
+      return res.status(500).json({ error: errorMessage });
     }
   }
 
@@ -39,7 +44,19 @@ class MaterialController {
       const { rotaId } = req.params;
       console.log('Buscando materiais para rotaId:', rotaId);
       
+      // Verificar se o rotaId é um número válido
+      if (isNaN(rotaId)) {
+        return res.status(400).json({ error: 'ID da rota inválido' });
+      }
+
       const materials = await Material.findByRotaId(rotaId);
+      
+      // Verificar se o resultado é um array
+      if (!Array.isArray(materials)) {
+        console.error('Resultado não é um array:', materials);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+
       console.log('Materiais encontrados:', materials);
       console.log('Tipo dos materiais:', typeof materials);
       console.log('É array?', Array.isArray(materials));
@@ -49,20 +66,24 @@ class MaterialController {
     } catch (error) {
       console.error('Erro em getByRotaId:', error);
       console.error('Stack trace:', error.stack);
-      res.status(500).json({ error: error.message });
+      
+      // Tentar extrair uma mensagem mais específica do erro
+      const errorMessage = error.message || 'Erro interno do servidor';
+      console.error('Mensagem de erro:', errorMessage);
+      
+      res.status(500).json({ error: errorMessage });
     }
   }
 
   static async update(req, res) {
     try {
       const { id } = req.params;
-      const { tipo, quantidade, observacoes, status } = req.body;
+      const { tipo, quantidade, observacoes } = req.body;
 
       const materialData = {
         tipo,
         quantidade,
-        observacoes,
-        status
+        observacoes
       };
 
       const material = await Material.update(id, materialData);

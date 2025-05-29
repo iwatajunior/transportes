@@ -38,6 +38,24 @@ import {
 import { cidadesPI } from '../services/cidadesPI';
 import api from '../services/api';
 
+const getStatusColor = (status) => {
+    switch (status) {
+        case 'Pendente':
+            return 'warning';
+        case 'Agendada':
+            return 'warning';
+        case 'Andamento':
+            return 'info';
+        case 'Concluida':
+            return 'success';
+        case 'Cancelada':
+        case 'Recusada':
+            return 'error';
+        default:
+            return 'default';
+    }
+};
+
 const RotasPage = () => {
   const [rotas, setRotas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,14 +98,19 @@ const RotasPage = () => {
     try {
       setLoadingMateriais(prev => ({ ...prev, [rotaId]: true }));
       const response = await api.get(`/materials/rota/${rotaId}`);
-      setMateriaisPorRota(prev => ({ ...prev, [rotaId]: response.data }));
+      setMateriaisPorRota(prev => ({ ...prev, [rotaId]: response.data || [] }));
     } catch (error) {
       console.error('Erro ao buscar materiais:', error);
-      setSnackbar({
-        open: true,
-        message: 'Erro ao buscar materiais: ' + (error.response?.data?.error || error.message || 'Erro desconhecido'),
-        severity: 'error'
-      });
+      // Se o erro for 404 (não encontrado), não mostramos mensagem de erro
+      if (error.response?.status !== 404) {
+        setSnackbar({
+          open: true,
+          message: 'Erro ao buscar materiais: ' + (error.response?.data?.error || error.message || 'Erro desconhecido'),
+          severity: 'error'
+        });
+      }
+      // Mesmo em caso de erro, setamos os materiais como vazio
+      setMateriaisPorRota(prev => ({ ...prev, [rotaId]: [] }));
     } finally {
       setLoadingMateriais(prev => ({ ...prev, [rotaId]: false }));
     }
@@ -449,35 +472,31 @@ const RotasPage = () => {
                             <TableHead>
                               <TableRow>
                                 <TableCell>Tipo</TableCell>
-                                <TableCell>Origem</TableCell>
-                                <TableCell>Destino</TableCell>
-                                <TableCell align="right">Quantidade</TableCell>
-                                <TableCell>Requisitante</TableCell>
-                                <TableCell align="center">Ações</TableCell>
+                                <TableCell>Quantidade</TableCell>
+                                <TableCell>Observações</TableCell>
+                                <TableCell>Ações</TableCell>
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {materiais.map((material) => (
-                                <TableRow key={material.id}>
+                              {materiaisPorRota[rota.id]?.map((material, index) => (
+                                <TableRow key={index}>
                                   <TableCell>{material.tipo}</TableCell>
-                                  <TableCell>{getCidadeNome(material.cidade_origem_id)}</TableCell>
-                                  <TableCell>{getCidadeNome(material.cidade_destino_id)}</TableCell>
-                                  <TableCell align="right">{Number(material.quantidade).toFixed(1)}</TableCell>
-                                  <TableCell>{material.requisitante}</TableCell>
-                                  <TableCell align="center">
+                                  <TableCell align="right">{material.quantidade}</TableCell>
+                                  <TableCell>{material.observacoes || 'N/A'}</TableCell>
+                                  <TableCell>
                                     <IconButton
-                                      size="small"
                                       onClick={() => handleEditMaterial(material)}
-                                      color="primary"
+                                      size="small"
+                                      disabled={loadingMateriais[rota.id] || !material}
                                     >
-                                      <EditIcon fontSize="small" />
+                                      <EditIcon />
                                     </IconButton>
                                     <IconButton
+                                      onClick={() => handleDeleteMaterial(material)}
                                       size="small"
-                                      onClick={() => handleDeleteMaterial(material.id)}
-                                      color="error"
+                                      disabled={loadingMateriais[rota.id] || !material}
                                     >
-                                      <DeleteIcon fontSize="small" />
+                                      <DeleteIcon />
                                     </IconButton>
                                   </TableCell>
                                 </TableRow>
