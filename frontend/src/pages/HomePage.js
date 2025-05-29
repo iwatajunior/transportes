@@ -408,6 +408,27 @@ const HomePage = () => {
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Envie Encomendas</Typography>
             </Button>
           </Grid>
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<ListIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/gerenciarviagens')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Gerenciar Viagens</Typography>
+            </Button>
+          </Grid>
         </Grid>
 
         <RouteMap />

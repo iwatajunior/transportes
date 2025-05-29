@@ -488,6 +488,14 @@ const TripDetailPage = () => {
                                         <Typography variant="body2" sx={{ ml: 1 }}>{trip.centro_custo}</Typography>
                                     </Box>
                                 )}
+                                {trip.observacoes && (
+                                    <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
+                                        <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500', display: 'flex', alignItems: 'center' }}>
+                                             <NotesIcon fontSize="small" sx={{ mr: 0.5 }} /> Observações:
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ ml: 1 }}>{trip.observacoes}</Typography>
+                                    </Box>
+                                )}
                             </CardContent>
                         </Card>
                     </Grid>
@@ -528,10 +536,7 @@ const TripDetailPage = () => {
                                         <Typography variant="body2" sx={{ ml: 1 }}>{formatDate(trip.data_retorno_efetivo, true)}</Typography>
                                      </Box>
                                 )}
-                                <Box display="flex" alignItems="center" mb={0}>
-                                    <Typography sx={{ minWidth: { xs: 70, sm: 80 }, fontWeight: '500' }}>Placa:</Typography>
-                                    <Typography variant="body2" sx={{ ml: 1 }}>{trip.veiculo_alocado_placa || 'Não alocado'}</Typography>
-                                </Box>
+
                             </CardContent>
                         </Card>
                     </Grid>
@@ -601,9 +606,9 @@ const TripDetailPage = () => {
                     )}
 
 
-                    {/* Card: Observações (Opcional) */}
+                    {/* Card: Observações (Opcional) - REMOVIDO
                     {trip.observacoes && (
-                        <Grid item xs={12} md={trip.passageiros && trip.passageiros.length > 0 ? 6 : 12}> {/* Ocupa 12 se não houver passageiros, 6 se houver */}
+                        <Grid item xs={12} md={trip.passageiros && trip.passageiros.length > 0 ? 6 : 12}> 
                             <Card elevation={2} sx={{ 
                                 height: '100%',
                                 transition: 'all 0.2s ease-in-out',
@@ -629,6 +634,7 @@ const TripDetailPage = () => {
                             </Card>
                         </Grid>
                     )}
+                    */}
                     
                     {/* === Card de Alocação (Condicional) === */}
                     {canAllocate && (
