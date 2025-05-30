@@ -83,7 +83,7 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
         }
     };
 
-    const vehicleTypes = ['Carro', 'Van', 'Ônibus', 'Moto'];
+    const vehicleTypes = ['Carro', 'Van', 'Onibus', 'Caminhao', 'Moto'];
     const usageTypes = ['Carga', 'Passeio', 'Misto'];
     const statusTypes = ['Disponível', 'Em Manutenção', 'Em Viagem', 'Indisponível'];
 
