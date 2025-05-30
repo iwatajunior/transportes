@@ -282,7 +282,7 @@ const tripController = {
                 return res.status(400).json({ message: 'ID da viagem inválido.' });
             }
 
-            const allowedStatus = ["Pendente", "Aprovada", "Agendada", "Andamento", "Concluida", "Cancelada", "Recusada"];
+            const allowedStatus = ["Pendente", "Aprovada", "Agendada", "Andamento", "Concluida", "Cancelada"];
             if (!newStatus || !allowedStatus.includes(newStatus)) {
                 return res.status(400).json({ message: `Status inválido. Status permitidos: ${allowedStatus.join(', ')}.` });
             }

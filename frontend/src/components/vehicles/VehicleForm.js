@@ -15,25 +15,25 @@ import axios from 'axios';
 
 const VehicleForm = ({ onSubmit, initialData = {} }) => {
     const [formData, setFormData] = useState({
-        placa: initialData.placa || '',
-        marca: initialData.marca || '',
-        modelo: initialData.modelo || '',
-        ano: initialData.ano || '',
-        tipo: initialData.tipo || 'Carro',
-        capacidade: initialData.capacidade || '',
-        tipo_uso: initialData.tipo_uso || '',
-        quilometragematual: initialData.quilometragematual || '',
-        observacoes: initialData.observacoes || '',
-        status: initialData.status || 'Disponível'
+        placa: '',
+        marca: '',
+        modelo: '',
+        ano: '',
+        tipo: 'Carro',
+        capacidade: '',
+        tipo_uso: '',
+        quilometragematual: '',
+        observacoes: '',
+        status: 'Disponível'
     });
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Inicializa o estado apenas uma vez quando o componente é montado
     useEffect(() => {
         if (initialData) {
-            setFormData(prevData => ({
-                ...prevData,
+            const initialFormData = {
                 placa: initialData.placa || '',
                 marca: initialData.marca || '',
                 modelo: initialData.modelo || '',
@@ -44,7 +44,11 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
                 quilometragematual: initialData.quilometragematual || '',
                 observacoes: initialData.observacoes || '',
                 status: initialData.status || 'Disponível'
-            }));
+            };
+            // Só atualiza o estado se for diferente do atual
+            if (JSON.stringify(formData) !== JSON.stringify(initialFormData)) {
+                setFormData(initialFormData);
+            }
         }
     }, [initialData]);
 

@@ -130,14 +130,12 @@ const TripListPage = () => {
                 return { color: 'warning', icon: <HelpOutlineIcon /> };
             case 'Agendada':
                 return { color: 'warning', icon: <EventIcon /> };
-            case 'Em Andamento':
-                return { color: 'info', icon: <AccessTimeIcon /> };
+
             case 'Andamento':
                 return { color: 'info', icon: <AccessTimeIcon /> };
             case 'Concluida':
                 return { color: 'success', icon: <TaskAltIcon /> };
-            case 'Recusada':
-                return { color: 'error', icon: <CancelIcon /> };
+
             case 'Cancelada':
                 return { color: 'error', icon: <CancelIcon /> };
             default:

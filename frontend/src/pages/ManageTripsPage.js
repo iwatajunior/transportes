@@ -38,8 +38,7 @@ const ManageTripsPage = () => {
                 'Agendada': 2,
                 'Andamento': 3,
                 'Concluida': 4,
-                'Recusada': 5,
-                'Cancelada': 6
+                'Cancelada': 5
             };
             
             // Ordenando os dados pelo status usando a ordem definida

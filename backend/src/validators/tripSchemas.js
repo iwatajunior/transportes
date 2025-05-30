@@ -3,7 +3,7 @@ const Joi = require('joi');
 // ATENÇÃO: Estes devem ser os mesmos valores do ENUM 'status_viagem_enum' no seu banco de dados.
 // Se você usou os valores simplificados ('Em_Andamento', 'Concluida') no DB, mantenha-os aqui.
 // Se conseguiu usar acentos no DB, atualize os valores neste array para corresponder.
-const statusViagemEnum = ['Pendente', 'Agendada', 'Andamento', 'Concluida', 'Cancelada', 'Recusada'];
+const statusViagemEnum = ['Pendente', 'Agendada', 'Andamento', 'Concluida', 'Cancelada'];
 
 // NOTA: O banco de dados tem um ENUM chamado status_tipo_veiculo_enum que aceita apenas certos valores
 // O erro indica que 'Van' não é aceito, então voltamos aos valores anteriores que funcionavam

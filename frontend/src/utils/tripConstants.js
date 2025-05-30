@@ -3,8 +3,7 @@ export const TRIP_STATUS = {
     SCHEDULED: 'Agendada',
     IN_PROGRESS: 'Andamento',
     COMPLETED: 'Concluida',
-    CANCELLED: 'Cancelada',
-    REJECTED: 'Recusada'
+    CANCELLED: 'Cancelada'
 };
 
 export const TRIP_STATUS_OPTIONS = Object.values(TRIP_STATUS);
@@ -14,6 +13,5 @@ export const TRIP_STATUS_COLORS = {
     [TRIP_STATUS.SCHEDULED]: 'primary',
     [TRIP_STATUS.IN_PROGRESS]: 'primary',
     [TRIP_STATUS.COMPLETED]: 'success',
-    [TRIP_STATUS.CANCELLED]: 'error',
-    [TRIP_STATUS.REJECTED]: 'error'
+    [TRIP_STATUS.CANCELLED]: 'error'
 };

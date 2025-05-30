@@ -49,7 +49,6 @@ const getStatusColor = (status) => {
         case 'Concluida':
             return 'success';
         case 'Cancelada':
-        case 'Recusada':
             return 'error';
         default:
             return 'default';

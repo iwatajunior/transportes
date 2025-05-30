@@ -89,8 +89,7 @@ const RelatorioViagensPage = () => {
                 return { bg: '#ff9800', text: 'white' };
             case 'Agendada':
                 return { bg: '#4caf50', text: 'white' };
-            case 'Recusada':
-                return { bg: '#f44336', text: 'white' };
+
             case 'Cancelada':
                 return { bg: '#f44336', text: 'white' };
             default:

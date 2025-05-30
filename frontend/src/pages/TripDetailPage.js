@@ -47,8 +47,6 @@ const getStatusColor = (status) => {
             return 'info';
         case 'Concluida':
             return 'success';
-        case 'Recusada':
-            return 'error';
         case 'Cancelada':
             return 'error';
         default:
@@ -846,14 +844,6 @@ const TripDetailPage = () => {
                                                     startIcon={<ChangeCircleIcon />}
                                                 >
                                                     Concluir
-                                                </Button>
-                                                <Button
-                                                    onClick={() => handleStatusChange('Recusada')}
-                                                    disabled={trip.status_viagem === 'Recusada'}
-                                                    color="error"
-                                                    startIcon={<ChangeCircleIcon />}
-                                                >
-                                                    Recusar
                                                 </Button>
                                                 <Button
                                                     onClick={() => handleStatusChange('Cancelada')}
