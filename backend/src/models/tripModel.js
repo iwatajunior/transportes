@@ -341,7 +341,7 @@ async function checkVehicleConflict(vehicleId, startTime, endTime, excludeTripId
                 AND (data_retorno_prevista::text || ' ' || horario_retorno_previsto::text)::timestamp > $2
               )
               AND ($4::integer IS NULL OR viagemid != $4)
-              AND status_viagem IN ('Aprovada', 'Agendada', 'Andamento')
+              AND status_viagem IN ('Agendada', 'Andamento')
         );
     `;
     try {
@@ -374,7 +374,7 @@ async function checkDriverConflict(driverId, startTime, endTime, excludeTripId =
                 AND (data_retorno_prevista::text || ' ' || horario_retorno_previsto::text)::timestamp > $2
               )
               AND ($4::integer IS NULL OR viagemid != $4)
-              AND status_viagem IN ('Aprovada', 'Agendada', 'Andamento')
+              AND status_viagem IN ('Agendada', 'Andamento')
         );
     `;
     try {

@@ -15,9 +15,19 @@ export const getStatusColor = (status) => {
 
 export const getStatusChipColor = (status) => {
     const lowerStatus = status?.toLowerCase() || '';
-    if (lowerStatus === 'disponivel') return 'success';
-    if (lowerStatus === 'emmanutencao') return 'warning';
-
-    if (lowerStatus === 'indisponivel') return 'error';
-    return 'default';
+    
+    switch (lowerStatus) {
+        case 'pendente':
+            return 'default'; // Cinza para Pendente
+        case 'agendada':
+            return 'warning'; // Amarelo para Agendada
+        case 'andamento':
+            return 'primary'; // Azul para Andamento
+        case 'concluida':
+            return 'success'; // Verde para Concluída
+        case 'cancelada':
+            return 'error'; // Vermelho para Cancelada
+        default:
+            return 'default';
+    }
 };

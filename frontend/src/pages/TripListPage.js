@@ -127,15 +127,13 @@ const TripListPage = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'Pendente':
-                return { color: 'warning', icon: <HelpOutlineIcon /> };
+                return { color: 'default', icon: <HelpOutlineIcon /> };
             case 'Agendada':
                 return { color: 'warning', icon: <EventIcon /> };
-
             case 'Andamento':
-                return { color: 'info', icon: <AccessTimeIcon /> };
+                return { color: 'primary', icon: <AccessTimeIcon /> };
             case 'Concluida':
                 return { color: 'success', icon: <TaskAltIcon /> };
-
             case 'Cancelada':
                 return { color: 'error', icon: <CancelIcon /> };
             default:

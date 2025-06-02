@@ -203,7 +203,7 @@ async create(vehicleData) {
         const query = `
         SELECT veiculoid, placa, marca, modelo 
         FROM Veiculos 
-        WHERE status = 'Disponível'
+        WHERE status = 'Disponivel'
         ORDER BY marca, modelo, placa;
     `;
         try {

@@ -90,7 +90,7 @@ const tripController = {
 
     /**
      * Atualiza uma viagem existente.
-     * TODO: Definir regras de permissão (ex: admin pode mudar tudo, solicitante só pode cancelar ou alterar alguns campos antes de 'Aprovada').
+     * TODO: Definir regras de permissão (ex: admin pode mudar tudo, solicitante só pode cancelar ou alterar alguns campos antes de 'Pendente' ou 'Agendada').
      */
     async updateTrip(req, res) {
         try {
@@ -199,8 +199,8 @@ const tripController = {
 
             // TODO: Adicionar validação extra se necessário:
             // - Verificar se o veículo e o motorista existem e estão disponíveis/ativos?
-            // - Verificar o status da viagem (ex: só alocar se 'Pendente' ou 'Aprovada')?
-            // if (!['Pendente', 'Aprovada'].includes(existingTrip.status_viagem)) {
+            // - Verificar o status da viagem (ex: só alocar se 'Pendente' ou 'Agendada')?
+            // if (!['Pendente', 'Agendada'].includes(existingTrip.status_viagem)) {
             //     return res.status(400).json({ message: `Não é possível alocar recursos para uma viagem com status '${existingTrip.status_viagem}'.` });
             // }
 
@@ -282,7 +282,7 @@ const tripController = {
                 return res.status(400).json({ message: 'ID da viagem inválido.' });
             }
 
-            const allowedStatus = ["Pendente", "Aprovada", "Agendada", "Andamento", "Concluida", "Cancelada"];
+            const allowedStatus = ["Pendente", "Agendada", "Andamento", "Concluida", "Cancelada"];
             if (!newStatus || !allowedStatus.includes(newStatus)) {
                 return res.status(400).json({ message: `Status inválido. Status permitidos: ${allowedStatus.join(', ')}.` });
             }
