@@ -112,7 +112,7 @@ const VehicleListPage = () => {
                       <TableCell>{vehicle.modelo}</TableCell>
                       <TableCell>{vehicle.ano}</TableCell>
                       <TableCell>{vehicle.tipo}</TableCell>
-                      <TableCell>{vehicle.status && vehicle.status.toLowerCase() === 'inativo' ? 'Indisponível' : vehicle.status}</TableCell>
+                      <TableCell>{vehicle.status}</TableCell>
                       <TableCell align="right">
                         <IconButton component={Link} to={`/editar-veiculo/${vehicle.veiculoid}`} color="primary" aria-label="edit">
                           <EditIcon />

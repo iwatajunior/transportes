@@ -1,7 +1,7 @@
 const Joi = require('joi');
 
 // Enum para status_veiculo (espelhando o ENUM do SQL)
-const statusVeiculoEnum = ['Disponível', 'Em Manutenção', 'Em Viagem', 'Indisponível'];
+const statusVeiculoEnum = ['Disponivel', 'EmManutencao', 'Indisponivel'];
 
 // Enum para tipo_veiculo (espelhando o ENUM do SQL)
 const tipoVeiculoEnum = ['Carro', 'Van', 'Ônibus', 'Moto'];

@@ -27,7 +27,7 @@ const EditVehiclePage = () => {
         capacidade: data.capacidade || '',
         quilometragematual: data.quilometragematual || '',
         observacoes: data.observacoes || '',
-        status: data.status || 'Disponível'
+        status: data.status || 'Disponivel'
       };
       setVehicleData(formattedData);
     } catch (err) {

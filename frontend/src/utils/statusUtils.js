@@ -2,14 +2,11 @@ export const getStatusColor = (status) => {
     if (!status) return 'default';
     
     switch (status.toLowerCase()) {
-        case 'agendada':
-            return 'warning';
-        case 'andamento':
-            return 'info';
-        case 'concluída':
+        case 'disponivel':
             return 'success';
-        case 'cancelada':
-
+        case 'emmanutencao':
+            return 'warning';
+        case 'indisponivel':
             return 'error';
         default:
             return 'default';
@@ -18,9 +15,9 @@ export const getStatusColor = (status) => {
 
 export const getStatusChipColor = (status) => {
     const lowerStatus = status?.toLowerCase() || '';
-    if (lowerStatus === 'agendada') return 'warning';
-    if (lowerStatus.includes('concluída') || lowerStatus.includes('realizada')) return 'success';
-    if (lowerStatus.includes('andamento') || lowerStatus.includes('iniciada')) return 'info';
-    if (lowerStatus.includes('cancelada')) return 'error';
+    if (lowerStatus === 'disponivel') return 'success';
+    if (lowerStatus === 'emmanutencao') return 'warning';
+
+    if (lowerStatus === 'indisponivel') return 'error';
     return 'default';
 };

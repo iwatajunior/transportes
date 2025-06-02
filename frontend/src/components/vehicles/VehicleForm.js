@@ -24,7 +24,7 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
         tipo_uso: '',
         quilometragematual: '',
         observacoes: '',
-        status: 'Disponível'
+        status: 'Disponivel' // Valor padrão do banco de dados
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +43,7 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
                 tipo_uso: initialData.tipo_uso || '',
                 quilometragematual: initialData.quilometragematual || '',
                 observacoes: initialData.observacoes || '',
-                status: initialData.status || 'Disponível'
+                status: initialData.status || 'Disponivel'
             };
             // Só atualiza o estado se for diferente do atual
             if (JSON.stringify(formData) !== JSON.stringify(initialFormData)) {
@@ -85,7 +85,7 @@ const VehicleForm = ({ onSubmit, initialData = {} }) => {
 
     const vehicleTypes = ['Carro', 'Van', 'Onibus', 'Caminhao', 'Moto'];
     const usageTypes = ['Carga', 'Passeio', 'Misto'];
-    const statusTypes = ['Disponível', 'Em Manutenção', 'Em Viagem', 'Indisponível'];
+    const statusTypes = ['Disponivel', 'EmManutencao', 'Indisponivel'];
 
     return (
         <Box component="form" onSubmit={handleSubmit}>
