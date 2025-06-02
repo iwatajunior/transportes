@@ -29,6 +29,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
         horario_saida: null,
         data_retorno_prevista: null,
         horario_retorno_previsto: null,
+        origem: '',
         destino_completo: '',
         finalidade: '',
         quantidade_passageiros: 1,
@@ -105,6 +106,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
             }
         }
 
+        if (!formData.origem.trim()) errors.origem = "Origem é obrigatória.";
         if (!formData.destino_completo.trim()) errors.destino_completo = "Destino é obrigatório.";
         if (!formData.finalidade.trim()) errors.finalidade = "Finalidade é obrigatória.";
         if (formData.quantidade_passageiros < 1) errors.quantidade_passageiros = "Nº de passageiros deve ser ao menos 1.";
@@ -152,6 +154,27 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                     <Grid item xs={12}>
                         <Grid container spacing={2}>
+                            <Grid item xs={12} sm={3}>
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="Origem *"
+                                    name="origem"
+                                    value={formData.origem}
+                                    onChange={handleInputChange}
+                                    error={!!formErrors.origem}
+                                    helperText={formErrors.origem}
+                                    sx={{
+                                        '& .MuiInputBase-root': {
+                                            borderRadius: 1,
+                                            backgroundColor: '#fff',
+                                            '&:hover': {
+                                                backgroundColor: '#f8f9fa'
+                                            }
+                                        }
+                                    }}
+                                />
+                            </Grid>
                             <Grid item xs={12} sm={3}>
                                 <DatePicker
                                     label="Data da Saída *"

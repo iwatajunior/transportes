@@ -32,6 +32,13 @@ const createTripSchema = Joi.object({
         'string.pattern.base': 'Horário de retorno previsto deve estar no formato HH:MM (ex: 17:00).',
         'any.required': 'Horário de retorno previsto é obrigatório.'
     }),
+    origem: Joi.string().trim().min(5).max(255).required().messages({
+        'string.base': 'Origem deve ser um texto.',
+        'string.empty': 'Origem não pode ser vazia.',
+        'string.min': 'Origem deve ter no mínimo {#limit} caracteres.',
+        'string.max': 'Origem deve ter no máximo {#limit} caracteres.',
+        'any.required': 'Origem é obrigatória.'
+    }),
     destino_completo: Joi.string().trim().min(5).max(255).required().messages({
         'string.base': 'Destino deve ser um texto.',
         'string.empty': 'Destino não pode ser vazio.',
@@ -78,6 +85,7 @@ const updateTripSchema = Joi.object({
     horario_retorno_previsto: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
     data_retorno_efetiva: Joi.date().iso().optional().allow(null),
     horario_retorno_efetivo: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/).optional().allow(null),
+    origem: Joi.string().trim().min(5).max(255).optional(),
     destino_completo: Joi.string().trim().min(5).max(255).optional(),
     finalidade: Joi.string().trim().min(5).max(500).optional(),
     quantidade_passageiros: Joi.number().integer().min(1).max(100).optional(),
