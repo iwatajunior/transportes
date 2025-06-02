@@ -138,46 +138,41 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                 noValidate 
                 sx={{ 
                     mt: 1,
+                    backgroundColor: '#fff',
+                    borderRadius: 1,
+                    boxShadow: 1,
+                    p: 2,
                     '& .MuiTextField-root, & .MuiFormControl-root': {
-                        backgroundColor: '#fff'
+                        backgroundColor: '#fff',
+                        borderRadius: 0.5
                     },
                     '& .MuiInputLabel-root': {
-                        color: theme => theme.palette.text.secondary
+                        color: theme => theme.palette.text.secondary,
+                        fontSize: '0.9rem'
                     },
                     '& .MuiOutlinedInput-root': {
                         '&:hover fieldset': {
                             borderColor: theme => theme.palette.primary.main,
                         },
+                        '&.Mui-focused fieldset': {
+                            borderColor: theme => theme.palette.primary.main,
+                        },
+                        fontSize: '0.9rem'
                     }
                 }}
             >
                 <Grid container spacing={2} sx={{ mb: 2 }}>
                     <Grid item xs={12}>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} sm={3}>
-                                <TextField
-                                    fullWidth
-                                    required
-                                    label="Origem *"
-                                    name="origem"
-                                    value={formData.origem}
-                                    onChange={handleInputChange}
-                                    error={!!formErrors.origem}
-                                    helperText={formErrors.origem}
-                                    sx={{
-                                        '& .MuiInputBase-root': {
-                                            borderRadius: 1,
-                                            backgroundColor: '#fff',
-                                            '&:hover': {
-                                                backgroundColor: '#f8f9fa'
-                                            }
-                                        }
-                                    }}
-                                />
-                            </Grid>
+                        <Typography variant="subtitle1" gutterBottom sx={{ 
+                            color: theme => theme.palette.primary.main,
+                            fontSize: '1rem'
+                        }}>
+                            Dados da Viagem
+                        </Typography>
+                        <Grid container spacing={1}>
                             <Grid item xs={12} sm={3}>
                                 <DatePicker
-                                    label="Data da Saída *"
+                                    label="Data de Saída *"
                                     value={formData.data_saida}
                                     onChange={(newValue) => handlePickerChange('data_saida', newValue)}
                                     renderInput={(params) => 
@@ -189,7 +184,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                                             helperText={formErrors.data_saida}
                                             sx={{
                                                 '& .MuiInputBase-root': {
-                                                    borderRadius: 1,
+                                                    borderRadius: 0.5,
                                                     backgroundColor: '#fff',
                                                     '&:hover': {
                                                         backgroundColor: '#f8f9fa'
@@ -202,7 +197,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                             </Grid>
                             <Grid item xs={12} sm={3}>
                                 <TimePicker
-                                    label="Horário da Saída *"
+                                    label="Horário de Saída *"
                                     value={formData.horario_saida}
                                     onChange={(newValue) => handlePickerChange('horario_saida', newValue)}
                                     renderInput={(params) => 
@@ -214,7 +209,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                                             helperText={formErrors.horario_saida}
                                             sx={{
                                                 '& .MuiInputBase-root': {
-                                                    borderRadius: 1,
+                                                    borderRadius: 0.5,
                                                     backgroundColor: '#fff',
                                                     '&:hover': {
                                                         backgroundColor: '#f8f9fa'
@@ -227,7 +222,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                             </Grid>
                             <Grid item xs={12} sm={3}>
                                 <DatePicker
-                                    label="Data de Retorno *"
+                                    label="Data de Retorno Prevista *"
                                     value={formData.data_retorno_prevista}
                                     onChange={(newValue) => handlePickerChange('data_retorno_prevista', newValue)}
                                     renderInput={(params) => 
@@ -239,7 +234,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                                             helperText={formErrors.data_retorno_prevista}
                                             sx={{
                                                 '& .MuiInputBase-root': {
-                                                    borderRadius: 1,
+                                                    borderRadius: 0.5,
                                                     backgroundColor: '#fff',
                                                     '&:hover': {
                                                         backgroundColor: '#f8f9fa'
@@ -253,7 +248,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                             </Grid>
                             <Grid item xs={12} sm={3}>
                                 <TimePicker
-                                    label="Horário de Retorno *"
+                                    label="Horário de Retorno Previsto *"
                                     value={formData.horario_retorno_previsto}
                                     onChange={(newValue) => handlePickerChange('horario_retorno_previsto', newValue)}
                                     renderInput={(params) => 
@@ -265,7 +260,7 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                                             helperText={formErrors.horario_retorno_previsto}
                                             sx={{
                                                 '& .MuiInputBase-root': {
-                                                    borderRadius: 1,
+                                                    borderRadius: 0.5,
                                                     backgroundColor: '#fff',
                                                     '&:hover': {
                                                         backgroundColor: '#f8f9fa'
@@ -278,151 +273,179 @@ const TripForm = ({ onSubmit, isLoading, initialData = {}, isEditMode = false })
                             </Grid>
                         </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            required
-                            fullWidth
-                            id="destino_completo"
-                            name="destino_completo"
-                            label="Destino"
-                            multiline
-                            rows={2}
-                            value={formData.destino_completo}
-                            onChange={handleInputChange}
-                            error={!!formErrors.destino_completo}
-                            helperText={formErrors.destino_completo}
-                            sx={{
-                                '& .MuiInputBase-root': {
-                                    borderRadius: 1,
-                                    backgroundColor: '#fff',
-                                    '&:hover': {
-                                        backgroundColor: '#f8f9fa'
-                                    }
-                                }
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            required
-                            fullWidth
-                            id="finalidade"
-                            name="finalidade"
-                            label="Finalidade"
-                            multiline
-                            rows={2}
-                            value={formData.finalidade}
-                            onChange={handleInputChange}
-                            error={!!formErrors.finalidade}
-                            helperText={formErrors.finalidade}
-                            sx={{
-                                '& .MuiInputBase-root': {
-                                    borderRadius: 1,
-                                    backgroundColor: '#fff',
-                                    '&:hover': {
-                                        backgroundColor: '#f8f9fa'
-                                    }
-                                }
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField
-                            required
-                            fullWidth
-                            id="quantidade_passageiros"
-                            name="quantidade_passageiros"
-                            label="Nº de Passageiros"
-                            type="number"
-                            value={formData.quantidade_passageiros}
-                            onChange={handleInputChange}
-                            error={!!formErrors.quantidade_passageiros}
-                            helperText={formErrors.quantidade_passageiros}
-                            InputProps={{ inputProps: { min: 1 } }}
-                            sx={{
-                                '& .MuiInputBase-root': {
-                                    borderRadius: 1,
-                                    backgroundColor: '#fff',
-                                    '&:hover': {
-                                        backgroundColor: '#f8f9fa'
-                                    }
-                                }
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth required error={!!formErrors.tipo_veiculo_desejado}>
-                            <InputLabel>Tipo de Veículo</InputLabel>
-                            <Select
-                                value={formData.tipo_veiculo_desejado}
-                                label="Tipo de Veículo"
-                                name="tipo_veiculo_desejado"
-                                onChange={handleInputChange}
-                                sx={{
-                                    '& .MuiInputBase-root': {
-                                        borderRadius: 1,
-                                        backgroundColor: '#fff',
-                                        '&:hover': {
-                                            backgroundColor: '#f8f9fa'
-                                        }
-                                    }
-                                }}
-                            >
-                                {tipoVeiculoOptions.map((tipo) => (
-                                    <MenuItem key={tipo} value={tipo}>{tipo}</MenuItem>
-                                ))}
-                            </Select>
-                            {formErrors.tipo_veiculo_desejado && (
-                                <FormHelperText>{formErrors.tipo_veiculo_desejado}</FormHelperText>
-                            )}
-                        </FormControl>
-                    </Grid>
+
+                    {/* Seção de Informações da Viagem */}
                     <Grid item xs={12}>
-                        <TextField
-                            fullWidth
-                            id="observacoes"
-                            name="observacoes"
-                            label="Observações"
-                            multiline
-                            rows={3}
-                            value={formData.observacoes}
-                            onChange={handleInputChange}
-                            error={!!formErrors.observacoes}
-                            helperText={formErrors.observacoes}
-                        />
+                        <Typography variant="subtitle1" gutterBottom sx={{ 
+                            color: theme => theme.palette.primary.main,
+                            fontSize: '1rem'
+                        }}>
+                            Informações da Viagem
+                        </Typography>
+                        <Grid container spacing={1}>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="Origem *"
+                                    name="origem"
+                                    value={formData.origem}
+                                    onChange={handleInputChange}
+                                    error={!!formErrors.origem}
+                                    helperText={formErrors.origem}
+                                    sx={{
+                                        '& .MuiInputBase-root': {
+                                            borderRadius: 0.5,
+                                            backgroundColor: '#fff',
+                                            '&:hover': {
+                                                backgroundColor: '#f8f9fa'
+                                            }
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="Destino *"
+                                    name="destino_completo"
+                                    value={formData.destino_completo}
+                                    onChange={handleInputChange}
+                                    error={!!formErrors.destino_completo}
+                                    helperText={formErrors.destino_completo}
+                                    sx={{
+                                        '& .MuiInputBase-root': {
+                                            borderRadius: 0.5,
+                                            backgroundColor: '#fff',
+                                            '&:hover': {
+                                                backgroundColor: '#f8f9fa'
+                                            }
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="Finalidade *"
+                                    name="finalidade"
+                                    value={formData.finalidade}
+                                    onChange={handleInputChange}
+                                    error={!!formErrors.finalidade}
+                                    helperText={formErrors.finalidade}
+                                    sx={{
+                                        '& .MuiInputBase-root': {
+                                            borderRadius: 0.5,
+                                            backgroundColor: '#fff',
+                                            '&:hover': {
+                                                backgroundColor: '#f8f9fa'
+                                            }
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                    </Grid>
+
+                    {/* Seção de Passageiros e Veículo */}
+                    <Grid item xs={12}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ 
+                            color: theme => theme.palette.primary.main,
+                            fontSize: '1rem'
+                        }}>
+                            Requisitos da Viagem
+                        </Typography>
+                        <Grid container spacing={1}>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    fullWidth
+                                    required
+                                    label="Quantidade de Passageiros *"
+                                    name="quantidade_passageiros"
+                                    type="number"
+                                    value={formData.quantidade_passageiros}
+                                    onChange={handleInputChange}
+                                    error={!!formErrors.quantidade_passageiros}
+                                    helperText={formErrors.quantidade_passageiros}
+                                    sx={{
+                                        '& .MuiInputBase-root': {
+                                            borderRadius: 1,
+                                            backgroundColor: '#fff',
+                                            '&:hover': {
+                                                backgroundColor: '#f8f9fa'
+                                            }
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <FormControl fullWidth error={!!formErrors.tipo_veiculo_desejado}>
+                                    <InputLabel>Tipo de Veículo Desejado *</InputLabel>
+                                    <Select
+                                        name="tipo_veiculo_desejado"
+                                        value={formData.tipo_veiculo_desejado}
+                                        onChange={handleInputChange}
+                                        label="Tipo de Veículo Desejado *"
+                                    >
+                                        {tipoVeiculoOptions.map((option) => (
+                                            <MenuItem key={option} value={option}>
+                                                {option}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                    {formErrors.tipo_veiculo_desejado && (
+                                        <FormHelperText>{formErrors.tipo_veiculo_desejado}</FormHelperText>
+                                    )}
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    fullWidth
+                                    label="Observações"
+                                    name="observacoes"
+                                    value={formData.observacoes}
+                                    onChange={handleInputChange}
+                                    error={!!formErrors.observacoes}
+                                    helperText={formErrors.observacoes}
+                                    multiline
+                                    rows={4}
+                                    sx={{
+                                        '& .MuiInputBase-root': {
+                                            borderRadius: 1,
+                                            backgroundColor: '#fff',
+                                            '&:hover': {
+                                                backgroundColor: '#f8f9fa'
+                                            }
+                                        }
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
-                <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'center',
-                    mt: 4,
-                    mb: 2
-                }}>
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
-                        type="submit"
                         variant="contained"
+                        color="primary"
+                        type="submit"
                         disabled={isLoading}
-                        size="large"
-                        sx={{ 
-                            minWidth: 200,
-                            py: 1.5,
+                        startIcon={isLoading ? <CircularProgress size={20} /> : null}
+                        sx={{
+                            px: 3,
+                            py: 1,
+                            borderRadius: 1,
                             textTransform: 'none',
-                            fontSize: '1.1rem',
-                            fontWeight: 500,
-                            boxShadow: 2,
+                            fontWeight: 'bold',
+                            boxShadow: 1,
+                            fontSize: '0.9rem',
                             '&:hover': {
-                                boxShadow: 4
+                                backgroundColor: theme => theme.palette.primary.dark
                             }
                         }}
                     >
-                        {isLoading ? (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <CircularProgress size={20} color="inherit" />
-                                <span>Processando...</span>
-                            </Box>
-                        ) : (
-                            isEditMode ? 'Salvar Alterações' : 'Registrar Viagem'
-                        )}
+                        {isEditMode ? 'Atualizar Viagem' : 'Registrar Viagem'}
                     </Button>
                 </Box>
             </Box>

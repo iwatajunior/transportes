@@ -60,30 +60,20 @@ const RegisterTripPage = () => {
                     display: 'flex', 
                     flexDirection: 'column',
                     alignItems: 'center',
-                    mb: 4
+                    mb: 2
                 }}>
                     <Typography 
-                        variant="h4" 
+                        variant="h5" 
                         component="h1" 
                         gutterBottom 
                         sx={{ 
                             fontFamily: "'Exo 2', sans-serif",
                             color: theme => theme.palette.primary.main,
                             fontWeight: 600,
-                            mb: 1
+                            fontSize: '1.5rem'
                         }}
                     >
                         Registrar Nova Viagem
-                    </Typography>
-                    <Typography 
-                        variant="subtitle1" 
-                        sx={{ 
-                            color: theme => theme.palette.text.secondary,
-                            textAlign: 'center',
-                            maxWidth: 600
-                        }}
-                    >
-                        Preencha os detalhes da viagem abaixo. Todos os campos marcados com * são obrigatórios.
                     </Typography>
                 </Box>
 
