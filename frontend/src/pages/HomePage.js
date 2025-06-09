@@ -258,7 +258,7 @@ const HomePage = () => {
                 textDecoration: 'underline'
               }}
             >
-              Gerencie aqui suas viagens e envios de encomendas.
+              Gerencie aqui suas viagens e encomendas.
             </Typography>
           </Typography>
         </Box>
