@@ -390,8 +390,8 @@ const RotasPage = () => {
                       <FormControl fullWidth>
                         <InputLabel>Status</InputLabel>
                         <Select
-                          value={editingRota?.status || rota?.status || ''}
-                          onChange={(e) => setStatus(e.target.value)}
+                          value={editingRota?.status || ''}
+                          onChange={(e) => setEditingRota({...editingRota, status: e.target.value})}
                           label="Status"
                           disabled={!editingRota}
                           displayEmpty
