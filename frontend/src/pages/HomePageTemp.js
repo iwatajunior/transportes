@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Button, Grid, Link as RouterLink, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, TextField, Snackbar, Alert } from '@mui/material';
-import { Pagination } from '@mui/material'; // Adicionado para paginação
+import { Pagination } from '@mui/material';
 import {
   Add as AddIcon,
   List as ListIcon,
@@ -26,12 +26,17 @@ const HomePage = () => {
   const { user } = useAuth();
   const history = useHistory();
   const [rotas, setRotas] = useState([]);
-  const [rotasFiltradas, setRotasFiltradas] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(2);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(2);
+
+  const indexOfLastRota = currentPage * itemsPerPage;
+  const indexOfFirstRota = indexOfLastRota - itemsPerPage;
+  const currentRotas = rotas.slice(indexOfFirstRota, indexOfLastRota);
+  const totalPages = Math.ceil(rotas.length / itemsPerPage);
+
   const [openEncomendaDialog, setOpenEncomendaDialog] = useState(false);
   const [selectedRota, setSelectedRota] = useState('');
   const [selectedCidade, setSelectedCidade] = useState('');
@@ -45,39 +50,10 @@ const HomePage = () => {
   useEffect(() => {
     const fetchRotas = async () => {
       try {
-        setLoading(true); // Adicionado para garantir que o loading seja true durante a requisição
         const response = await api.get('/routes?home=true');
-        const rotasData = response.data || [];
-        
-        // Verificar se a resposta tem dados
-        if (!rotasData || !Array.isArray(rotasData)) {
-          console.error('Resposta inválida da API:', rotasData);
-          throw new Error('Resposta inválida da API');
-        }
-
-        // Ordenar as rotas por status
-        const rotasFiltradas = rotasData
-          .sort((a, b) => {
-            const statusOrder = { 
-              'agendada': 1, 
-              'andamento': 2,
-              'concluida': 3,
-              'cancelada': 4
-            };
-            const statusA = statusOrder[a.status.toLowerCase()] || 99;
-            const statusB = statusOrder[b.status.toLowerCase()] || 99;
-            return statusA - statusB;
-          });
-
-        console.log('Rotas ordenadas:', rotasFiltradas);
-
-        console.log('Rotas filtradas:', rotasFiltradas);
-        
-        setRotas(rotasData);
-        setRotasFiltradas(rotasFiltradas);
+        setRotas(response.data);
         setLoading(false);
       } catch (err) {
-        console.error('Erro ao carregar rotas:', err);
         setError('Erro ao carregar rotas');
         setLoading(false);
       }
@@ -171,20 +147,10 @@ const HomePage = () => {
                    materialInfo.tipo && 
                    materialInfo.quantidade && 
                    materialInfo.cidade_destino;
-    
-    console.log('Validação do formulário:', {
-      selectedCidade,
-      tipo: materialInfo.tipo,
-      quantidade: materialInfo.quantidade,
-      cidade_destino: materialInfo.cidade_destino,
-      isValid
-    });
-    
     return isValid;
   };
 
   const handleInteresseClick = (rota) => {
-    console.log('Rota selecionada:', rota);
     setSelectedRota(rota);
     setSelectedCidade('');
     setMaterialInfo({
@@ -194,17 +160,18 @@ const HomePage = () => {
       cidade_destino: ''
     });
     setOpenEncomendaDialog(true);
-  };  const getCidadesRota = (rota) => {
+  };
+
+  const getCidadesRota = (rota) => {
     if (!rota) return [];
     
     const cidadesRota = [
       { id: rota.cidade_origem, nome: getCidadeNome(rota.cidade_origem) },
-      ...((rota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
+      ...((rota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })));
       { id: rota.cidade_destino, nome: getCidadeNome(rota.cidade_destino) },
       ...((rota.cidades_intermediarias_volta || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) })))
     ];
     
-    // Remove duplicatas mantendo apenas a primeira ocorrência
     return cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
   };
 
@@ -225,95 +192,15 @@ const HomePage = () => {
   }
 
   return (
-    <Box
-      component="main"
-      sx={{
-        flexGrow: 1,
-        p: '2px',
-        mt: '2px'
-      }}
-    >
-      <Container maxWidth="lg" sx={{ py: 1 }}>
-        {/* Header Section */}
-        <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <Typography 
-            variant="h5" 
-            component="h1" 
-            gutterBottom 
-            sx={{ 
-              fontFamily: "'Exo 2', sans-serif", 
-              fontWeight: 'bold',
-              color: '#1976d2',
-              mb: 0.5
-            }}
-          >
-            {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
-          </Typography>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              fontFamily: "'Exo 2', sans-serif",
-              color: 'text.secondary',
-              mt: 0
-            }}
-          >
-            Gerencie suas viagens e envios de encomendas aqui.
-          </Typography>
-        </Box>
-
-        {/* Main Actions Grid */}
+    <Container>
+      <Box sx={{ mt: 4 }}>
         <Grid container spacing={2}>
-          {/* Primary Actions */}
-          <Grid item xs={12} md={4}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
-              onClick={() => history.push('/cadastrar-rota')}
-              sx={{
-                bgcolor: '#FF9800',
-                color: 'white',
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  bgcolor: '#F57C00'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Rota</Typography>
-            </Button>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              startIcon={<EditIcon sx={{ fontSize: 28 }} />}
-              onClick={() => history.push('/rotas')}
-              sx={{
-                bgcolor: '#FF9800',
-                color: 'white',
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  bgcolor: '#F57C00'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Rotas</Typography>
-            </Button>
-          </Grid>
-
           <Grid item xs={12} md={4}>
             <Button 
               variant="contained" 
               fullWidth
               startIcon={<AddIcon sx={{ fontSize: 28 }} />}
-              onClick={() => history.push('/registrar-viagem')}
+              onClick={() => history.push('/criar-rota')}
               sx={{
                 bgcolor: '#FF9800',
                 color: 'white',
@@ -326,76 +213,9 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Viagem</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Criar Nova Rota</Typography>
             </Button>
           </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              startIcon={<ListIcon sx={{ fontSize: 28 }} />}
-              onClick={() => history.push('/viagens')}
-              sx={{
-                bgcolor: '#FF9800',
-                color: 'white',
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  bgcolor: '#F57C00'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Viagens</Typography>
-            </Button>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              startIcon={<DashboardIcon sx={{ fontSize: 28 }} />}
-              onClick={() => history.push('/admin/dashboard')}
-              sx={{
-                bgcolor: '#FF9800',
-                color: 'white',
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  bgcolor: '#F57C00'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Dashboard</Typography>
-            </Button>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              startIcon={<DirectionsCarIcon sx={{ fontSize: 28 }} />}
-              onClick={() => history.push('/veiculos')}
-              sx={{
-                bgcolor: '#FF9800',
-                color: 'white',
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  bgcolor: '#F57C00'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Veículos</Typography>
-            </Button>
-          </Grid>
-
           <Grid item xs={12} md={4}>
             <Button 
               variant="contained" 
@@ -415,28 +235,6 @@ const HomePage = () => {
               }}
             >
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Usuários</Typography>
-            </Button>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              startIcon={<SendIcon sx={{ fontSize: 28 }} />}
-              onClick={handleEncomendaClick}
-              sx={{
-                bgcolor: '#FF9800',
-                color: 'white',
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  bgcolor: '#F57C00'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Envie Encomendas</Typography>
             </Button>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -462,28 +260,8 @@ const HomePage = () => {
           </Grid>
         </Grid>
 
-        <RouteMap rotas={rotasFiltradas} currentPage={currentPage} itemsPerPage={itemsPerPage} />
-        
-        {/* Pagination */}
-        {rotasFiltradas.length > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-            <Pagination
-              count={Math.ceil(rotasFiltradas.length / itemsPerPage)}
-              page={currentPage}
-              onChange={(e, page) => setCurrentPage(page)}
-              color="primary"
-              size="large"
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  minWidth: 32,
-                  fontSize: '1rem'
-                }
-              }}
-            />
-          </Box>
-        )}
+        <RouteMap />
 
-        {/* Dialog para Envio de Encomendas */}
         <Dialog 
           open={openEncomendaDialog} 
           onClose={handleDialogClose}
@@ -492,35 +270,16 @@ const HomePage = () => {
         >
           <DialogTitle>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <LocalShippingIcon color="primary" />
-              <Typography variant="h6">Enviar Material</Typography>
+              <Typography variant="h6">Enviar Encomenda</Typography>
             </Box>
           </DialogTitle>
           <DialogContent>
             <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                Rota: {selectedRota?.identificacao}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {getCidadeNome(selectedRota?.cidade_origem)} → {getCidadeNome(selectedRota?.cidade_destino)}
-              </Typography>
-            </Box>
-            <Box sx={{ mt: 3 }}>
               <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel>Rota</InputLabel>
                 <Select
-                  value={selectedRota?.id || ''}
-                  onChange={(e) => {
-                    const rota = rotas.find(r => r.id === e.target.value);
-                    setSelectedRota(rota);
-                    setSelectedCidade('');
-                    setMaterialInfo({
-                      tipo: '',
-                      quantidade: '',
-                      observacoes: '',
-                      cidade_destino: ''
-                    });
-                  }}
+                  value={selectedRota}
+                  onChange={handleRotaChange}
                   label="Rota"
                 >
                   {rotas.map((rota) => (
@@ -535,7 +294,7 @@ const HomePage = () => {
                 <InputLabel>Cidade de Coleta do Material</InputLabel>
                 <Select
                   value={selectedCidade}
-                  onChange={e => setSelectedCidade(e.target.value)}
+                  onChange={handleCidadeChange}
                   label="Cidade de Coleta do Material"
                 >
                   {selectedRota && getCidadesRota(selectedRota).map(cidade => (
@@ -582,23 +341,68 @@ const HomePage = () => {
                 fullWidth
                 label="Observações"
                 multiline
-                rows={3}
+                rows={4}
                 value={materialInfo.observacoes}
                 onChange={(e) => setMaterialInfo({...materialInfo, observacoes: e.target.value})}
+                sx={{ mb: 2 }}
               />
             </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleDialogClose}>Cancelar</Button>
-            <Button 
-              onClick={handleConfirmarEncomenda} 
-              disabled={!isFormValid()} 
-              variant="contained"
-            >
+            <Button onClick={handleConfirmarEncomenda} variant="contained" color="primary">
               Confirmar Envio
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+            Rotas Programadas
+          </Typography>
+          <Grid container spacing={2}>
+            {currentRotas.map((rota) => (
+              <Grid item xs={12} sm={6} md={4} key={rota.id}>
+                <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    {rota.identificacao}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Origem: {getCidadeNome(rota.cidade_origem)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Destino: {getCidadeNome(rota.cidade_destino)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Data Saída: {new Date(rota.data_saida).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Data Retorno: {new Date(rota.data_retorno).toLocaleDateString()}
+                  </Typography>
+                  <Button 
+                    variant="outlined" 
+                    fullWidth 
+                    onClick={() => handleInteresseClick(rota)}
+                    sx={{ mt: 2 }}
+                  >
+                    Enviar Encomenda
+                  </Button>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={(event, page) => setCurrentPage(page)}
+                color="primary"
+              />
+            </Box>
+          )}
+        </Box>
 
         <Snackbar 
           open={snackbar.open} 
@@ -610,8 +414,8 @@ const HomePage = () => {
             {snackbar.message}
           </Alert>
         </Snackbar>
-      </Container>
-    </Box>
+      </Box>
+    </Container>
   );
 };
 

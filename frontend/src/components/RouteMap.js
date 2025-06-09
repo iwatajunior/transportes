@@ -81,11 +81,11 @@ const RoutePath = ({ rota, onClick }) => {
   );
 };
 
-const RouteMap = () => {
+const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
   const { user } = useAuth();
-  const [rotas, setRotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentRotas, setCurrentRotas] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRota, setSelectedRota] = useState(null);
   const [selectedCidade, setSelectedCidade] = useState('');
@@ -109,6 +109,20 @@ const RouteMap = () => {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [editedMaterial, setEditedMaterial] = useState(null);
   const [openMaterialDialog, setOpenMaterialDialog] = useState(false);
+
+  useEffect(() => {
+    console.log('Rotas recebidas:', rotas);
+    
+    // Calcular o índice inicial e final para a paginação
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    // Atualizar as rotas visíveis
+    const currentRotas = rotas.slice(startIndex, endIndex);
+    console.log('Rotas paginadas:', currentRotas);
+    setCurrentRotas(currentRotas);
+    setLoading(false); // Garantir que o loading seja false após processar as rotas
+  }, [rotas, currentPage, itemsPerPage]);
 
   // Configuração do mapa
   const center = {
@@ -184,17 +198,6 @@ const RouteMap = () => {
     }
   ];
 
-  const fetchRotas = async () => {
-    try {
-      const response = await api.get('/routes?home=true');
-      setRotas(response.data);
-      setLoading(false);
-    } catch (err) {
-      setError('Erro ao carregar rotas');
-      setLoading(false);
-    }
-  };
-
   const fetchMateriais = async (rotaId) => {
     try {
       if (!user) {
@@ -233,9 +236,7 @@ const RouteMap = () => {
     }
   };
 
-  useEffect(() => {
-    fetchRotas();
-  }, []);
+
 
   const getCidadeNome = (id) => {
     const cidade = cidadesPI.find(c => String(c.id) === String(id));
@@ -345,7 +346,7 @@ const RouteMap = () => {
         throw new Error('Erro ao atualizar rota');
       }
 
-      await fetchRotas();
+      setLoading(false);
       setEditDialogOpen(false);
       setSnackbar({
         open: true,
@@ -406,7 +407,8 @@ const RouteMap = () => {
 
   const handleSaveMaterial = async () => {
     try {
-      await api.put(`/materials/${selectedMaterial.id}`, editedMaterial);
+      setLoading(false);
+      const response = await api.put(`/materials/${selectedMaterial.id}`, editedMaterial);
       setSnackbar({
         open: true,
         message: 'Material atualizado com sucesso!',
@@ -415,6 +417,7 @@ const RouteMap = () => {
       setEditMaterialDialogOpen(false);
       // Atualizar a lista de materiais
       if (selectedRota) {
+        setLoadingMateriais(prev => ({ ...prev, [selectedRota.id]: true }));
         fetchMateriais(selectedRota.id);
       }
     } catch (error) {
@@ -447,7 +450,7 @@ const RouteMap = () => {
       <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2', textAlign: 'left' }}>
         Rotas Programadas
       </Typography>
-      {rotas.length === 0 ? (
+      {currentRotas.length === 0 ? (
         <Box sx={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -484,7 +487,7 @@ const RouteMap = () => {
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {(rotas || []).map((rota) => {
+          {currentRotas.map((rota) => {
             const materiais = materiaisPorRota[rota.id] || [];
             const isLoadingMateriais = loadingMateriais[rota.id];
             
