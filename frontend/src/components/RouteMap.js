@@ -446,8 +446,8 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
   }
 
   return (
-    <Box sx={{ mt: 1 }}>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', color: '#1976d2', textAlign: 'left' }}>
+    <Box sx={{ mt: 2 }}>
+      <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2', textAlign: 'left' }}>
         Rotas Programadas
       </Typography>
       {currentRotas.length === 0 ? (
@@ -486,16 +486,16 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={2}>
+        <Grid container spacing={3}>
           {currentRotas.map((rota) => {
             const materiais = materiaisPorRota[rota.id] || [];
             const isLoadingMateriais = loadingMateriais[rota.id];
             
             return (
               <Grid item xs={12} key={rota.id}>
-                <Paper elevation={3} sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-                    <Box sx={{ color: '#666', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Paper elevation={3} sx={{ p: 3, backgroundColor: '#f8f9fa' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Box sx={{ color: '#666', display: 'flex', alignItems: 'center', gap: 1 }}>
                       <span style={{ fontSize: 14 }}>
                         <strong>Rota:</strong> {rota.identificacao}
                       </span>
@@ -534,7 +534,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
                       </span>
                     </Box>
                   </Box>
-                  <Divider sx={{ my: 1.5 }} />
+                  <Divider sx={{ my: 2 }} />
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 4, mt: 2 }}>
                     {/* Percurso de Ida */}
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>

@@ -243,7 +243,8 @@ const HomePage = () => {
               fontFamily: "'Exo 2', sans-serif", 
               fontWeight: 'bold',
               color: '#1976d2',
-              mb: -0.5
+              mb: -0.5,
+              textAlign: 'left'
             }}
           >
             {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
