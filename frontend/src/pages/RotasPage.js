@@ -38,23 +38,6 @@ import {
 import { cidadesPI } from '../services/cidadesPI';
 import api from '../services/api';
 
-const getStatusColor = (status) => {
-    switch (status) {
-        case 'Pendente':
-            return 'warning';
-        case 'Agendada':
-            return 'warning';
-        case 'Andamento':
-            return 'info';
-        case 'Concluida':
-            return 'success';
-        case 'Cancelada':
-            return 'error';
-        default:
-            return 'default';
-    }
-};
-
 const RotasPage = () => {
   const [rotas, setRotas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,8 +51,6 @@ const RotasPage = () => {
   const [editMaterialDialogOpen, setEditMaterialDialogOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [editedMaterial, setEditedMaterial] = useState(null);
-
-
 
   const getCidadeNome = (cidadeId) => {
     const cidade = cidades.find(c => String(c.id) === String(cidadeId));
@@ -140,8 +121,7 @@ const RotasPage = () => {
         data_saida: rota.data_saida,
         data_retorno: rota.data_retorno,
         cidades_intermediarias_ida: rota.cidades_intermediarias_ida.map(c => c.id),
-        cidades_intermediarias_volta: rota.cidades_intermediarias_volta.map(c => c.id),
-        status: rota.status
+        cidades_intermediarias_volta: rota.cidades_intermediarias_volta.map(c => c.id)
       });
 
       if (response.status !== 200) {
@@ -160,40 +140,6 @@ const RotasPage = () => {
       setSnackbar({
         open: true,
         message: 'Erro ao atualizar rota: ' + (err.message || 'Erro desconhecido'),
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleStatusChange = async (rota) => {
-    try {
-      const newStatus = rota.status === 'ativo' ? 'inativo' : 'ativo';
-      const response = await api.put(`/routes/${rota.id}`, {
-        identificacao: rota.identificacao,
-        cidade_origem: rota.cidade_origem,
-        cidade_destino: rota.cidade_destino,
-        data_saida: rota.data_saida,
-        data_retorno: rota.data_retorno,
-        cidades_intermediarias_ida: rota.cidades_intermediarias_ida || [],
-        cidades_intermediarias_volta: rota.cidades_intermediarias_volta || [],
-        status: newStatus
-      });
-
-      if (response.status !== 200) {
-        throw new Error('Erro ao atualizar status da rota');
-      }
-
-      await fetchRotas();
-      setSnackbar({
-        open: true,
-        message: `Rota ${newStatus === 'ativo' ? 'ativada' : 'inativada'} com sucesso!`,
-        severity: 'success'
-      });
-    } catch (err) {
-      console.error('Erro ao atualizar status da rota:', err);
-      setSnackbar({
-        open: true,
-        message: 'Erro ao atualizar status da rota: ' + (err.message || 'Erro desconhecido'),
         severity: 'error'
       });
     }
@@ -335,19 +281,6 @@ const RotasPage = () => {
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
                       Rota {rota.identificacao}
                     </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={rota.status === 'ativo'}
-                          onChange={() => handleStatusChange(rota)}
-                          color="primary"
-                          size="small"
-                        />
-                      }
-                      label={rota.status === 'ativo' ? 'Ativa' : 'Inativa'}
-                    />
                   </Box>
                 </Box>
 

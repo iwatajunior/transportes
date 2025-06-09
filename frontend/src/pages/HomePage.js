@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Button, Grid, Link as RouterLink, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, TextField, Snackbar, Alert } from '@mui/material';
+import { Pagination } from '@mui/material'; // Adicionado para paginação
 import {
   Add as AddIcon,
   List as ListIcon,
@@ -161,9 +162,7 @@ const HomePage = () => {
       cidade_destino: ''
     });
     setOpenEncomendaDialog(true);
-  };
-
-  const getCidadesRota = (rota) => {
+  };  const getCidadesRota = (rota) => {
     if (!rota) return [];
     
     const cidadesRota = [
