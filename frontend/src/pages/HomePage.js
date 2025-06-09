@@ -229,40 +229,42 @@ const HomePage = () => {
       component="main"
       sx={{
         flexGrow: 1,
-        p: '2px',
-        mt: '2px'
+        p: 0,
+        mt: -2
       }}
     >
-      <Container maxWidth="lg" sx={{ py: 1 }}>
+      <Container maxWidth="lg" sx={{ py: 0, px: 0 }}>
         {/* Header Section */}
-        <Box sx={{ textAlign: 'center', mb: 2 }}>
+        <Box sx={{ textAlign: 'center', mb: -1 }}>
           <Typography 
             variant="h5" 
             component="h1" 
-            gutterBottom 
             sx={{ 
               fontFamily: "'Exo 2', sans-serif", 
               fontWeight: 'bold',
               color: '#1976d2',
-              mb: 0.5
+              mb: -0.5
             }}
           >
             {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
-          </Typography>
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              fontFamily: "'Exo 2', sans-serif",
-              color: 'text.secondary',
-              mt: 0
-            }}
-          >
-            Gerencie suas viagens e envios de encomendas aqui.
+            <Typography 
+              variant="subtitle1" 
+              sx={{ 
+                fontFamily: "'Exo 2', sans-serif",
+                color: 'text.secondary',
+                display: 'inline',
+                ml: 1,
+                textDecoration: 'underline'
+              }}
+            >
+              Gerencie aqui suas viagens e envios de encomendas.
+            </Typography>
           </Typography>
         </Box>
+        <Box sx={{ height: '15px' }} />
 
         {/* Main Actions Grid */}
-        <Grid container spacing={2}>
+        <Grid container spacing={1.5} sx={{ mt: 2 }}>
           {/* Primary Actions */}
           <Grid item xs={12} md={4}>
             <Button 
@@ -466,17 +468,20 @@ const HomePage = () => {
         
         {/* Pagination */}
         {rotasFiltradas.length > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
             <Pagination
               count={Math.ceil(rotasFiltradas.length / itemsPerPage)}
               page={currentPage}
               onChange={(e, page) => setCurrentPage(page)}
               color="primary"
-              size="large"
+              size="small"
               sx={{
                 '& .MuiPaginationItem-root': {
-                  minWidth: 32,
-                  fontSize: '1rem'
+                  minWidth: 24,
+                  fontSize: '0.875rem'
+                },
+                '& .MuiPaginationItem-page': {
+                  padding: '0 4px'
                 }
               }}
             />
