@@ -486,7 +486,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={1}>
           {currentRotas.map((rota) => {
             const materiais = materiaisPorRota[rota.id] || [];
             const isLoadingMateriais = loadingMateriais[rota.id];
