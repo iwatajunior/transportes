@@ -55,13 +55,11 @@ const routeModel = {
      */
     async findAll(onlyActive = false) {
         const query = `
-            SELECT * FROM rotas
-            ${onlyActive ? 'WHERE status = \'ativo\'' : ''}
-            ORDER BY data_cadastro DESC;
+            SELECT * FROM get_routes($1::boolean) as rotas;
         `;
 
         try {
-            const result = await pool.query(query);
+            const result = await pool.query(query, [onlyActive]);
             return result.rows;
         } catch (error) {
             console.error('Erro ao buscar rotas:', error);

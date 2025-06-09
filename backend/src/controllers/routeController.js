@@ -63,9 +63,8 @@ const routeController = {
      */
     async listRoutes(req, res) {
         try {
-            // Se for uma requisição da home, retorna apenas rotas ativas
-            const isHomeRequest = req.query.home === 'true';
-            const rotas = await routeModel.findAll(isHomeRequest);
+            // Sempre retorna todas as rotas na HomePage
+            const rotas = await routeModel.findAll(false);
             res.json(rotas);
         } catch (error) {
             console.error('Erro ao listar rotas:', error);

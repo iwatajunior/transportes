@@ -3,10 +3,27 @@ import { Box, Paper, Typography, Grid, Chip, Divider, Button, Dialog, DialogTitl
 import { DirectionsBus, LocationOn, ArrowForward, LocalShipping as LocalShippingIcon, Edit, CalendarToday, Forward as ForwardIcon, Close, Delete as DeleteIcon, Add as AddIcon, DoubleArrow } from '@mui/icons-material';
 import api from '../services/api';
 import { cidadesPI } from '../services/cidadesPI';
+import { RouteStatus } from '../constants/routeStatus';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleMap, useJsApiLoader, Polyline, Marker, LoadScript } from '@react-google-maps/api';
+
+// Função para obter a cor do status
+const getStatusColor = (status) => {
+  switch (status) {
+    case RouteStatus.AGENDADA:
+      return 'primary';
+    case RouteStatus.ANDAMENTO:
+      return 'warning';
+    case RouteStatus.CONCLUIDA:
+      return 'success';
+    case RouteStatus.CANCELADA:
+      return 'error';
+    default:
+      return 'default';
+  }
+};
 
 // Componente para desenhar a rota no mapa
 const RoutePath = ({ rota, onClick }) => {
@@ -479,6 +496,12 @@ const RouteMap = () => {
                       <span style={{ fontSize: 14 }}>
                         <strong>Rota:</strong> {rota.identificacao}
                       </span>
+                      <Chip
+                        label={rota.status}
+                        color={getStatusColor(rota.status)}
+                        size="small"
+                        sx={{ ml: 1 }}
+                      />
                     </Box>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, justifyContent: 'center' }}>

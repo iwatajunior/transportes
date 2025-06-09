@@ -26,7 +26,11 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import { 
   Save as SaveIcon, 
@@ -35,6 +39,7 @@ import {
   ExpandLess as ExpandLessIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material';
+import { RouteStatus, routeStatusOptions } from '../constants/routeStatus';
 import { cidadesPI } from '../services/cidadesPI';
 import api from '../services/api';
 
@@ -45,6 +50,13 @@ const RotasPage = () => {
   const [cidades, setCidades] = useState(cidadesPI);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [editingRota, setEditingRota] = useState(null);
+  const [status, setStatus] = useState('');
+  
+  useEffect(() => {
+    if (editingRota) {
+      setStatus(editingRota.status || '');
+    }
+  }, [editingRota]);
   const [materiaisPorRota, setMateriaisPorRota] = useState({});
   const [loadingMateriais, setLoadingMateriais] = useState({});
   const [expandedRotas, setExpandedRotas] = useState({});
@@ -73,6 +85,16 @@ const RotasPage = () => {
     } catch (err) {
       setError('Erro ao carregar rotas');
       setLoading(false);
+    }
+  };
+
+  const handleEditRota = async (rotaId) => {
+    try {
+      const rota = rotas.find(r => r.id === rotaId);
+      setEditingRota({ ...rota });
+      setStatus(rota.status || 'Agendada'); // Definindo um valor padrão
+    } catch (err) {
+      setError('Erro ao carregar rota para edição');
     }
   };
 
@@ -112,36 +134,34 @@ const RotasPage = () => {
     });
   };
 
-  const handleSave = async (rota) => {
+  const handleSaveRota = async () => {
+    if (!editingRota) return;
+
     try {
-      const response = await api.put(`/routes/${rota.id}`, {
-        identificacao: rota.identificacao,
-        cidade_origem: rota.cidade_origem.id,
-        cidade_destino: rota.cidade_destino.id,
-        data_saida: rota.data_saida,
-        data_retorno: rota.data_retorno,
-        cidades_intermediarias_ida: rota.cidades_intermediarias_ida.map(c => c.id),
-        cidades_intermediarias_volta: rota.cidades_intermediarias_volta.map(c => c.id)
+      const response = await api.put(`/routes/${editingRota.id}`, {
+        identificacao: editingRota.identificacao,
+        cidade_origem: editingRota.cidade_origem.id,
+        cidade_destino: editingRota.cidade_destino.id,
+        data_saida: editingRota.data_saida,
+        data_retorno: editingRota.data_retorno,
+        cidades_intermediarias_ida: editingRota.cidades_intermediarias_ida.map(c => c.id),
+        cidades_intermediarias_volta: editingRota.cidades_intermediarias_volta.map(c => c.id),
+        status: status
       });
-
-      if (response.status !== 200) {
-        throw new Error('Erro ao atualizar rota');
-      }
-
-      await fetchRotas();
+      
+      const updatedRotas = rotas.map(r => 
+        r.id === editingRota.id ? response.data : r
+      );
+      setRotas(updatedRotas);
       setEditingRota(null);
+      setStatus('');
       setSnackbar({
         open: true,
-        message: 'Rota atualizada com sucesso!',
+        message: 'Rota atualizada com sucesso',
         severity: 'success'
       });
     } catch (err) {
-      console.error('Erro ao atualizar rota:', err);
-      setSnackbar({
-        open: true,
-        message: 'Erro ao atualizar rota: ' + (err.message || 'Erro desconhecido'),
-        severity: 'error'
-      });
+      setError('Erro ao atualizar rota');
     }
   };
 
@@ -292,7 +312,7 @@ const RotasPage = () => {
                           variant="contained"
                           color="primary"
                           startIcon={<SaveIcon />}
-                          onClick={() => handleSave(editingRota)}
+                          onClick={handleSaveRota}
                           size="small"
                         >
                           Salvar
@@ -365,6 +385,41 @@ const RotasPage = () => {
                         size="small"
                       />
                     </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth>
+                        <InputLabel>Status</InputLabel>
+                        <Select
+                          value={editingRota?.status || rota?.status || ''}
+                          onChange={(e) => setStatus(e.target.value)}
+                          label="Status"
+                          disabled={!editingRota}
+                          displayEmpty
+                          renderValue={(value) => value || 'Selecione um status'}
+                        >
+                          {routeStatusOptions.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    
+                    {/* Adicionando um Chip para mostrar o status quando não estiver em modo de edição */}
+                    {!editingRota && rota?.status && (
+                      <Grid item xs={12} sm={6}>
+                        <Chip
+                          label={rota.status}
+                          color={rota.status === 'Agendada' ? 'primary' : 
+                                rota.status === 'Andamento' ? 'warning' : 
+                                rota.status === 'Concluida' ? 'success' : 
+                                'error'}
+                          size="small"
+                          style={{ marginTop: 8 }}
+                        />
+                      </Grid>
+                    )}
 
                     <Grid item xs={12}>
                       <Autocomplete
