@@ -40,7 +40,8 @@ const routeController = {
                 cidadesIntermediariasIda: cidadesIntermediariasIda || [],
                 cidadesIntermediariasVolta: cidadesIntermediariasVolta || [],
                 dataSaida,
-                dataRetorno
+                dataRetorno,
+                status: 'Agendada'
             });
 
             res.status(201).json({

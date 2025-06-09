@@ -19,6 +19,7 @@ import {
 import { format } from 'date-fns';
 import api from '../services/api';
 import { getCidadesPI } from '../services/cidadesPI';
+import { RouteStatus } from '../constants/routeStatus';
 
 const CadastroRotaPage = () => {
   const history = useHistory();
@@ -35,7 +36,8 @@ const CadastroRotaPage = () => {
     dataSaida: '',
     horarioSaida: '',
     dataRetorno: '',
-    horarioRetorno: ''
+    horarioRetorno: '',
+    status: RouteStatus.AGENDADA
   });
 
   const [cidades, setCidades] = useState([]);
@@ -117,7 +119,8 @@ const CadastroRotaPage = () => {
         cidadesIntermediariasIda: formData.cidadesIntermediariasIda,
         cidadesIntermediariasVolta: formData.cidadesIntermediariasVolta,
         dataSaida: format(new Date(`${formData.dataSaida} ${formData.horarioSaida}`), 'yyyy-MM-dd HH:mm:ss'),
-        dataRetorno: format(new Date(`${formData.dataRetorno} ${formData.horarioRetorno}`), 'yyyy-MM-dd HH:mm:ss')
+        dataRetorno: format(new Date(`${formData.dataRetorno} ${formData.horarioRetorno}`), 'yyyy-MM-dd HH:mm:ss'),
+        status: formData.status
       };
 
       // Enviar para a API

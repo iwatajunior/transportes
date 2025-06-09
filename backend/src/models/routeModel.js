@@ -1,5 +1,7 @@
 const pool = require('../config/db');
 
+const { RouteStatus } = require('../constants/routeStatus');
+
 const routeModel = {
     /**
      * Cria uma nova rota no banco de dados.
@@ -14,7 +16,8 @@ const routeModel = {
             cidadesIntermediariasIda,
             cidadesIntermediariasVolta,
             dataSaida,
-            dataRetorno
+            dataRetorno,
+            status = RouteStatus.AGENDADA
         } = routeData;
 
         const query = `
@@ -26,8 +29,9 @@ const routeModel = {
                 cidades_intermediarias_volta,
                 data_saida,
                 data_retorno,
+                status,
                 data_cadastro
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
             RETURNING *;
         `;
         const values = [
@@ -37,7 +41,8 @@ const routeModel = {
             JSON.stringify(cidadesIntermediariasIda),
             JSON.stringify(cidadesIntermediariasVolta),
             dataSaida,
-            dataRetorno
+            dataRetorno,
+            status
         ];
 
         try {
