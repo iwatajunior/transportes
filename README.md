@@ -40,3 +40,41 @@ TRANSPORTES/
 7.  Testes.
 8.  Deploy.
 
+Sobre as Classes: 
+Baseado na análise do código, as principais classes (models) do sistema são:
+
+RouteModel (Modelo de Rota)
+Gerencia as rotas de transporte
+Atributos: identificação, cidade_origem, cidade_destino, cidades_intermediarias_ida/volta, data_saida, data_retorno, status
+UserModel (Modelo de Usuário)
+Gerencia os usuários do sistema
+Atributos: userid, nome, email, perfil, setor, fotoperfilurl, ativo, datacadastro, senha, status
+VehicleModel (Modelo de Veículo)
+Gerencia os veículos do sistema
+Atributos: placa, marca, modelo, ano, capacidade, tipo, tipo_uso, status, quilometragematual, ultimamanutencao, dataproximarevisao, observacoes, usuarioresponsavelid
+MaterialModel (Modelo de Material)
+Gerencia os materiais transportados
+Atributos: tipo, quantidade, origem, destino, requisitante
+TripModel (Modelo de Viagem)
+Gerencia as viagens realizadas
+Atributos: rota_id, veículo_id, motorista_id, data_inicio, data_fim, status
+LoginAttemptModel (Modelo de Tentativa de Login)
+Registra tentativas de login
+Atributos: usuário, timestamp, sucesso, ip
+Além dessas classes principais, o sistema também possui:
+
+AuthController (Controlador de Autenticação)
+RouteController (Controlador de Rotas)
+UserController (Controlador de Usuários)
+VehicleController (Controlador de Veículos)
+MaterialController (Controlador de Materiais)
+TripController (Controlador de Viagens)
+Essas classes formam a estrutura principal do sistema, dividido em:
+
+Gestão de Usuários
+Gestão de Veículos
+Gestão de Rotas
+Gestão de Materiais
+Gestão de Viagens
+Sistema de Autenticação
+
