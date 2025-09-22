@@ -19,13 +19,7 @@ const ManageTripsPage = () => {
         fetchTrips();
     }, []);
 
-    // Atualiza automaticamente quando o status de uma viagem é alterada
-    useEffect(() => {
-        const interval = setInterval(() => {
-            fetchTrips();
-        }, 5000); // Atualiza a cada 5 segundos
-        return () => clearInterval(interval);
-    }, []);
+    
 
     const fetchTrips = async () => {
         try {
