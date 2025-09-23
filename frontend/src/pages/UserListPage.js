@@ -99,7 +99,7 @@ const UserListPage = () => {
                   onClick={() => history.push('/admin/login-attempts')}
                   sx={{ mr: 2 }}
                 >
-                  Tentativas de Login
+                  Logs de Acesso
                 </Button>
               <Button 
                 variant="contained" 

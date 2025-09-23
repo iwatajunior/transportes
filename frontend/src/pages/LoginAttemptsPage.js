@@ -180,7 +180,7 @@ const LoginAttemptsPage = () => {
                                             {formatDate(attempt.data_tentativa)}
                                         </TableCell>
                                         <TableCell>{attempt.email}</TableCell>
-                                        <TableCell>{attempt.ip_address}</TableCell>
+                                        <TableCell>{(attempt.ip_address || '').replace(/^::ffff:/, '')}</TableCell>
                                         <TableCell>
                                             <Chip
                                                 label={getStatusLabel(attempt.status)}

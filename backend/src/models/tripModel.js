@@ -63,6 +63,8 @@ const tripModel = {
                 v.destino_completo, v.finalidade, v.quantidade_passageiros, v.tipo_veiculo_desejado,
                 v.veiculo_solicitado_id, v.solicitante_usuarioid, v.observacoes, v.status_viagem,
                 v.veiculo_alocado_id, v.motorista_usuarioid,
+                v.origem AS origem,
+                v.origem AS origem_completa,
                 u_sol.nome AS solicitante_nome, 
                 ve.placa AS veiculo_alocado_placa,
                 ve.modelo AS veiculo_alocado_modelo, -- Adicionado modelo do veículo
@@ -108,6 +110,8 @@ const tripModel = {
                 v.destino_completo, v.finalidade, v.quantidade_passageiros, v.tipo_veiculo_desejado,
                 v.veiculo_solicitado_id, v.solicitante_usuarioid, v.observacoes, v.status_viagem,
                 v.veiculo_alocado_id, v.motorista_usuarioid, v.km_inicial, v.km_final,
+                v.origem AS origem,
+                v.origem AS origem_completa,
                 u_sol.nome AS solicitante_nome,
                 u_sol.fotoperfilurl AS solicitante_avatar,
                 u_mot.fotoperfilurl AS motorista_avatar,

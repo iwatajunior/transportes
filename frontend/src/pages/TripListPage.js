@@ -4,10 +4,11 @@ import {
     Container, Paper, Typography, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, CircularProgress, Alert, Box, Button, IconButton,
     Avatar, Stack, Chip, Tooltip, useTheme, TextField, FormControl, InputLabel, Select, MenuItem,
-    Grid, TablePagination
+    Grid, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import HailIcon from '@mui/icons-material/Hail';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import PersonIcon from '@mui/icons-material/Person';
@@ -29,6 +30,7 @@ const TripListPage = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(6);
     const [filteredTrips, setFilteredTrips] = useState([]);
+    const [openCaronaModal, setOpenCaronaModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [showFilters, setShowFilters] = useState(true);
@@ -148,16 +150,31 @@ const TripListPage = () => {
                     <Typography variant="h4" component="h1" sx={{ fontFamily: "'Exo 2', sans-serif" }}>
                         Painel de Viagens
                     </Typography>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        component={RouterLink}
-                        to="/registrar-viagem"
-                        startIcon={<AddCircleOutlineIcon />}
-                        sx={{ fontFamily: "'Exo 2', sans-serif" }}
-                    >
-                        Registrar Nova Viagem
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                            variant="contained"
+                            startIcon={<HailIcon />}
+                            sx={{ 
+                                fontFamily: "'Exo 2', sans-serif",
+                                bgcolor: '#FF9800',
+                                color: 'white',
+                                '&:hover': { bgcolor: '#F57C00' }
+                            }}
+                            onClick={() => setOpenCaronaModal(true)}
+                        >
+                            Pedir Carona
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            component={RouterLink}
+                            to="/registrar-viagem"
+                            startIcon={<AddCircleOutlineIcon />}
+                            sx={{ fontFamily: "'Exo 2', sans-serif" }}
+                        >
+                            Nova Viagem
+                        </Button>
+                    </Box>
                 </Box>
 
                 {/* Barra de Filtros */}
@@ -542,6 +559,75 @@ const TripListPage = () => {
                         borderColor: 'divider'
                     }}
                 />
+
+                {/* Modal Pedir Carona (mínimo, sem conteúdo) */}
+                <Dialog
+                    open={openCaronaModal}
+                    onClose={() => setOpenCaronaModal(false)}
+                    maxWidth="md"
+                    fullWidth
+                    PaperProps={{
+                        sx: {
+                            backgroundColor: '#FFFFFF',
+                            borderRadius: 2
+                        }
+                    }}
+                >
+                    <DialogTitle sx={{
+                        backgroundColor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                        fontWeight: 600
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <HailIcon sx={{ color: theme.palette.primary.contrastText }} />
+                            Pedir Carona
+                        </Box>
+                    </DialogTitle>
+                    <DialogContent>
+                        <TableContainer>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px' }}>Status</TableCell>
+                                        <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px' }}>Origem</TableCell>
+                                        <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px' }}>Destino</TableCell>
+                                        <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px' }}>Data Saída</TableCell>
+                                        <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px' }}>Data Retorno</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {trips
+                                        .filter((trip) => trip.status_viagem === 'Agendada')
+                                        .map((trip) => (
+                                            <TableRow key={trip.tripid}>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={trip.status_viagem}
+                                                        color={getStatusColor(trip.status_viagem).color}
+                                                        size="small"
+                                                        icon={getStatusColor(trip.status_viagem).icon}
+                                                        sx={{
+                                                            fontWeight: 500,
+                                                            '& .MuiChip-icon': {
+                                                                color: 'inherit'
+                                                            }
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>{trip.origem || trip.origem_completa || 'N/A'}</TableCell>
+                                                <TableCell>{trip.destino_completo || 'N/A'}</TableCell>
+                                                <TableCell>{formatDate(trip.data_saida)}</TableCell>
+                                                <TableCell>{formatDate(trip.data_retorno_prevista)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenCaronaModal(false)}>Fechar</Button>
+                    </DialogActions>
+                </Dialog>
             </Paper>
         </Container>
     );

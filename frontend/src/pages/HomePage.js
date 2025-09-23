@@ -254,8 +254,7 @@ const HomePage = () => {
                 fontFamily: "'Exo 2', sans-serif",
                 color: 'text.secondary',
                 display: 'inline',
-                ml: 1,
-                textDecoration: 'underline'
+                ml: 1
               }}
             >
               Gerencie aqui suas viagens e encomendas.
