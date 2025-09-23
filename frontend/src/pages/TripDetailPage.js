@@ -684,7 +684,24 @@ const TripDetailPage = () => {
                                                 return (
                                                     <React.Fragment key={c.caronaid}>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
-                                                            <Typography variant="body2">{line}</Typography>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                <Avatar
+                                                                    src={c.requisitante_avatar ? `http://10.1.1.42:3001${c.requisitante_avatar}` : undefined}
+                                                                    sx={{ 
+                                                                        width: 32,
+                                                                        height: 32,
+                                                                        border: '2px solid',
+                                                                        borderColor: 'primary.main',
+                                                                        backgroundColor: 'primary.lighter',
+                                                                        color: 'primary.dark',
+                                                                        fontSize: '1rem',
+                                                                        fontWeight: 500
+                                                                    }}
+                                                                >
+                                                                    {(nome || String(c.requisitante) || ' ')[0]}
+                                                                </Avatar>
+                                                                <Typography variant="body2">{line}</Typography>
+                                                            </Box>
                                                             {status === 'pendente' && (
                                                                 <Box sx={{ display: 'flex', gap: 1 }}>
                                                                     <Button size="small" variant="contained" color="success" onClick={() => approveCarona(c.caronaid)}>Aprovar</Button>

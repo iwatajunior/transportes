@@ -48,11 +48,12 @@ module.exports = {
       SELECT 
         c.*, 
         u.nome AS requisitante_nome,
-        u.setor AS requisitante_setor
+        u.setor AS requisitante_setor,
+        u.fotoperfilurl AS requisitante_avatar
       FROM caronas c
       LEFT JOIN usuarios u ON u.userid = c.requisitante
       WHERE c.viagemid = $1
-      ${whereStatus}
+        ${whereStatus}
       ORDER BY c.caronaid DESC;
     `;
     const { rows } = await pool.query(query, params);
