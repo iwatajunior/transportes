@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
+import api, { getUsers } from '../services/api';
 import {
     Container, Paper, Typography, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, CircularProgress, Alert, Box, Button, IconButton,
     Avatar, Stack, Chip, Tooltip, useTheme, TextField, FormControl, InputLabel, Select, MenuItem,
-    Grid, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions
+    Grid, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Checkbox, Snackbar, Alert as MuiAlert
 } from '@mui/material';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 import { Link as RouterLink } from 'react-router-dom';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import HailIcon from '@mui/icons-material/Hail';
@@ -23,16 +24,28 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { useAuth } from '../contexts/AuthContext';
 
 const TripListPage = () => {
     const theme = useTheme();
+    const { user: authUser } = useAuth();
     const [trips, setTrips] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(6);
     const [filteredTrips, setFilteredTrips] = useState([]);
     const [openCaronaModal, setOpenCaronaModal] = useState(false);
+    // Estado para seleção de carona
+    const [selectUserOpen, setSelectUserOpen] = useState(false);
+    const [selectedTrip, setSelectedTrip] = useState(null);
+    const [usersOptions, setUsersOptions] = useState([]);
+    const [usersLoading, setUsersLoading] = useState(false);
+    const [selectedUserIds, setSelectedUserIds] = useState([]);
+    const [includeMe, setIncludeMe] = useState(true);
+    const [caronaMotivo, setCaronaMotivo] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [isSavingCarona, setIsSavingCarona] = useState(false);
     const [error, setError] = useState('');
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [showFilters, setShowFilters] = useState(true);
     
     // Estados dos filtros
@@ -599,7 +612,34 @@ const TripListPage = () => {
                                     {trips
                                         .filter((trip) => trip.status_viagem === 'Agendada')
                                         .map((trip) => (
-                                            <TableRow key={trip.tripid}>
+                                            <TableRow 
+                                                key={trip.tripid}
+                                                hover
+                                                sx={{ cursor: 'pointer' }}
+                                                onClick={async () => {
+                                                    setSelectedTrip(trip);
+                                                    setSelectUserOpen(true);
+                                                    // Pré-seleciona "meu usuário" por padrão e permite adicionar outros
+                                                    setIncludeMe(true);
+                                                    if (authUser?.userId != null) {
+                                                        setSelectedUserIds([String(authUser.userId)]);
+                                                    } else {
+                                                        setSelectedUserIds([]);
+                                                    }
+                                                    if (!usersOptions || usersOptions.length === 0) {
+                                                        try {
+                                                            setUsersLoading(true);
+                                                            const data = await getUsers();
+                                                            setUsersOptions(Array.isArray(data) ? data : (data?.users || []));
+                                                        } catch (e) {
+                                                            console.error('Erro ao carregar usuários para carona:', e);
+                                                            setUsersOptions([]);
+                                                        } finally {
+                                                            setUsersLoading(false);
+                                                        }
+                                                    }
+                                                }}
+                                            >
                                                 <TableCell>
                                                     <Chip
                                                         label={trip.status_viagem}
@@ -628,6 +668,163 @@ const TripListPage = () => {
                         <Button onClick={() => setOpenCaronaModal(false)}>Fechar</Button>
                     </DialogActions>
                 </Dialog>
+
+                {/* Dialog para selecionar usuário da carona */}
+                <Dialog
+                    open={selectUserOpen}
+                    onClose={() => { setSelectUserOpen(false); setSelectedUserIds([]); setCaronaMotivo(''); }}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>Selecionar Usuários para Carona</DialogTitle>
+                    <DialogContent>
+                        {/* Opção para incluir o usuário atual junto com outros */}
+                        <Box sx={{ mb: 2 }}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={includeMe}
+                                        onChange={(e) => {
+                                            const checked = e.target.checked;
+                                            setIncludeMe(checked);
+                                            const myId = authUser?.userId != null ? String(authUser.userId) : null;
+                                            if (!myId) return;
+                                            if (checked) {
+                                                // Garante que meu usuário está presente sem duplicar
+                                                setSelectedUserIds((prev) => Array.from(new Set([...(prev || []), myId])));
+                                            } else {
+                                                // Remove meu usuário da seleção
+                                                setSelectedUserIds((prev) => (prev || []).filter((id) => id !== myId));
+                                            }
+                                        }}
+                                    />
+                                }
+                                label="Incluir meu usuário"
+                            />
+                        </Box>
+                        <Box sx={{ mt: 1 }}>
+                            <Autocomplete
+                                multiple
+                                disableCloseOnSelect
+                                options={usersOptions || []}
+                                loading={usersLoading}
+                                getOptionLabel={(u) => `${u?.nome || u?.name || ''}${u?.setor ? ` - ${u.setor}` : ''}`}
+                                value={(usersOptions || []).filter((u) => selectedUserIds.includes(String(u.userid || u.id)))}
+                                filterOptions={(options, params) => {
+                                    const input = (params.inputValue || '').trim();
+                                    if (input.length < 1) return [];
+                                    const defaultFilter = createFilterOptions();
+                                    const filtered = defaultFilter(options, params);
+                                    // Remove usuários já selecionados da lista de opções
+                                    return filtered.filter((u) => !selectedUserIds.includes(String(u.userid || u.id)));
+                                }}
+                                renderTags={() => null}
+                                noOptionsText=""
+                                onChange={(event, values) => {
+                                    const ids = values.map((u) => String(u.userid || u.id));
+                                    const myId = authUser?.userId != null ? String(authUser.userId) : null;
+                                    const finalArr = includeMe && myId ? Array.from(new Set([...ids, myId])) : ids;
+                                    setSelectedUserIds(finalArr);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Buscar usuários (Nome - Setor)"
+                                        placeholder="Digite para buscar..."
+                                    />
+                                )}
+                            />
+                            {!usersLoading && usersOptions && usersOptions.length === 0 && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                    Nenhum usuário encontrado.
+                                </Typography>
+                            )}
+                        </Box>
+                        {selectedUserIds && selectedUserIds.length > 0 && (
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Usuários selecionados:</Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                    {selectedUserIds.map((id) => {
+                                        const u = usersOptions.find((x) => String(x.userid || x.id) === String(id));
+                                        const label = u ? `${u.nome || u.name}${u.setor ? ` - ${u.setor}` : ''}` : id;
+                                        return (
+                                            <Chip
+                                                key={id}
+                                                label={label}
+                                                size="small"
+                                                onDelete={() => {
+                                                    const myId = authUser?.userId != null ? String(authUser.userId) : null;
+                                                    setSelectedUserIds((prev) => (prev || []).filter((x) => String(x) !== String(id)));
+                                                    if (myId && String(id) === myId) {
+                                                        setIncludeMe(false);
+                                                    }
+                                                }}
+                                                deleteIcon={<CancelIcon fontSize="small" />}
+                                            />
+                                        );
+                                    })}
+                                </Box>
+                            </Box>
+                        )}
+                        {selectedTrip && (
+                            <Box sx={{ mt: 2, color: 'text.secondary' }}>
+                                <Typography variant="body2">
+                                    Viagem selecionada: #{selectedTrip.tripid} - {selectedTrip.origem || 'Origem N/A'} → {selectedTrip.destino_completo || 'Destino N/A'}
+                                </Typography>
+                            </Box>
+                        )}
+                        <Box sx={{ mt: 2 }}>
+                            <TextField
+                                fullWidth
+                                label="Motivo da Carona"
+                                value={caronaMotivo}
+                                onChange={(e) => setCaronaMotivo(e.target.value)}
+                                multiline
+                                minRows={2}
+                            />
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => { setSelectUserOpen(false); setSelectedUserIds([]); setCaronaMotivo(''); }}>Cancelar</Button>
+                        <Button
+                            variant="contained"
+                            onClick={async () => {
+                                if (!selectedTrip?.tripid || !selectedUserIds || selectedUserIds.length === 0 || isSavingCarona) return;
+                                try {
+                                    setIsSavingCarona(true);
+                                    await api.post('/caronas', {
+                                        viagemId: selectedTrip.tripid,
+                                        requisitantes: selectedUserIds.map((id) => Number(id)),
+                                        motivo: caronaMotivo || null
+                                    });
+                                    console.log('Caronas gravadas com sucesso');
+                                    setSelectUserOpen(false);
+                                    setSelectedUserIds([]);
+                                    setCaronaMotivo('');
+                                    setSnackbar({ open: true, message: 'Carona solicitada com sucesso!', severity: 'success' });
+                                } catch (err) {
+                                    console.error('Erro ao salvar caronas:', err);
+                                    setSnackbar({ open: true, message: err.response?.data?.message || 'Erro ao solicitar carona', severity: 'error' });
+                                } finally {
+                                    setIsSavingCarona(false);
+                                }
+                            }}
+                            disabled={!selectedUserIds || selectedUserIds.length === 0 || !caronaMotivo.trim() || isSavingCarona}
+                        >
+                            {isSavingCarona ? 'Salvando...' : 'Confirmar'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+                <Snackbar
+                    open={snackbar.open}
+                    autoHideDuration={3000}
+                    onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                >
+                    <MuiAlert onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} severity={snackbar.severity} elevation={6} variant="filled">
+                        {snackbar.message}
+                    </MuiAlert>
+                </Snackbar>
             </Paper>
         </Container>
     );

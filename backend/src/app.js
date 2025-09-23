@@ -64,12 +64,14 @@ const tripRoutes = require('./routes/tripRoutes');
 const userRoutes = require('./routes/userRoutes'); // <-- Importação das rotas de usuário
 const routeRoutes = require('./routes/routeRoutes'); // <-- Importação das rotas de rotas
 const materialRoutes = require('./routes/materialRoutes'); // <-- Importação das rotas de materiais
+const caronasRoutes = require('./routes/caronasRoutes'); // <-- Importação das rotas de caronas
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/vehicles', vehicleRoutes); // <-- Novas rotas de veículos
 app.use('/api/v1/trips', tripRoutes);
 app.use('/api/v1/users', userRoutes); // <-- Uso das rotas de usuário
 app.use('/api/v1/routes', routeRoutes); // <-- Uso das rotas de rotas
 app.use('/api/v1/materials', materialRoutes); // <-- Uso das rotas de materiais
+app.use('/api/v1/caronas', caronasRoutes); // <-- Uso das rotas de caronas
 
 const PORT = 3001;
 

@@ -12,14 +12,15 @@ const ManageTripsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
-    const itemsPerPage = 3;
+    const [itemsPerPage] = useState(3);
     const totalPages = Math.ceil(trips.length / itemsPerPage);
+
+    // (Removido) Estados para caronas
 
     useEffect(() => {
         fetchTrips();
     }, []);
 
-    
 
     const fetchTrips = async () => {
         try {
@@ -34,12 +35,12 @@ const ManageTripsPage = () => {
                 'Concluida': 4,
                 'Cancelada': 5
             };
-            
+
             // Ordenando os dados pelo status usando a ordem definida
             const orderedTrips = [...response.data].sort((a, b) => {
                 return (statusOrder[a.status_viagem] || 7) - (statusOrder[b.status_viagem] || 7);
             });
-            
+
             setTrips(orderedTrips);
             console.log('Dados retornados pela API:', response.data);
         } catch (err) {
@@ -130,6 +131,7 @@ const ManageTripsPage = () => {
                                 <TableCell>ID</TableCell>
                                 <TableCell>Status</TableCell>
                                 <TableCell>Finalidade</TableCell>
+                                <TableCell>Destino</TableCell>
                                 <TableCell>Data Saída</TableCell>
                                 <TableCell>Ações</TableCell>
                             </TableRow>
@@ -152,6 +154,9 @@ const ManageTripsPage = () => {
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2">{trip.finalidade}</Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2">{trip.destino_completo || trip.destino || 'N/A'}</Typography>
                                     </TableCell>
                                     <TableCell>
                                         <Typography variant="body2">
@@ -189,6 +194,8 @@ const ManageTripsPage = () => {
                         </TableBody>
                     </Table>
                 </TableContainer>
+
+                
             </Paper>
         </Container>
     );

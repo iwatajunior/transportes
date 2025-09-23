@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink, useHistory } from 'react-router-dom';
 import api from '../services/api';
+
 import { 
     Container, 
     Paper, 
@@ -33,6 +34,7 @@ import BusinessCenterIcon from '@mui/icons-material/BusinessCenter'; // Para cen
 import FlagIcon from '@mui/icons-material/Flag'; // Para finalidade
 import EngineeringIcon from '@mui/icons-material/Engineering'; // Para Motorista e Alocação
 import GroupIcon from '@mui/icons-material/Group'; // Adicionado de volta
+import HailIcon from '@mui/icons-material/Hail';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../contexts/AuthContext';  // Importar contexto de autenticação
@@ -122,6 +124,33 @@ const TripDetailPage = () => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+    // Estados para Caronas (listagem simples)
+    const [caronas, setCaronas] = useState([]);
+    const [caronasLoading, setCaronasLoading] = useState(false);
+    const [caronasError, setCaronasError] = useState('');
+
+    const approveCarona = async (caronaId) => {
+        try {
+            await api.put(`/caronas/${caronaId}/status`, { status: 'Aprovado' });
+            setCaronas(prev => prev.map(c => c.caronaid === caronaId ? { ...c, status: 'aprovado' } : c));
+            setSnackbar({ open: true, message: 'Carona aprovada com sucesso!', severity: 'success' });
+        } catch (e) {
+            console.error('Erro ao aprovar carona:', e);
+            setSnackbar({ open: true, message: 'Erro ao aprovar carona', severity: 'error' });
+        }
+    };
+
+    const rejectCarona = async (caronaId) => {
+        try {
+            await api.put(`/caronas/${caronaId}/status`, { status: 'Reprovado' });
+            setCaronas(prev => prev.map(c => c.caronaid === caronaId ? { ...c, status: 'reprovado' } : c));
+            setSnackbar({ open: true, message: 'Carona reprovada!', severity: 'info' });
+        } catch (e) {
+            console.error('Erro ao reprovar carona:', e);
+            setSnackbar({ open: true, message: 'Erro ao reprovar carona', severity: 'error' });
+        }
+    };
+
     // Busca dados da viagem, veículos e motoristas
     useEffect(() => {
         const fetchData = async () => {
@@ -190,6 +219,30 @@ const TripDetailPage = () => {
 
         fetchData();
     }, [id]);
+
+    // Buscar caronas da viagem (todas: pendente/aprovado/reprovado)
+    useEffect(() => {
+        const fetchCaronas = async () => {
+            try {
+                setCaronasLoading(true);
+                setCaronasError('');
+                const resp = await api.get('/caronas', { params: { viagemId: id } });
+                const list = Array.isArray(resp.data?.caronas) ? resp.data.caronas : [];
+                setCaronas(list);
+            } catch (e) {
+                console.error('Erro ao carregar caronas:', e);
+                setCaronas([]);
+                setCaronasError('Erro ao carregar caronas');
+            } finally {
+                setCaronasLoading(false);
+            }
+        };
+        fetchCaronas();
+    }, [id]);
+
+    // (Removido) Ações de aprovar/reprovar caronas
+
+
 
     // useEffect para pré-selecionar o motorista APÓS trip E drivers carregarem
     useEffect(() => {
@@ -441,7 +494,7 @@ const TripDetailPage = () => {
 
                     {/* Card: Informações Gerais */}
                     <Grid item xs={12} md={6}>
-                        <Card elevation={2} sx={{ height: '100%' }}>
+                        <Card elevation={2} sx={{ height: '100%', p: 1 }}>
                             <CardHeader 
                                 sx={{
                                     pb: 1,
@@ -464,6 +517,18 @@ const TripDetailPage = () => {
                                             sx={{ alignSelf: 'flex-start' }}
                                         />
                                     </Box>
+                                </Box>
+                                <Box display="flex" alignItems="flex-start" mb={1.5}>
+                                    <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Requisitante:</Typography>
+                                    <Typography variant="body2" sx={{ ml: 1 }}>
+                                        {(() => {
+                                            const nome = trip.solicitante_nome || trip.requisitante_nome;
+                                            const setor = trip.solicitante_departamento || trip.requisitante_setor;
+                                            if (nome && setor) return `${nome} - ${setor}`;
+                                            if (nome) return nome;
+                                            return 'N/A';
+                                        })()}
+                                    </Typography>
                                 </Box>
                                 <Box display="flex" alignItems="flex-start" mb={1.5}>
                                     <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500', display: 'flex', alignItems: 'center' }}>
@@ -573,7 +638,63 @@ const TripDetailPage = () => {
                         </Grid>
                     )}
                     
-                     {/* Card: Passageiros (Opcional) */}
+                    {/* Card: Caronas (listagem simples) */}
+                    <Grid item xs={12} md={6}>
+                        <Card elevation={2} sx={{ height: '100%', p: 0.5 }}>
+                            <CardHeader 
+                                sx={{
+                                    pb: 1,
+                                    '& .MuiCardHeader-title': {
+                                        fontSize: { xs: '1.1rem', sm: '1.2rem' },
+                                        fontWeight: 600
+                                    }
+                                }}
+                                avatar={<Avatar sx={{ bgcolor: 'warning.main', width: 40, height: 40 }}><HailIcon /></Avatar>}
+                                title={<Typography variant="h6">Caronas</Typography>}
+                            />
+                            <CardContent sx={{ pt: 1 }}>
+                                {caronasLoading ? (
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                                        <CircularProgress size={24} />
+                                    </Box>
+                                ) : caronasError ? (
+                                    <Alert severity="error">{caronasError}</Alert>
+                                ) : caronas.length === 0 ? (
+                                    <Typography variant="body2" color="text.secondary">Nenhuma carona registrada para esta viagem.</Typography>
+                                ) : (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                        {(() => {
+                                            const order = { aprovado: 0, reprovado: 1, pendente: 2 };
+                                            const arr = [...caronas].sort((a, b) => (order[String(a.status).toLowerCase()] ?? 9) - (order[String(b.status).toLowerCase()] ?? 9));
+                                            return arr.map((c, idx) => {
+                                                const nome = c.requisitante_nome || '';
+                                                const setor = c.requisitante_setor || '';
+                                                const status = String(c.status || '').toLowerCase();
+                                                const motivo = (c.motivo ?? '').toString().trim();
+                                                const line = `${nome || c.requisitante} - ${setor || 'N/A'} - ${status} - ${motivo || 'N/A'}`;
+                                                return (
+                                                    <React.Fragment key={c.caronaid}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
+                                                            <Typography variant="body2">{line}</Typography>
+                                                            {status === 'pendente' && (
+                                                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                                                    <Button size="small" variant="contained" color="success" onClick={() => approveCarona(c.caronaid)}>Aprovar</Button>
+                                                                    <Button size="small" variant="outlined" color="error" onClick={() => rejectCarona(c.caronaid)}>Reprovar</Button>
+                                                                </Box>
+                                                            )}
+                                                        </Box>
+                                                        {idx < arr.length - 1 && <Divider sx={{ my: 0.5 }} />}
+                                                    </React.Fragment>
+                                                );
+                                            });
+                                        })()}
+                                    </Box>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Card: Passageiros (Opcional) */}
                     {trip.passageiros && trip.passageiros.length > 0 && (
                         <Grid item xs={12} md={6}>
                              <Card elevation={2} sx={{ 
