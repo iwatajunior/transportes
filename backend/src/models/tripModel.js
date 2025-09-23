@@ -66,6 +66,7 @@ const tripModel = {
                 v.origem AS origem,
                 v.origem AS origem_completa,
                 u_sol.nome AS solicitante_nome, 
+                u_sol.fotoperfilurl AS solicitante_avatar,
                 ve.placa AS veiculo_alocado_placa,
                 ve.modelo AS veiculo_alocado_modelo, -- Adicionado modelo do veículo
                 u_mot.nome AS motorista_alocado_nome, -- Alias corrigido

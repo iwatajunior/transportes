@@ -267,6 +267,8 @@ const TripDetailPage = () => {
         }
     }, [trip]);
 
+    // (Sem efeito extra) Avatar será lido diretamente de trip.solicitante_avatar
+
     // Função para salvar/gerenciar KM Inicial (para Gestor/Admin)
     const handleManageInitialKm = async () => {
         if (!initialKm.trim() || isNaN(Number(initialKm)) || Number(initialKm) < 0) {
@@ -518,17 +520,34 @@ const TripDetailPage = () => {
                                         />
                                     </Box>
                                 </Box>
-                                <Box display="flex" alignItems="flex-start" mb={1.5}>
+                                <Box display="flex" alignItems="center" mb={1.5}>
                                     <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Requisitante:</Typography>
-                                    <Typography variant="body2" sx={{ ml: 1 }}>
-                                        {(() => {
-                                            const nome = trip.solicitante_nome || trip.requisitante_nome;
-                                            const setor = trip.solicitante_departamento || trip.requisitante_setor;
-                                            if (nome && setor) return `${nome} - ${setor}`;
-                                            if (nome) return nome;
-                                            return 'N/A';
-                                        })()}
-                                    </Typography>
+                                    <Box sx={{ ml: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Avatar
+                                            src={trip.solicitante_avatar ? `http://10.1.1.42:3001${trip.solicitante_avatar}` : undefined}
+                                            sx={{ 
+                                                width: 32,
+                                                height: 32,
+                                                border: '2px solid',
+                                                borderColor: 'primary.main',
+                                                backgroundColor: 'primary.lighter',
+                                                color: 'primary.dark',
+                                                fontSize: '1rem',
+                                                fontWeight: 500
+                                            }}
+                                        >
+                                            {(trip.solicitante_nome || trip.requisitante_nome || ' ')[0]}
+                                        </Avatar>
+                                        <Typography variant="body2">
+                                            {(() => {
+                                                const nome = trip.solicitante_nome || trip.requisitante_nome;
+                                                const setor = trip.solicitante_departamento || trip.requisitante_setor;
+                                                if (nome && setor) return `${nome} - ${setor}`;
+                                                if (nome) return nome;
+                                                return 'N/A';
+                                            })()}
+                                        </Typography>
+                                    </Box>
                                 </Box>
                                 <Box display="flex" alignItems="flex-start" mb={1.0}>
                                     <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Data Saída:</Typography>
