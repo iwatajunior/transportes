@@ -506,7 +506,7 @@ const TripDetailPage = () => {
                                 avatar={<Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}><PlaceIcon /></Avatar>}
                                 title={<Typography variant="h6">Informações Gerais</Typography>}
                             />
-                            <CardContent>
+                            <CardContent sx={{ textAlign: 'left' }}>
                                 <Box display="flex" alignItems="flex-start" mb={1.5}>
                                     <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Status:</Typography>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1 }}>
@@ -660,7 +660,8 @@ const TripDetailPage = () => {
                                                 const setor = c.requisitante_setor || '';
                                                 const status = String(c.status || '').toLowerCase();
                                                 const motivo = (c.motivo ?? '').toString().trim();
-                                                const line = `${nome || c.requisitante} - ${setor || 'N/A'} - ${status} - ${motivo || 'N/A'}`;
+                                                const statusPart = status === 'pendente' ? '' : ` - ${status}`;
+                                                const line = `${nome || c.requisitante} - ${setor || 'N/A'}${statusPart} - ${motivo || 'N/A'}`;
                                                 return (
                                                     <React.Fragment key={c.caronaid}>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
