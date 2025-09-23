@@ -530,11 +530,39 @@ const TripDetailPage = () => {
                                         })()}
                                     </Typography>
                                 </Box>
+                                <Box display="flex" alignItems="flex-start" mb={1.0}>
+                                    <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Data Saída:</Typography>
+                                    <Typography variant="body2" sx={{ ml: 1 }}>{trip.data_saida ? formatDate(trip.data_saida, false) : 'N/A'}</Typography>
+                                </Box>
+                                <Box display="flex" alignItems="flex-start" mb={1.0}>
+                                    <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Data Retorno:</Typography>
+                                    <Typography variant="body2" sx={{ ml: 1 }}>{trip.data_retorno_prevista ? formatDate(trip.data_retorno_prevista, false) : 'N/A'}</Typography>
+                                </Box>
+                                <Box display="flex" alignItems="flex-start" mb={1.0}>
+                                    <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Horário Saída:</Typography>
+                                    <Typography variant="body2" sx={{ ml: 1 }}>{trip.horario_saida || 'N/A'}</Typography>
+                                </Box>
                                 <Box display="flex" alignItems="flex-start" mb={1.5}>
-                                    <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500', display: 'flex', alignItems: 'center' }}>
-                                        <HelpOutlineIcon fontSize="small" sx={{ mr: 0.5 }} /> Motivo:
+                                    <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Horário Retorno:</Typography>
+                                    <Typography variant="body2" sx={{ ml: 1 }}>{trip.horario_retorno_previsto || 'N/A'}</Typography>
+                                </Box>
+                                <Box display="flex" alignItems="flex-start" mb={1.0}>
+                                    <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Origem:</Typography>
+                                    <Typography variant="body2" sx={{ ml: 1 }}>
+                                        {(() => {
+                                            const origem = trip.origem_completa || trip.origem || trip.local_saida || '';
+                                            return origem || 'N/A';
+                                        })()}
                                     </Typography>
-                                    <Typography variant="body2" sx={{ ml: 1 }}>{trip.motivo || 'N/A'}</Typography>
+                                </Box>
+                                <Box display="flex" alignItems="flex-start" mb={1.5}>
+                                    <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500' }}>Destino:</Typography>
+                                    <Typography variant="body2" sx={{ ml: 1 }}>
+                                        {(() => {
+                                            const destino = trip.destino_completo || trip.destino || trip.local_destino || '';
+                                            return destino || 'N/A';
+                                        })()}
+                                    </Typography>
                                 </Box>
                                 {trip.finalidade && (
                                     <Box display="flex" alignItems="center" mb={1.5}>
@@ -564,46 +592,7 @@ const TripDetailPage = () => {
                         </Card>
                     </Grid>
 
-                    {/* Card: Datas e Horários */}
-                    <Grid item xs={12} md={6}>
-                         <Card elevation={2} sx={{ 
-                            height: '100%',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: (theme) => theme.shadows[4]
-                            }
-                        }}>
-                            <CardHeader 
-                                sx={{
-                                    pb: 1,
-                                    '& .MuiCardHeader-title': {
-                                        fontSize: { xs: '1.1rem', sm: '1.2rem' },
-                                        fontWeight: 600
-                                    }
-                                }}
-                                avatar={<Avatar sx={{ bgcolor: 'secondary.main', width: 40, height: 40 }}><EventIcon /></Avatar>}
-                                title={<Typography variant="h6">Datas e Horários</Typography>}
-                            />
-                            <CardContent sx={{ pt: 1 }}>
-                                <Box display="flex" alignItems="flex-start" mb={1.5}>
-                                    <Typography sx={{ minWidth: { xs: 100, sm: 140 }, fontWeight: '500' }}>Saída:</Typography>
-                                    <Typography variant="body2" sx={{ ml: 1 }}>{formatDate(trip.data_saida, true)}</Typography>
-                                </Box>
-                                <Box display="flex" alignItems="flex-start" mb={1.5}>
-                                    <Typography sx={{ minWidth: { xs: 100, sm: 140 }, fontWeight: '500' }}>Retorno Prev.:</Typography>
-                                    <Typography variant="body2" sx={{ ml: 1 }}>{formatDate(trip.data_retorno_prevista, true)}</Typography>
-                                </Box>
-                                {trip.data_retorno_efetivo && (
-                                     <Box display="flex" alignItems="flex-start" mb={1.5}>
-                                        <Typography sx={{ minWidth: { xs: 100, sm: 140 }, fontWeight: '500' }}>Retorno Efet.:</Typography>
-                                        <Typography variant="body2" sx={{ ml: 1 }}>{formatDate(trip.data_retorno_efetivo, true)}</Typography>
-                                     </Box>
-                                )}
-
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                    
 
                     {/* Card: Motorista Alocado (Condicional) */}
                     {trip.motorista_nome && (
