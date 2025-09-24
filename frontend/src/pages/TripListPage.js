@@ -131,6 +131,20 @@ const TripListPage = () => {
         return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
           .toLocaleDateString('pt-BR', { timeZone: 'UTC' });
     };
+    const formatTime = (value) => {
+        if (!value) return '--:--';
+        // If already a HH:mm or HH:mm:ss string
+        if (typeof value === 'string') {
+            const match = value.match(/^(\d{2}):(\d{2})(?::\d{2})?$/);
+            if (match) return `${match[1]}:${match[2]}h`;
+        }
+        // Fallback: try parsing as date/datetime
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return '--:--';
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}h`;
+    };
 
     if (isLoading) {
         return (
@@ -374,7 +388,7 @@ const TripListPage = () => {
                                     fontWeight: 500,
                                     whiteSpace: 'nowrap',
                                     padding: '8px 16px',
-                                    width: 90
+                                    width: 40
                                 }}
                             >ID</TableCell>
                             <TableCell 
@@ -384,7 +398,7 @@ const TripListPage = () => {
                                     fontWeight: 500,
                                     whiteSpace: 'nowrap',
                                     padding: '8px 16px',
-                                    width: 110
+                                    width: 50
                                 }}
                             >Status</TableCell>
                             <TableCell 
@@ -395,7 +409,7 @@ const TripListPage = () => {
                                     whiteSpace: 'nowrap',
                                     py: 1,
                                     px: 2,
-                                    width: 160
+                                    width: 140
                                 }}
                             >Origem</TableCell>
                             <TableCell 
@@ -406,7 +420,7 @@ const TripListPage = () => {
                                     whiteSpace: 'nowrap',
                                     py: 1,
                                     px: 2,
-                                    width: 160
+                                    width: 140
                                 }}
                             >Destino</TableCell>
                             <TableCell 
@@ -417,7 +431,7 @@ const TripListPage = () => {
                                     whiteSpace: 'nowrap',
                                     py: 1,
                                     px: 2,
-                                    width: 180
+                                    width: 160
                                 }}
                             >Solicitante</TableCell>
                             <TableCell 
@@ -428,9 +442,21 @@ const TripListPage = () => {
                                     whiteSpace: 'nowrap',
                                     py: 1,
                                     px: 2,
-                                    width: 120
+                                    width: 90
                                 }}
-                            >Data Saída</TableCell>
+                            >Data/Hora<br/>Saída</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 0,
+                                    px: 0,
+                                    width: 0,
+                                    display: 'none'
+                                }}
+                            >Horário<br/>Saída</TableCell>
                             <TableCell 
                                 sx={{ 
                                     backgroundColor: theme.palette.primary.main,
@@ -439,9 +465,21 @@ const TripListPage = () => {
                                     whiteSpace: 'nowrap',
                                     py: 1,
                                     px: 2,
-                                    width: 120
+                                    width: 90
                                 }}
-                            >Data Retorno</TableCell>
+                            >Data/Hora<br/>Retorno</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 0,
+                                    px: 0,
+                                    width: 0,
+                                    display: 'none'
+                                }}
+                            >Horário<br/>Retorno</TableCell>
                             <TableCell 
                                 sx={{ 
                                     backgroundColor: theme.palette.primary.main,
@@ -450,7 +488,7 @@ const TripListPage = () => {
                                     whiteSpace: 'nowrap',
                                     py: 1,
                                     px: 2,
-                                    width: 160
+                                    width: 140
                                 }}
                             >Veículo</TableCell>
                             <TableCell 
@@ -473,7 +511,7 @@ const TripListPage = () => {
                                     whiteSpace: 'nowrap',
                                     py: 1,
                                     px: 2,
-                                    width: 90
+                                    width: 64
                                 }}
                             >Ações</TableCell>
                         </TableRow>
@@ -495,28 +533,26 @@ const TripListPage = () => {
                                     }
                                 }}
                             >
-                                <TableCell sx={{ py: 1, px: 2, whiteSpace: 'nowrap', width: 90 }}>#{trip.tripid}</TableCell>
-                                <TableCell sx={{ py: 1, px: 2, width: 110 }}>
-                                    <Chip
-                                        label={trip.status_viagem}
-                                        color={getStatusColor(trip.status_viagem).color}
-                                        size="small"
-                                        icon={getStatusColor(trip.status_viagem).icon}
-                                        sx={{
-                                            fontWeight: 500,
-                                            '& .MuiChip-icon': {
-                                                color: 'inherit'
-                                            }
-                                        }}
-                                    />
+                                <TableCell sx={{ py: 1, px: 2, whiteSpace: 'nowrap', width: 40 }}>#{trip.tripid}</TableCell>
+                                <TableCell sx={{ py: 1, px: 2, width: 50 }}>
+                                    <Tooltip title={trip.status_viagem || 'Status'}>
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center',
+                                            color: theme.palette[getStatusColor(trip.status_viagem).color]?.main
+                                        }}>
+                                            {getStatusColor(trip.status_viagem).icon}
+                                        </Box>
+                                    </Tooltip>
                                 </TableCell>
-                                <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 140, whiteSpace: 'nowrap' }}>
                                     <Typography variant="body2" noWrap>{trip.origem || trip.origem_completo || 'N/A'}</Typography>
                                 </TableCell>
-                                <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 140, whiteSpace: 'nowrap' }}>
                                     <Typography variant="body2" noWrap>{trip.destino_completo}</Typography>
                                 </TableCell>
-                                <TableCell sx={{ py: 1, px: 2, maxWidth: 180 }}>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 160 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <Avatar
                                             src={trip.solicitante_avatar ? `http://10.1.1.42:3001${trip.solicitante_avatar}` : undefined}
@@ -558,9 +594,21 @@ const TripListPage = () => {
                                         </Box>
                                     </Box>
                                 </TableCell>
-                                <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(trip.data_saida)}</TableCell>
-                                <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(trip.data_retorno_prevista)}</TableCell>
-                                <TableCell sx={{ py: 1, px: 2, maxWidth: 160 }}>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 90, whiteSpace: 'nowrap' }}>
+                                    <Box>
+                                        <Typography variant="body2" noWrap>{formatDate(trip.data_saida)}</Typography>
+                                        <Typography variant="caption" color="text.secondary" noWrap>{formatTime(trip.horario_saida)}</Typography>
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ py: 0, px: 0, maxWidth: 0, whiteSpace: 'nowrap', display: 'none' }}>{formatTime(trip.horario_saida)}</TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 90, whiteSpace: 'nowrap' }}>
+                                    <Box>
+                                        <Typography variant="body2" noWrap>{formatDate(trip.data_retorno_prevista)}</Typography>
+                                        <Typography variant="caption" color="text.secondary" noWrap>{formatTime(trip.horario_retorno_previsto)}</Typography>
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ py: 0, px: 0, maxWidth: 0, whiteSpace: 'nowrap', display: 'none' }}>{formatTime(trip.horario_retorno_previsto)}</TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 140 }}>
                                     {trip.veiculo_alocado_modelo} 
                                     {trip.veiculo_alocado_placa && (
                                         <Typography variant="caption" display="block" color="text.secondary">
@@ -568,7 +616,7 @@ const TripListPage = () => {
                                         </Typography>
                                     )}
                                 </TableCell>
-                                <TableCell sx={{ py: 1, px: 2, maxWidth: 200 }}>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 160 }}>
                                         {trip.motorista_nome ? (
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Avatar
@@ -619,7 +667,7 @@ const TripListPage = () => {
                                             </Typography>
                                         )}
                                     </TableCell>
-                                    <TableCell align="right" sx={{ py: 1, px: 2 }}>
+                                    <TableCell align="right" sx={{ py: 1, px: 2, width: 64 }}>
                                         <Tooltip title="Ver Detalhes">
                                             <IconButton
                                                 component={RouterLink}

@@ -31,5 +31,17 @@
     "user_name": "Administrador",
     "user_setor": "",
     "created_at": "2025-09-24T15:32:32.577Z"
+  },
+  {
+    "id": "1758740036072",
+    "tripid": 17,
+    "user_id": 4,
+    "trip_rating": 1,
+    "driver_rating": 1,
+    "vehicle_rating": 1,
+    "feedback": "negativo",
+    "user_name": "Administrador",
+    "user_setor": "",
+    "created_at": "2025-09-24T18:53:56.072Z"
   }
 ]
