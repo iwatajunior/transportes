@@ -153,7 +153,9 @@ const MinhasViagensPage = () => {
             <Table size="small" sx={{ minWidth: 800, backgroundColor: theme.palette.background.paper }}>
               <TableHead>
                 <TableRow>
+                  <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500 }}>ID</TableCell>
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500 }}>Status</TableCell>
+                  <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500 }}>Origem</TableCell>
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500 }}>Destino</TableCell>
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500 }}>Data Saída</TableCell>
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500 }}>Data Retorno</TableCell>
@@ -167,6 +169,7 @@ const MinhasViagensPage = () => {
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((trip) => (
                     <TableRow key={trip.tripid}>
+                      <TableCell>#{trip.tripid}</TableCell>
                       <TableCell>
                         <Chip
                           label={trip.status_viagem}
@@ -175,6 +178,7 @@ const MinhasViagensPage = () => {
                           icon={getStatusColor(trip.status_viagem).icon}
                         />
                       </TableCell>
+                      <TableCell>{trip.origem || trip.origem_completa || 'N/A'}</TableCell>
                       <TableCell>{trip.destino_completo}</TableCell>
                       <TableCell>{formatDate(trip.data_saida)}</TableCell>
                       <TableCell>{formatDate(trip.data_retorno_prevista)}</TableCell>

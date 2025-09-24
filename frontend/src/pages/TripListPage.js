@@ -306,188 +306,223 @@ const TripListPage = () => {
                     </Grid>
                 </Paper>
 
-                {/* Lista de Viagens */}
-                <TableContainer>
-                    <Table 
-                        size="small" 
-                        sx={{ 
-                            minWidth: 800,
-                            backgroundColor: theme.palette.background.paper,
-                            '& .MuiTableCell-root': {
-                                borderBottom: `1px solid ${theme.palette.divider}`,
-                                padding: '8px 16px'
-                            }
-                        }}
-                    >
-                        <TableHead>
-                            <TableRow>
-                                <TableCell 
-                                    sx={{ 
-                                        backgroundColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontWeight: 500,
-                                        whiteSpace: 'nowrap',
-                                        padding: '8px 16px'
-                                    }}
-                                >Status</TableCell>
-                                <TableCell 
-                                    sx={{ 
-                                        backgroundColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontWeight: 500,
-                                        whiteSpace: 'nowrap',
-                                        py: 1,
-                                        px: 2
-                                    }}
-                                >Destino</TableCell>
-                                <TableCell 
-                                    sx={{ 
-                                        backgroundColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontWeight: 500,
-                                        whiteSpace: 'nowrap',
-                                        py: 1,
-                                        px: 2
-                                    }}
-                                >Solicitante</TableCell>
-                                <TableCell 
-                                    sx={{ 
-                                        backgroundColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontWeight: 500,
-                                        whiteSpace: 'nowrap',
-                                        py: 1,
-                                        px: 2
-                                    }}
-                                >Data Saída</TableCell>
-                                <TableCell 
-                                    sx={{ 
-                                        backgroundColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontWeight: 500,
-                                        whiteSpace: 'nowrap',
-                                        py: 1,
-                                        px: 2
-                                    }}
-                                >Data Retorno</TableCell>
-                                <TableCell 
-                                    sx={{ 
-                                        backgroundColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontWeight: 500,
-                                        whiteSpace: 'nowrap',
-                                        py: 1,
-                                        px: 2
-                                    }}
-                                >Veículo</TableCell>
-                                <TableCell 
-                                    sx={{ 
-                                        backgroundColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontWeight: 500,
-                                        whiteSpace: 'nowrap',
-                                        py: 1,
-                                        px: 2
-                                    }}
-                                >Motorista</TableCell>
-                                <TableCell 
-                                    align="right"
-                                    sx={{ 
-                                        backgroundColor: theme.palette.primary.main,
-                                        color: theme.palette.primary.contrastText,
-                                        fontWeight: 500,
-                                        whiteSpace: 'nowrap',
-                                        py: 1,
-                                        px: 2
-                                    }}
-                                >Ações</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {filteredTrips.map((trip) => (
-                                <TableRow 
-                                    key={trip.tripid}
-                                    sx={{
-                                        '&:nth-of-type(odd)': {
-                                            backgroundColor: theme.palette.action.hover,
-                                        },
-                                        '&:hover': {
-                                            backgroundColor: theme.palette.action.selected
-                                        },
-                                        '& td': { 
-                                            fontSize: '0.875rem',
-                                            py: 1
-                                        }
-                                    }}
-                                >
-                                    <TableCell sx={{ py: 1, px: 2 }}>
-                                        <Chip
-                                            label={trip.status_viagem}
-                                            color={getStatusColor(trip.status_viagem).color}
-                                            size="small"
-                                            icon={getStatusColor(trip.status_viagem).icon}
-                                            sx={{
-                                                fontWeight: 500,
-                                                '& .MuiChip-icon': {
-                                                    color: 'inherit'
-                                                }
+            {/* Lista de Viagens */}
+            <TableContainer>
+                <Table 
+                    size="small" 
+                    sx={{ 
+                        minWidth: 800,
+                        backgroundColor: theme.palette.background.paper,
+                        '& .MuiTableCell-root': {
+                            borderBottom: `1px solid ${theme.palette.divider}`,
+                            padding: '8px 16px'
+                        }
+                    }}
+                >
+                    <TableHead>
+                        <TableRow>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    padding: '8px 16px',
+                                    width: 90
+                                }}
+                            >ID</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    padding: '8px 16px',
+                                    width: 110
+                                }}
+                            >Status</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 1,
+                                    px: 2,
+                                    width: 160
+                                }}
+                            >Origem</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 1,
+                                    px: 2,
+                                    width: 160
+                                }}
+                            >Destino</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 1,
+                                    px: 2,
+                                    width: 180
+                                }}
+                            >Solicitante</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 1,
+                                    px: 2,
+                                    width: 120
+                                }}
+                            >Data Saída</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 1,
+                                    px: 2,
+                                    width: 120
+                                }}
+                            >Data Retorno</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 1,
+                                    px: 2,
+                                    width: 160
+                                }}
+                            >Veículo</TableCell>
+                            <TableCell 
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 1,
+                                    px: 2,
+                                    width: 160
+                                }}
+                            >Motorista</TableCell>
+                            <TableCell 
+                                align="right"
+                                sx={{ 
+                                    backgroundColor: theme.palette.primary.main,
+                                    color: theme.palette.primary.contrastText,
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                    py: 1,
+                                    px: 2,
+                                    width: 90
+                                }}
+                            >Ações</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filteredTrips.map((trip) => (
+                            <TableRow 
+                                key={trip.tripid}
+                                sx={{
+                                    '&:nth-of-type(odd)': {
+                                        backgroundColor: theme.palette.action.hover,
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: theme.palette.action.selected
+                                    },
+                                    '& td': { 
+                                        fontSize: '0.875rem',
+                                        py: 1
+                                    }
+                                }}
+                            >
+                                <TableCell sx={{ py: 1, px: 2, whiteSpace: 'nowrap', width: 90 }}>#{trip.tripid}</TableCell>
+                                <TableCell sx={{ py: 1, px: 2, width: 110 }}>
+                                    <Chip
+                                        label={trip.status_viagem}
+                                        color={getStatusColor(trip.status_viagem).color}
+                                        size="small"
+                                        icon={getStatusColor(trip.status_viagem).icon}
+                                        sx={{
+                                            fontWeight: 500,
+                                            '& .MuiChip-icon': {
+                                                color: 'inherit'
+                                            }
+                                        }}
+                                    />
+                                </TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>
+                                    <Typography variant="body2" noWrap>{trip.origem || trip.origem_completo || 'N/A'}</Typography>
+                                </TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>
+                                    <Typography variant="body2" noWrap>{trip.destino_completo}</Typography>
+                                </TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 180 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Avatar
+                                            src={trip.solicitante_avatar ? `http://10.1.1.42:3001${trip.solicitante_avatar}` : undefined}
+                                            sx={{ 
+                                                width: 32, 
+                                                height: 32,
+                                                border: '2px solid',
+                                                borderColor: 'primary.main',
+                                                backgroundColor: 'primary.lighter',
+                                                color: 'primary.dark',
+                                                fontSize: '1rem',
+                                                fontWeight: 500
                                             }}
-                                        />
-                                    </TableCell>
-                                    <TableCell sx={{ py: 1, px: 2 }}>{trip.destino_completo}</TableCell>
-                                    <TableCell sx={{ py: 1, px: 2 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <Avatar
-                                                src={trip.solicitante_avatar ? `http://10.1.1.42:3001${trip.solicitante_avatar}` : undefined}
+                                        >
+                                            {trip.solicitante_nome?.charAt(0)}
+                                        </Avatar>
+                                        <Box>
+                                            <Typography 
+                                                variant="body2" 
                                                 sx={{ 
-                                                    width: 32, 
-                                                    height: 32,
-                                                    border: '2px solid',
-                                                    borderColor: 'primary.main',
-                                                    backgroundColor: 'primary.lighter',
-                                                    color: 'primary.dark',
-                                                    fontSize: '1rem',
-                                                    fontWeight: 500
+                                                    fontWeight: 500,
+                                                    color: 'text.primary',
+                                                    lineHeight: 1.2
                                                 }}
                                             >
-                                                {trip.solicitante_nome?.charAt(0)}
-                                            </Avatar>
-                                            <Box>
+                                                {trip.solicitante_nome}
+                                            </Typography>
+                                            {trip.solicitante_departamento && (
                                                 <Typography 
-                                                    variant="body2" 
+                                                    variant="caption" 
                                                     sx={{ 
-                                                        fontWeight: 500,
-                                                        color: 'text.primary',
-                                                        lineHeight: 1.2
+                                                        color: 'text.secondary',
+                                                        display: 'block'
                                                     }}
                                                 >
-                                                    {trip.solicitante_nome}
+                                                    {trip.solicitante_departamento}
                                                 </Typography>
-                                                {trip.solicitante_departamento && (
-                                                    <Typography 
-                                                        variant="caption" 
-                                                        sx={{ 
-                                                            color: 'text.secondary',
-                                                            display: 'block'
-                                                        }}
-                                                    >
-                                                        {trip.solicitante_departamento}
-                                                    </Typography>
-                                                )}
-                                            </Box>
+                                            )}
                                         </Box>
-                                    </TableCell>
-                                    <TableCell sx={{ py: 1, px: 2 }}>{formatDate(trip.data_saida)}</TableCell>
-                                    <TableCell sx={{ py: 1, px: 2 }}>{formatDate(trip.data_retorno_prevista)}</TableCell>
-                                    <TableCell sx={{ py: 1, px: 2 }}>
-                                        {trip.veiculo_alocado_modelo} 
-                                        {trip.veiculo_alocado_placa && 
-                                            <Typography variant="caption" display="block" color="text.secondary">
-                                                {trip.veiculo_alocado_placa}
-                                            </Typography>
-                                        }
-                                    </TableCell>
-                                    <TableCell sx={{ py: 1, px: 2 }}>
+                                    </Box>
+                                </TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(trip.data_saida)}</TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(trip.data_retorno_prevista)}</TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 160 }}>
+                                    {trip.veiculo_alocado_modelo} 
+                                    {trip.veiculo_alocado_placa && (
+                                        <Typography variant="caption" display="block" color="text.secondary">
+                                            {trip.veiculo_alocado_placa}
+                                        </Typography>
+                                    )}
+                                </TableCell>
+                                <TableCell sx={{ py: 1, px: 2, maxWidth: 200 }}>
                                         {trip.motorista_nome ? (
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <Avatar
