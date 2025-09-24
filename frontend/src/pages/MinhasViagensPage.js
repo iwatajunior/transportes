@@ -17,9 +17,19 @@ import {
   IconButton,
   TablePagination,
   useTheme,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Rating,
+  TextField,
+  Snackbar,
+  Alert as MuiAlert
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
+import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import EventIcon from '@mui/icons-material/Event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -37,6 +47,17 @@ const MinhasViagensPage = () => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(6);
+  const [actionOpen, setActionOpen] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [tripRating, setTripRating] = useState(0);
+  const [driverRating, setDriverRating] = useState(0);
+  const [vehicleRating, setVehicleRating] = useState(0);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [myEvaluations, setMyEvaluations] = useState({}); // { [tripid]: {trip_rating, driver_rating, ...} }
+  const [readOnlyEval, setReadOnlyEval] = useState(false);
+  const isFormValid = tripRating > 0 && driverRating > 0 && vehicleRating > 0;
 
   const fetchTrips = useCallback(async () => {
     setLoading(true);
@@ -54,6 +75,23 @@ const MinhasViagensPage = () => {
   useEffect(() => {
     fetchTrips();
   }, [fetchTrips]);
+
+  // Fetch current user's evaluations once
+  useEffect(() => {
+    const fetchEvaluations = async () => {
+      try {
+        const resp = await api.get('/evaluations');
+        const all = resp.data?.evaluations || [];
+        const mine = all.filter((e) => String(e.user_id) === String(user?.userId));
+        const map = {};
+        mine.forEach((e) => { map[String(e.tripid)] = e; });
+        setMyEvaluations(map);
+      } catch (err) {
+        // silencioso
+      }
+    };
+    fetchEvaluations();
+  }, [user]);
 
   const minhasTrips = useMemo(() => {
     const uid = user?.userId;
@@ -164,11 +202,48 @@ const MinhasViagensPage = () => {
                         )}
                       </TableCell>
                       <TableCell align="right">
-                        <Tooltip title="Ver Detalhes">
-                          <IconButton component={RouterLink} to={`/viagens/${trip.tripid}`} size="small">
-                            <VisibilityIcon />
-                          </IconButton>
-                        </Tooltip>
+                        {(() => {
+                          const evalForTrip = myEvaluations[String(trip.tripid)];
+                          const alreadyEvaluated = Boolean(evalForTrip);
+                          const canEvaluate = !alreadyEvaluated && String(trip.status_viagem || '').toLowerCase() === 'concluida';
+                          const tooltipText = alreadyEvaluated
+                            ? `Sua avaliação — Viagem: ${evalForTrip.trip_rating}/5, Motorista: ${evalForTrip.driver_rating}/5 (clique para ver)`
+                            : (canEvaluate ? 'Avaliar viagem' : 'Disponível após conclusão da viagem');
+                          return (
+                            <Tooltip title={tooltipText}>
+                              <span>
+                                <IconButton 
+                                  size="small" 
+                                  color={alreadyEvaluated ? 'success' : (canEvaluate ? 'warning' : 'default')} 
+                                  onClick={() => {
+                                    const evalForTrip = myEvaluations[String(trip.tripid)];
+                                    if (canEvaluate) {
+                                      setSelectedTrip(trip);
+                                      setTripRating(0);
+                                      setDriverRating(0);
+                                      setFeedbackText('');
+                                      setVehicleRating(0);
+                                      setReadOnlyEval(false);
+                                      setActionOpen(true);
+                                    } else if (evalForTrip) {
+                                      // abrir em modo somente leitura com os dados já enviados
+                                      setSelectedTrip(trip);
+                                      setTripRating(Number(evalForTrip.trip_rating) || 0);
+                                      setDriverRating(Number(evalForTrip.driver_rating) || 0);
+                                      setVehicleRating(Number(evalForTrip.vehicle_rating) || 0);
+                                      setFeedbackText(evalForTrip.feedback || '');
+                                      setReadOnlyEval(true);
+                                      setActionOpen(true);
+                                    }
+                                  }}
+                                  disabled={!canEvaluate && !alreadyEvaluated}
+                                >
+                                  {alreadyEvaluated ? <ThumbUpAltIcon /> : <ThumbUpOffAltIcon />}
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          );
+                        })()}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -190,6 +265,128 @@ const MinhasViagensPage = () => {
           />
         </Paper>
       </Container>
+
+      {/* Modal de Ações (vazio por enquanto) */}
+      <Dialog open={actionOpen} onClose={() => setActionOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{readOnlyEval ? 'Sua avaliação' : 'Avalie essa viagem'}</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>Avalie a viagem (1 a 5) *</Typography>
+              <Rating
+                name="trip-rating"
+                value={tripRating}
+                onChange={(e, newValue) => !readOnlyEval && setTripRating(newValue || 0)}
+                max={5}
+                readOnly={readOnlyEval}
+              />
+              {!readOnlyEval && tripRating === 0 && (
+                <Typography variant="caption" color="error">Campo obrigatório</Typography>
+              )}
+            </Box>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>Avalie o motorista (1 a 5) *</Typography>
+              <Rating
+                name="driver-rating"
+                value={driverRating}
+                onChange={(e, newValue) => !readOnlyEval && setDriverRating(newValue || 0)}
+                max={5}
+                readOnly={readOnlyEval}
+              />
+              {!readOnlyEval && driverRating === 0 && (
+                <Typography variant="caption" color="error">Campo obrigatório</Typography>
+              )}
+            </Box>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>Avalie as condições do veículo (1 a 5) *</Typography>
+              <Rating
+                name="vehicle-rating"
+                value={vehicleRating}
+                onChange={(e, newValue) => !readOnlyEval && setVehicleRating(newValue || 0)}
+                max={5}
+                readOnly={readOnlyEval}
+              />
+              {!readOnlyEval && vehicleRating === 0 && (
+                <Typography variant="caption" color="error">Campo obrigatório</Typography>
+              )}
+            </Box>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>Feedback</Typography>
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                placeholder="Escreva aqui suas sugestões ou reclamações..."
+                value={feedbackText}
+                onChange={(e) => !readOnlyEval && setFeedbackText(e.target.value)}
+                InputProps={{ readOnly: readOnlyEval }}
+              />
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setActionOpen(false)} disabled={saving}>Fechar</Button>
+          {!readOnlyEval && (
+          <Tooltip title={isFormValid ? 'Enviar avaliação' : 'Preencha todas as avaliações obrigatórias'}>
+          <span>
+          <Button 
+            variant="contained" 
+            onClick={async () => {
+              if (!selectedTrip) return;
+              try {
+                setSaving(true);
+                const saveResp = await api.post('/evaluations', {
+                  tripid: selectedTrip.tripid,
+                  user_id: user?.userId,
+                  user_name: user?.nome,
+                  user_setor: user?.setor || user?.departamento || user?.department || user?.setor_nome || '',
+                  trip_rating: tripRating,
+                  driver_rating: driverRating,
+                  vehicle_rating: vehicleRating,
+                  feedback: feedbackText
+                });
+                setSnackbar({ open: true, message: 'Avaliação enviada com sucesso!', severity: 'success' });
+                // Atualizar cache local de avaliações para refletir imediatamente
+                setMyEvaluations(prev => ({
+                  ...prev,
+                  [String(selectedTrip.tripid)]: saveResp.data?.evaluation || {
+                    tripid: selectedTrip.tripid,
+                    user_id: user?.userId,
+                    user_name: user?.nome,
+                    user_setor: user?.setor || user?.departamento || user?.department || user?.setor_nome || '',
+                    trip_rating: tripRating,
+                    driver_rating: driverRating,
+                    vehicle_rating: vehicleRating,
+                    feedback: feedbackText
+                  }
+                }));
+                setActionOpen(false);
+              } catch (err) {
+                setSnackbar({ open: true, message: err.response?.data?.error || 'Falha ao enviar avaliação', severity: 'error' });
+              } finally {
+                setSaving(false);
+              }
+            }}
+            disabled={saving || !selectedTrip || !isFormValid}
+          >
+            {saving ? 'Enviando...' : 'Enviar avaliação'}
+          </Button>
+          </span>
+          </Tooltip>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={4000} 
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <MuiAlert onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </MuiAlert>
+      </Snackbar>
     </Box>
   );
 };

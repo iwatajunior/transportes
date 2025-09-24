@@ -13,7 +13,8 @@ import {
   LocationOn,
   ArrowForward,
   Send as SendIcon,
-  Luggage as LuggageIcon
+  Luggage as LuggageIcon,
+  Poll as PollIcon
 } from '@mui/icons-material';
 import { Link, useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -442,6 +443,29 @@ const HomePage = () => {
               }}
             >
               <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Minhas Viagens</Typography>
+            </Button>
+          </Grid>
+
+          {/* Atalho: Avaliações */}
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<PollIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/avaliacoes')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Avaliações</Typography>
             </Button>
           </Grid>
         </Grid>

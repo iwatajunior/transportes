@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link as RouterLink, useHistory } from 'react-router-dom';
+import { useParams, Link as RouterLink, useHistory, useLocation } from 'react-router-dom';
 import api from '../services/api';
 
 import { 
@@ -85,6 +85,8 @@ const getStatusChipColor = (status) => {
 const TripDetailPage = () => {
     const { id } = useParams();
     const history = useHistory();
+    const location = useLocation();
+    const isFromMinhas = new URLSearchParams(location.search).get('source') === 'minhas';
     const [trip, setTrip] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -606,8 +608,8 @@ const TripDetailPage = () => {
 
                     
 
-                    {/* Card: Motorista Alocado (Condicional) */}
-                    {trip.motorista_nome && (
+                    {/* Card: Motorista Alocado (exibido quando não vem de Minhas Viagens) */}
+                    {!isFromMinhas && trip.motorista_nome && (
                         <Grid item xs={12} md={6}>
                             <Card elevation={2} sx={{ 
                                 height: '100%',
@@ -660,61 +662,106 @@ const TripDetailPage = () => {
                                     </Box>
                                 ) : caronasError ? (
                                     <Alert severity="error">{caronasError}</Alert>
-                                ) : caronas.length === 0 ? (
-                                    <Typography variant="body2" color="text.secondary">Nenhuma carona registrada para esta viagem.</Typography>
-                                ) : (
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                        {(() => {
-                                            const order = { aprovado: 0, reprovado: 1, pendente: 2 };
-                                            const arr = [...caronas].sort((a, b) => (order[String(a.status).toLowerCase()] ?? 9) - (order[String(b.status).toLowerCase()] ?? 9));
-                                            return arr.map((c, idx) => {
-                                                const nome = c.requisitante_nome || '';
-                                                const setor = c.requisitante_setor || '';
-                                                const status = String(c.status || '').toLowerCase();
-                                                const motivo = (c.motivo ?? '').toString().trim();
-                                                const statusPart = status === 'pendente' ? '' : ` - ${status}`;
-                                                const line = `${nome || c.requisitante} - ${setor || 'N/A'}${statusPart} - ${motivo || 'N/A'}`;
-                                                return (
-                                                    <React.Fragment key={c.caronaid}>
-                                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                                <Avatar
-                                                                    src={c.requisitante_avatar ? `http://10.1.1.42:3001${c.requisitante_avatar}` : undefined}
-                                                                    sx={{ 
-                                                                        width: 32,
-                                                                        height: 32,
-                                                                        border: '2px solid',
-                                                                        borderColor: 'primary.main',
-                                                                        backgroundColor: 'primary.lighter',
-                                                                        color: 'primary.dark',
-                                                                        fontSize: '1rem',
-                                                                        fontWeight: 500
-                                                                    }}
-                                                                >
-                                                                    {(nome || String(c.requisitante) || ' ')[0]}
-                                                                </Avatar>
-                                                                <Typography variant="body2">{line}</Typography>
-                                                            </Box>
-                                                            {status === 'pendente' && (
-                                                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                                                    <Button size="small" variant="contained" color="success" onClick={() => approveCarona(c.caronaid)}>Aprovar</Button>
-                                                                    <Button size="small" variant="outlined" color="error" onClick={() => rejectCarona(c.caronaid)}>Reprovar</Button>
+                                ) : isFromMinhas ? (
+                                    // Minhas Viagens: mostrar apenas aprovadas, sem botões
+                                    (() => {
+                                        const order = { aprovado: 0 };
+                                        const approved = [...caronas]
+                                          .filter(c => String(c.status || '').toLowerCase() === 'aprovado')
+                                          .sort((a, b) => (order[String(a.status).toLowerCase()] ?? 9) - (order[String(b.status).toLowerCase()] ?? 9));
+                                        if (approved.length === 0) {
+                                            return <Typography variant="body2" color="text.secondary">Nenhuma carona aprovada para esta viagem.</Typography>;
+                                        }
+                                        return (
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                                {approved.map((c, idx) => {
+                                                    const nome = c.requisitante_nome || '';
+                                                    const setor = c.requisitante_setor || '';
+                                                    const status = String(c.status || '').toLowerCase();
+                                                    const motivo = (c.motivo ?? '').toString().trim();
+                                                    const statusPart = status ? ` - ${status}` : '';
+                                                    const line = `${nome || c.requisitante} - ${setor || 'N/A'}${statusPart} - ${motivo || 'N/A'}`;
+                                                    return (
+                                                        <React.Fragment key={c.caronaid}>
+                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                    <Avatar
+                                                                        src={c.requisitante_avatar ? `http://10.1.1.42:3001${c.requisitante_avatar}` : undefined}
+                                                                        sx={{ 
+                                                                            width: 32,
+                                                                            height: 32,
+                                                                            border: '2px solid',
+                                                                            borderColor: 'primary.main',
+                                                                            backgroundColor: 'primary.lighter',
+                                                                            color: 'primary.dark',
+                                                                            fontSize: '1rem',
+                                                                            fontWeight: 500
+                                                                        }}
+                                                                    >
+                                                                        {(nome || String(c.requisitante) || ' ')[0]}
+                                                                    </Avatar>
+                                                                    <Typography variant="body2">{line}</Typography>
                                                                 </Box>
-                                                            )}
+                                                            </Box>
+                                                            {idx < approved.length - 1 && <Divider sx={{ my: 0.5 }} />}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </Box>
+                                        );
+                                    })()
+                                ) : (
+                                    // Outras origens: comportamento original com botões e filtro visual
+                                    (() => {
+                                        const order = { aprovado: 0, reprovado: 1, pendente: 2 };
+                                        const arr = [...caronas].sort((a, b) => (order[String(a.status).toLowerCase()] ?? 9) - (order[String(b.status).toLowerCase()] ?? 9));
+                                        return arr.map((c, idx) => {
+                                            const nome = c.requisitante_nome || '';
+                                            const setor = c.requisitante_setor || '';
+                                            const status = String(c.status || '').toLowerCase();
+                                            const motivo = (c.motivo ?? '').toString().trim();
+                                            const statusPart = status === 'pendente' ? '' : ` - ${status}`;
+                                            const line = `${nome || c.requisitante} - ${setor || 'N/A'}${statusPart} - ${motivo || 'N/A'}`;
+                                            return (
+                                                <React.Fragment key={c.caronaid}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 0.5 }}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                            <Avatar
+                                                                src={c.requisitante_avatar ? `http://10.1.1.42:3001${c.requisitante_avatar}` : undefined}
+                                                                sx={{ 
+                                                                    width: 32,
+                                                                    height: 32,
+                                                                    border: '2px solid',
+                                                                    borderColor: 'primary.main',
+                                                                    backgroundColor: 'primary.lighter',
+                                                                    color: 'primary.dark',
+                                                                    fontSize: '1rem',
+                                                                    fontWeight: 500
+                                                                }}
+                                                            >
+                                                                {(nome || String(c.requisitante) || ' ')[0]}
+                                                            </Avatar>
+                                                            <Typography variant="body2">{line}</Typography>
                                                         </Box>
-                                                        {idx < arr.length - 1 && <Divider sx={{ my: 0.5 }} />}
-                                                    </React.Fragment>
-                                                );
-                                            });
-                                        })()}
-                                    </Box>
+                                                        {status === 'pendente' && (
+                                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                                <Button size="small" variant="contained" color="success" onClick={() => approveCarona(c.caronaid)}>Aprovar</Button>
+                                                                <Button size="small" variant="outlined" color="error" onClick={() => rejectCarona(c.caronaid)}>Reprovar</Button>
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                    {idx < arr.length - 1 && <Divider sx={{ my: 0.5 }} />}
+                                                </React.Fragment>
+                                            );
+                                        });
+                                    })()
                                 )}
                             </CardContent>
                         </Card>
                     </Grid>
 
-                    {/* Card: Passageiros (Opcional) */}
-                    {trip.passageiros && trip.passageiros.length > 0 && (
+                    {/* Card: Passageiros (exibido quando não vem de Minhas Viagens) */}
+                    {!isFromMinhas && trip.passageiros && trip.passageiros.length > 0 && (
                         <Grid item xs={12} md={6}>
                              <Card elevation={2} sx={{ 
                                 height: '100%',
@@ -775,8 +822,8 @@ const TripDetailPage = () => {
                     )}
                     */}
                     
-                    {/* === Card de Alocação (Condicional) === */}
-                    {canAllocate && (
+                    {/* === Card de Alocação (exibido quando não vem de Minhas Viagens) === */}
+                    {!isFromMinhas && canAllocate && (
                         <Grid item xs={12}>
                             <Card elevation={2} sx={{ mt: 2, display: hasValidRole ? 'block' : 'none' }}>
                                 <CardHeader 
