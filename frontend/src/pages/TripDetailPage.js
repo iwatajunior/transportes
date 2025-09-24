@@ -599,14 +599,7 @@ const TripDetailPage = () => {
                                         <Typography variant="body2" sx={{ ml: 1 }}>{trip.centro_custo}</Typography>
                                     </Box>
                                 )}
-                                {trip.observacoes && (
-                                    <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
-                                        <Typography sx={{ minWidth: { xs: 90, sm: 120 }, fontWeight: '500', display: 'flex', alignItems: 'center' }}>
-                                             <NotesIcon fontSize="small" sx={{ mr: 0.5 }} /> Observações:
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ ml: 1 }}>{trip.observacoes}</Typography>
-                                    </Box>
-                                )}
+                                
                             </CardContent>
                         </Card>
                     </Grid>
@@ -658,7 +651,7 @@ const TripDetailPage = () => {
                                     }
                                 }}
                                 avatar={<Avatar sx={{ bgcolor: 'warning.main', width: 40, height: 40 }}><HailIcon /></Avatar>}
-                                title={<Typography variant="h6">Caronas</Typography>}
+                                title={<Typography variant="h6">Solicitações de carona</Typography>}
                             />
                             <CardContent sx={{ pt: 1 }}>
                                 {caronasLoading ? (
