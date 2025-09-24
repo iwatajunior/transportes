@@ -531,34 +531,36 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
                         size="small"
                         sx={{ ml: 1 }}
                       />
-                      <Button 
-                        variant="contained"
-                        size="small"
-                        startIcon={<SendIcon sx={{ fontSize: 18 }} />}
-                        onClick={() => handleEnviarEncomenda(rota)}
-                        sx={{
-                          ml: 1,
-                          bgcolor: '#FF9800',
-                          color: 'white',
-                          textTransform: 'none',
-                          borderRadius: 2,
-                          '&:hover': {
-                            transform: 'scale(1.02)',
-                            bgcolor: '#F57C00'
-                          }
-                        }}
-                        aria-label="Envie Encomendas"
-                      >
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontWeight: 600,
-                            display: { xs: 'none', sm: 'inline' }
+                      {(['agendada','andamento'].includes(String(rota.status).toLowerCase())) && (
+                        <Button 
+                          variant="contained"
+                          size="small"
+                          startIcon={<SendIcon sx={{ fontSize: 18 }} />}
+                          onClick={() => handleEnviarEncomenda(rota)}
+                          sx={{
+                            ml: 1,
+                            bgcolor: '#FF9800',
+                            color: 'white',
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            '&:hover': {
+                              transform: 'scale(1.02)',
+                              bgcolor: '#F57C00'
+                            }
                           }}
+                          aria-label="Envie Encomendas"
                         >
-                          Envie Encomendas
-                        </Typography>
-                      </Button>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              fontWeight: 600,
+                              display: { xs: 'none', sm: 'inline' }
+                            }}
+                          >
+                            Envie Encomendas
+                          </Typography>
+                        </Button>
+                      )}
                     </Box>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, justifyContent: 'center' }}>

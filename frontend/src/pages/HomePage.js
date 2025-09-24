@@ -12,7 +12,8 @@ import {
   Edit as EditIcon,
   LocationOn,
   ArrowForward,
-  Send as SendIcon
+  Send as SendIcon,
+  Luggage as LuggageIcon
 } from '@mui/icons-material';
 import { Link, useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -284,7 +285,7 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Rota</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Nova Rota</Typography>
             </Button>
           </Grid>
 
@@ -306,7 +307,7 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Rotas</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Painel de Rotas</Typography>
             </Button>
           </Grid>
 
@@ -330,7 +331,7 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Painel de Viagens</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Painel de Viagens</Typography>
             </Button>
           </Grid>
 
@@ -352,7 +353,7 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Dashboard</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Dashboard</Typography>
             </Button>
           </Grid>
 
@@ -374,7 +375,7 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Veículos</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Veículos</Typography>
             </Button>
           </Grid>
 
@@ -396,7 +397,7 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Usuários</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Usuários</Typography>
             </Button>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -417,7 +418,30 @@ const HomePage = () => {
                 }
               }}
             >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Gerenciar Viagens</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Gerenciar Viagens</Typography>
+            </Button>
+          </Grid>
+
+          {/* Atalho: Minhas Viagens */}
+          <Grid item xs={12} md={4}>
+            <Button 
+              variant="contained" 
+              fullWidth
+              startIcon={<LuggageIcon sx={{ fontSize: 28 }} />}
+              onClick={() => history.push('/minhasviagens')}
+              sx={{
+                bgcolor: '#FF9800',
+                color: 'white',
+                textTransform: 'none',
+                borderRadius: 2,
+                mb: 1,
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                  bgcolor: '#F57C00'
+                }
+              }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>Minhas Viagens</Typography>
             </Button>
           </Grid>
         </Grid>
