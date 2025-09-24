@@ -105,16 +105,16 @@ const TestePage = () => {
           >
             <TableHead>
               <TableRow>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>ID</TableCell>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Status</TableCell>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Origem</TableCell>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Destino</TableCell>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Solicitante</TableCell>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Data Saída</TableCell>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Data Retorno</TableCell>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Veículo</TableCell>
-                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Motorista</TableCell>
-                <TableCell align="right" sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap' }}>Ações</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 90 }}>ID</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 110 }}>Status</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Origem</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Destino</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 180 }}>Solicitante</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 120 }}>Data Saída</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 120 }}>Data Retorno</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Veículo</TableCell>
+                <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Motorista</TableCell>
+                <TableCell align="right" sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 90 }}>Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -136,8 +136,8 @@ const TestePage = () => {
                     }
                   }}
                 >
-                  <TableCell>#{trip.tripid}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 1, px: 2, whiteSpace: 'nowrap', width: 90 }}>#{trip.tripid}</TableCell>
+                  <TableCell sx={{ py: 1, px: 2, width: 110 }}>
                     <Chip
                       label={trip.status_viagem}
                       color={getStatusColor(trip.status_viagem).color}
@@ -151,9 +151,9 @@ const TestePage = () => {
                       }}
                     />
                   </TableCell>
-                  <TableCell>{trip.origem || trip.origem_completa || 'N/A'}</TableCell>
-                  <TableCell>{trip.destino_completo}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>{trip.origem || trip.origem_completa || 'N/A'}</TableCell>
+                  <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>{trip.destino_completo}</TableCell>
+                  <TableCell sx={{ py: 1, px: 2, maxWidth: 180 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar
                         src={trip.solicitante_avatar ? `http://10.1.1.42:3001${trip.solicitante_avatar}` : undefined}
@@ -178,9 +178,9 @@ const TestePage = () => {
                       </Box>
                     </Box>
                   </TableCell>
-                  <TableCell>{formatDate(trip.data_saida)}</TableCell>
-                  <TableCell>{formatDate(trip.data_retorno_prevista)}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(trip.data_saida)}</TableCell>
+                  <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(trip.data_retorno_prevista)}</TableCell>
+                  <TableCell sx={{ py: 1, px: 2, maxWidth: 160 }}>
                     {trip.veiculo_alocado_modelo}
                     {trip.veiculo_alocado_placa && (
                       <Typography variant="caption" display="block" color="text.secondary">
@@ -188,7 +188,7 @@ const TestePage = () => {
                       </Typography>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 1, px: 2, maxWidth: 160 }}>
                     {trip.motorista_nome ? (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Avatar
@@ -212,7 +212,7 @@ const TestePage = () => {
                       <Typography variant="body2" sx={{ color: 'text.disabled' }}>Não alocado</Typography>
                     )}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" sx={{ py: 1, px: 2, width: 90 }}>
                     <Tooltip title="Ver Detalhes">
                       <IconButton component={RouterLink} to={`/viagens/${trip.tripid}`} size="small">
                         <VisibilityIcon />
