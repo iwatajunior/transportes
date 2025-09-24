@@ -35,6 +35,7 @@ import EventIcon from '@mui/icons-material/Event';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import CancelIcon from '@mui/icons-material/Cancel';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import { Link as RouterLink } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -145,7 +146,8 @@ const MinhasViagensPage = () => {
     <Box component="main" sx={{ flexGrow: 1, p: 2 }}>
       <Container maxWidth="xl">
         <Paper elevation={3} sx={{ p: 2, backgroundColor: '#FFFFFF', borderRadius: 2 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, textAlign: 'left' }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DirectionsCarIcon sx={{ fontSize: '2rem' }} />
             Minhas Viagens
           </Typography>
 

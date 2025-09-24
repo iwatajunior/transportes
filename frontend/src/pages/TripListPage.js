@@ -15,13 +15,14 @@ import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import PersonIcon from '@mui/icons-material/Person';
 import PlaceIcon from '@mui/icons-material/Place';
 import EventIcon from '@mui/icons-material/Event';
-import FlagIcon from '@mui/icons-material/Flag';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import CancelIcon from '@mui/icons-material/Cancel';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
+import FlagIcon from '@mui/icons-material/Flag';
+
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,7 +35,6 @@ const TripListPage = () => {
     const [rowsPerPage, setRowsPerPage] = useState(6);
     const [filteredTrips, setFilteredTrips] = useState([]);
     const [openCaronaModal, setOpenCaronaModal] = useState(false);
-    // Estado para seleção de carona
     const [selectUserOpen, setSelectUserOpen] = useState(false);
     const [selectedTrip, setSelectedTrip] = useState(null);
     const [usersOptions, setUsersOptions] = useState([]);
@@ -47,9 +47,8 @@ const TripListPage = () => {
     const [error, setError] = useState('');
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [showFilters, setShowFilters] = useState(true);
-    
-    // Estados dos filtros
     const [filters, setFilters] = useState({
+        origem: '',
         destino: '',
         solicitante: '',
         dataSaida: '',
@@ -59,7 +58,6 @@ const TripListPage = () => {
         motorista: '',
         textoGeral: ''
     });
-
     // Função para atualizar os filtros
     const handleFilterChange = (field, value) => {
         setFilters(prev => ({ ...prev, [field]: value }));
@@ -68,29 +66,45 @@ const TripListPage = () => {
     // Função para aplicar os filtros
     const applyFilters = useCallback(() => {
         const filtered = trips.filter(trip => {
+            const origemStr = (trip.origem || trip.origem_completa || '').toLowerCase();
             const matchDestino = !filters.destino || trip.destino_completo?.toLowerCase().includes(filters.destino.toLowerCase());
+            const matchOrigem = !filters.origem || origemStr.includes(filters.origem.toLowerCase());
             const matchSolicitante = !filters.solicitante || trip.solicitante_nome?.toLowerCase().includes(filters.solicitante.toLowerCase());
             const matchDataSaida = !filters.dataSaida || trip.data_saida?.includes(filters.dataSaida);
             const matchDataRetorno = !filters.dataRetorno || trip.data_retorno_prevista?.includes(filters.dataRetorno);
             const matchStatus = !filters.status || trip.status_viagem?.toLowerCase() === filters.status.toLowerCase();
-            const matchVeiculo = !filters.veiculo || 
-                (trip.veiculo_alocado_modelo?.toLowerCase().includes(filters.veiculo.toLowerCase()) ||
-                trip.veiculo_alocado_placa?.toLowerCase().includes(filters.veiculo.toLowerCase()));
+            const matchVeiculo = !filters.veiculo || (
+                trip.veiculo_alocado_modelo?.toLowerCase().includes(filters.veiculo.toLowerCase()) ||
+                trip.veiculo_alocado_placa?.toLowerCase().includes(filters.veiculo.toLowerCase())
+            );
             const matchMotorista = !filters.motorista || trip.motorista_nome?.toLowerCase().includes(filters.motorista.toLowerCase());
-            const matchTextoGeral = !filters.textoGeral || 
+            const matchTextoGeral = !filters.textoGeral ||
                 trip.finalidade?.toLowerCase().includes(filters.textoGeral.toLowerCase()) ||
                 trip.observacoes?.toLowerCase().includes(filters.textoGeral.toLowerCase());
 
-            return matchDestino && matchSolicitante && matchDataSaida && matchDataRetorno && 
+            return matchOrigem && matchDestino && matchSolicitante && matchDataSaida && matchDataRetorno &&
                    matchStatus && matchVeiculo && matchMotorista && matchTextoGeral;
         });
-
         setFilteredTrips(filtered);
     }, [trips, filters]);
 
     useEffect(() => {
         applyFilters();
     }, [filters, trips, applyFilters]);
+
+    const clearFilters = () => {
+        setFilters({
+            destino: '',
+            solicitante: '',
+            dataSaida: '',
+            dataRetorno: '',
+            status: '',
+            veiculo: '',
+            motorista: '',
+            textoGeral: ''
+        });
+        setPage(0);
+    };
 
     const fetchTrips = useCallback(async () => {
         setIsLoading(true);
@@ -160,7 +174,8 @@ const TripListPage = () => {
         <Container maxWidth="xl" sx={{ mt: 1, mb: 1 }}>
             <Paper elevation={3} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Typography variant="h4" component="h1" sx={{ fontFamily: "'Exo 2', sans-serif" }}>
+                    <Typography variant="h5" component="h1" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.primary' }}>
+                        <DirectionsCarIcon sx={{ fontSize: '2rem' }} />
                         Painel de Viagens
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
@@ -194,32 +209,22 @@ const TripListPage = () => {
                 <Paper
                     elevation={2}
                     sx={{
-                        p: 2,
-                        mb: 3,
+                        p: 1,
+                        mb: 1.5,
                         backgroundColor: '#FFFFFF',
-                        borderRadius: 2,
+                        borderRadius: 1,
                         border: `1px solid ${theme.palette.grey[200]}`
                     }}
                 >
-                    <Box sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        mb: 2,
-                        gap: 1
-                    }}>
-                        <FilterAltIcon sx={{ color: theme.palette.primary.main }} />
-                        <Typography variant="h6" sx={{ fontWeight: 600, color: theme.palette.text.primary }}>
-                            Filtrar Viagens
-                        </Typography>
-                    </Box>
 
-                    <Grid container spacing={2} sx={{ mb: 2 }} columns={12}>
-                        <Grid item xs={12} sm={6} md={4} lg={2}>
+                    <Grid container spacing={1} sx={{ mb: 1 }} columns={12}>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 fullWidth
-                                label="Destino"
-                                value={filters.destino}
-                                onChange={(e) => handleFilterChange('destino', e.target.value)}
+                                label="Origem"
+                                value={filters.origem}
+                                onChange={(e) => handleFilterChange('origem', e.target.value)}
+                                size="small"
                                 InputProps={{
                                     startAdornment: (
                                         <PlaceIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
@@ -227,12 +232,27 @@ const TripListPage = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4} lg={2}>
+                        <Grid item xs={12} sm={6} md={3}>
+                            <TextField
+                                fullWidth
+                                label="Destino"
+                                value={filters.destino}
+                                onChange={(e) => handleFilterChange('destino', e.target.value)}
+                                size="small"
+                                InputProps={{
+                                    startAdornment: (
+                                        <PlaceIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
+                                    ),
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 fullWidth
                                 label="Solicitante"
                                 value={filters.solicitante}
                                 onChange={(e) => handleFilterChange('solicitante', e.target.value)}
+                                size="small"
                                 InputProps={{
                                     startAdornment: (
                                         <PersonIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
@@ -240,7 +260,7 @@ const TripListPage = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4} lg={2}>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 fullWidth
                                 type="date"
@@ -248,6 +268,7 @@ const TripListPage = () => {
                                 value={filters.dataSaida}
                                 onChange={(e) => handleFilterChange('dataSaida', e.target.value)}
                                 InputLabelProps={{ shrink: true }}
+                                size="small"
                                 InputProps={{
                                     startAdornment: (
                                         <EventIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
@@ -255,7 +276,7 @@ const TripListPage = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4} lg={2}>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 fullWidth
                                 type="date"
@@ -263,6 +284,7 @@ const TripListPage = () => {
                                 value={filters.dataRetorno}
                                 onChange={(e) => handleFilterChange('dataRetorno', e.target.value)}
                                 InputLabelProps={{ shrink: true }}
+                                size="small"
                                 InputProps={{
                                     startAdornment: (
                                         <EventIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
@@ -270,13 +292,14 @@ const TripListPage = () => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4} lg={2}>
-                            <FormControl fullWidth>
+                        <Grid item xs={12} sm={6} md={3}>
+                            <FormControl fullWidth size="small">
                                 <InputLabel>Status</InputLabel>
                                 <Select
                                     value={filters.status}
                                     label="Status"
                                     onChange={(e) => handleFilterChange('status', e.target.value)}
+                                    size="small"
                                     startAdornment={
                                         <FlagIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
                                     }
@@ -290,12 +313,13 @@ const TripListPage = () => {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4} lg={2}>
+                        <Grid item xs={12} sm={6} md={3}>
                             <TextField
                                 fullWidth
                                 label="Veículo"
                                 value={filters.veiculo}
                                 onChange={(e) => handleFilterChange('veiculo', e.target.value)}
+                                size="small"
                                 InputProps={{
                                     startAdornment: (
                                         <DirectionsCarIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
@@ -303,6 +327,28 @@ const TripListPage = () => {
                                 }}
                             />
                         </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <TextField
+                                    fullWidth
+                                    label="Motorista"
+                                    value={filters.motorista}
+                                    onChange={(e) => handleFilterChange('motorista', e.target.value)}
+                                    size="small"
+                                    InputProps={{
+                                        startAdornment: (
+                                            <PersonIcon sx={{ mr: 1, color: theme.palette.text.secondary }} />
+                                        ),
+                                    }}
+                                />
+                                <Tooltip title="Limpar filtros">
+                                    <IconButton size="small" onClick={clearFilters} aria-label="Limpar filtros">
+                                        <FilterAltOffIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        </Grid>
+                        
                     </Grid>
                 </Paper>
 

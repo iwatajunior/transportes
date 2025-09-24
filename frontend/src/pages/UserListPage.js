@@ -6,7 +6,7 @@ import {
   Grid, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions,
   TextField
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, History as HistoryIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, History as HistoryIcon, Group as GroupIcon } from '@mui/icons-material';
 import { getUsers } from '../services/api';
 import { USER_ROLES } from '../utils/userConstants';
 // import './UserListPage.css'; // Pode ser removido se não houver estilos personalizados essenciais
@@ -71,18 +71,21 @@ const UserListPage = () => {
   return (
     <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           <Grid item xs={12}>
-            <Typography variant="h4" component="h1" gutterBottom align="center" sx={{
-              fontFamily: "'Exo 2', sans-serif",
+            <Typography variant="h5" component="h1" sx={{
               fontWeight: 'bold',
-              color: 'primary.main'
+              color: 'text.primary',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1
             }}>
-              Gerenciar Usuários
+              <GroupIcon sx={{ fontSize: '2rem' }} />
+              Painel de Usuários
             </Typography>
           </Grid>
           <Grid item xs={12}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <TextField
                 fullWidth
                 label="Pesquisar"

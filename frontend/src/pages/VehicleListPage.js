@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 
 const VehicleListPage = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -58,13 +59,16 @@ const VehicleListPage = () => {
   return (
     <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{
-            fontFamily: "'Exo 2', sans-serif",
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+          <Typography variant="h5" component="h1" gutterBottom sx={{
             fontWeight: 'bold',
-            color: 'primary.main'
+            color: 'text.primary',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
           }}>
-            Lista de Veículos
+            <DirectionsCarIcon sx={{ fontSize: '2rem' }} />
+            Painel de Veículos
           </Typography>
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', mb: 3 }}>

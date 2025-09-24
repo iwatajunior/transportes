@@ -21,6 +21,7 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  TablePagination,
   Chip,
   Collapse,
   Dialog,
@@ -30,14 +31,17 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Tooltip
 } from '@mui/material';
 import { 
   Save as SaveIcon, 
   Edit as EditIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  ForkRight as ForkRightIcon,
+  FilterAltOff as FilterAltOffIcon
 } from '@mui/icons-material';
 import { RouteStatus, routeStatusOptions } from '../constants/routeStatus';
 import { cidadesPI } from '../services/cidadesPI';
@@ -51,6 +55,9 @@ const RotasPage = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [editingRota, setEditingRota] = useState(null);
   const [status, setStatus] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(6);
+  const [filters, setFilters] = useState({ origem: '', destino: '', dataSaida: '', dataRetorno: '' });
   
   useEffect(() => {
     if (editingRota) {
@@ -67,6 +74,31 @@ const RotasPage = () => {
   const getCidadeNome = (cidadeId) => {
     const cidade = cidades.find(c => String(c.id) === String(cidadeId));
     return cidade ? cidade.nome : 'Cidade não encontrada';
+  };
+
+  // Util helpers similar to TripListPage
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+      .toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+  };
+
+  const getStatusColor = (st) => {
+    switch (st) {
+      case 'Pendente':
+        return { color: 'default' };
+      case 'Agendada':
+        return { color: 'warning' };
+      case 'Andamento':
+        return { color: 'primary' };
+      case 'Concluida':
+        return { color: 'success' };
+      case 'Cancelada':
+        return { color: 'error' };
+      default:
+        return { color: 'default' };
+    }
   };
 
   useEffect(() => {
@@ -169,11 +201,26 @@ const RotasPage = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  const handleFilterChange = (field, value) => {
+    setFilters(prev => ({ ...prev, [field]: value }));
+    setPage(0);
+  };
+
+  const clearFilters = () => {
+    setFilters({ origem: '', destino: '', dataSaida: '', dataRetorno: '' });
+    setPage(0);
+  };
+
   const handleToggleExpand = (rotaId) => {
-    setExpandedRotas(prev => ({
-      ...prev,
-      [rotaId]: !prev[rotaId]
-    }));
+    setExpandedRotas(prev => {
+      const isCurrentlyOpen = Boolean(prev[rotaId]);
+      // Collapse all; then open only the clicked one if it was closed
+      const next = {};
+      if (!isCurrentlyOpen) {
+        next[rotaId] = true;
+      }
+      return next;
+    });
   };
 
   const handleEditMaterial = (material) => {
@@ -250,259 +297,208 @@ const RotasPage = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 2 }}>
-      <Box sx={{ textAlign: 'center', mb: 2 }}>
-        <Typography 
-          variant="h5" 
-          component="h1" 
-          gutterBottom 
-          sx={{ 
-            fontFamily: "'Exo 2', sans-serif", 
-            fontWeight: 'bold',
-            color: '#1976d2'
-          }}
-        >
-          Rotas Cadastradas
-        </Typography>
-      </Box>
+    <Container maxWidth="xl" sx={{ mt: 1, mb: 1 }}>
+      <Paper elevation={3} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h5" component="h1" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.primary' }}>
+            <ForkRightIcon sx={{ fontSize: '2rem' }} />
+            Painel de Rotas
+          </Typography>
+        </Box>
 
-      <Grid container spacing={2}>
-        {rotas.map((rota) => {
-          const materiais = materiaisPorRota[rota.id] || [];
-          const isLoadingMateriais = loadingMateriais[rota.id];
-          const isExpanded = expandedRotas[rota.id];
-          
-          return (
-            <Grid item xs={12} key={rota.id}>
-              <Paper 
-                elevation={2} 
-                sx={{ 
-                  p: 2,
-                  backgroundColor: '#f8f9fa',
-                  '&:hover': {
-                    boxShadow: 4,
-                    transform: 'translateY(-1px)',
-                    transition: 'all 0.3s ease-in-out'
-                  }
-                }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <IconButton 
-                      onClick={() => handleToggleExpand(rota.id)}
-                      size="small"
-                      sx={{ 
-                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 0.3s'
-                      }}
-                    >
-                      <ExpandMoreIcon />
-                    </IconButton>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                      Rota {rota.identificacao}
-                    </Typography>
-                  </Box>
-                </Box>
+        {/* Filtros */}
+        <Paper elevation={0} sx={{ p: 1, mb: 1.5, border: (theme) => `1px solid ${theme.palette.grey[200]}`, borderRadius: 1 }}>
+          <Grid container spacing={1} columns={12}>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label="Origem"
+                value={filters.origem}
+                onChange={(e) => handleFilterChange('origem', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label="Destino"
+                value={filters.destino}
+                onChange={(e) => handleFilterChange('destino', e.target.value)}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                type="date"
+                label="Data Saída"
+                value={filters.dataSaida}
+                onChange={(e) => handleFilterChange('dataSaida', e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                size="small"
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Data Retorno"
+                  value={filters.dataRetorno}
+                  onChange={(e) => handleFilterChange('dataRetorno', e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  size="small"
+                />
+                <Tooltip title="Limpar filtros">
+                  <IconButton size="small" onClick={clearFilters} aria-label="Limpar filtros">
+                    <FilterAltOffIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
 
-                <Collapse in={isExpanded}>
-                  <Grid container spacing={1}>
-                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-                      {editingRota?.id === rota.id ? (
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<SaveIcon />}
-                          onClick={handleSaveRota}
-                          size="small"
-                        >
-                          Salvar
-                        </Button>
-                      ) : (
-                        <IconButton 
-                          onClick={() => handleEditClick(rota)}
-                          color="primary"
-                          size="small"
-                        >
+        <TableContainer>
+          <Table 
+            size="small" 
+            sx={{ 
+              minWidth: 800,
+              backgroundColor: '#fff',
+              '& .MuiTableCell-root': {
+                borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                padding: '8px 16px'
+              }
+            }}
+          >
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', width: 48 }} />
+                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 90 }}>ID</TableCell>
+                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 110 }}>Status</TableCell>
+                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Origem</TableCell>
+                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Destino</TableCell>
+                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 120 }}>Data Saída</TableCell>
+                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 120 }}>Data Retorno</TableCell>
+                <TableCell align="right" sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 90 }}>Ações</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {[...rotas]
+                .filter((r) => {
+                  const nomeOrigem = getCidadeNome(r.cidade_origem).toLowerCase();
+                  const nomeDestino = getCidadeNome(r.cidade_destino).toLowerCase();
+                  const fOri = filters.origem.trim().toLowerCase();
+                  const fDes = filters.destino.trim().toLowerCase();
+                  const fSaida = filters.dataSaida.trim();
+                  const fRet = filters.dataRetorno.trim();
+                  const dataOut = r?.data_saida ? String(r.data_saida).slice(0,10) : '';
+                  const dataRet = r?.data_retorno ? String(r.data_retorno).slice(0,10) : '';
+                  const matchOrigem = !fOri || nomeOrigem.includes(fOri);
+                  const matchDestino = !fDes || nomeDestino.includes(fDes);
+                  const matchSaida = !fSaida || dataOut === fSaida;
+                  const matchRet = !fRet || dataRet === fRet;
+                  return matchOrigem && matchDestino && matchSaida && matchRet;
+                })
+                .sort((a, b) => {
+                  const rank = { Agendada: 0, Andamento: 1, Concluida: 2, Cancelada: 3 };
+                  const ra = rank[a?.status] ?? 99;
+                  const rb = rank[b?.status] ?? 99;
+                  if (ra !== rb) return ra - rb;
+                  // tie-breaker by data_saida ascending
+                  const da = a?.data_saida ? new Date(a.data_saida).getTime() : 0;
+                  const db = b?.data_saida ? new Date(b.data_saida).getTime() : 0;
+                  return da - db;
+                })
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((rota) => (
+                  <React.Fragment key={rota.id}>
+                    <TableRow>
+                      <TableCell sx={{ py: 0, px: 1, width: 48 }}>
+                        <IconButton size="small" onClick={() => handleToggleExpand(rota.id)}>
+                          {expandedRotas[rota.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
+                      </TableCell>
+                      <TableCell sx={{ py: 1, px: 2, whiteSpace: 'nowrap', width: 90 }}>#{rota.id}</TableCell>
+                      <TableCell sx={{ py: 1, px: 2, width: 110 }}>
+                        <Chip label={rota.status || 'N/A'} color={getStatusColor(rota.status).color} size="small" />
+                      </TableCell>
+                      <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>{getCidadeNome(rota.cidade_origem)}</TableCell>
+                      <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>{getCidadeNome(rota.cidade_destino)}</TableCell>
+                      <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(rota.data_saida)}</TableCell>
+                      <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(rota.data_retorno)}</TableCell>
+                      <TableCell align="right" sx={{ py: 1, px: 2, width: 90 }}>
+                        <IconButton color="primary" size="small" onClick={() => handleEditClick(rota)}>
                           <EditIcon />
                         </IconButton>
-                      )}
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Identificação"
-                        value={editingRota?.id === rota.id ? editingRota.identificacao : rota.identificacao}
-                        onChange={(e) => setEditingRota({...editingRota, identificacao: e.target.value})}
-                        disabled={editingRota?.id !== rota.id}
-                        size="small"
-                      />
-                    </Grid>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={8} sx={{ py: 0, px: 0 }}>
+                        <Collapse in={Boolean(expandedRotas[rota.id])} timeout="auto" unmountOnExit>
+                          <Box sx={{ p: 2, backgroundColor: (theme) => theme.palette.action.hover }}>
+                            {loadingMateriais[rota.id] ? (
+                              <Box sx={{ display: 'flex', justifyContent: 'center', p: 1 }}>
+                                <CircularProgress size={20} />
+                              </Box>
+                            ) : !materiaisPorRota[rota.id] || materiaisPorRota[rota.id].length === 0 ? (
+                              <Typography color="text.secondary" sx={{ textAlign: 'center', py: 1 }}>
+                                Nenhum material cadastrado para esta rota.
+                              </Typography>
+                            ) : (
+                              <TableContainer component={Paper} sx={{ mt: 1 }}>
+                                <Table size="small">
+                                  <TableHead>
+                                    <TableRow>
+                                      <TableCell>Tipo</TableCell>
+                                      <TableCell align="right">Quantidade</TableCell>
+                                      <TableCell>Observações</TableCell>
+                                      <TableCell>Ações</TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {materiaisPorRota[rota.id]?.map((material, index) => (
+                                      <TableRow key={index}>
+                                        <TableCell>{material.tipo}</TableCell>
+                                        <TableCell align="right">{material.quantidade}</TableCell>
+                                        <TableCell>{material.observacoes || 'N/A'}</TableCell>
+                                        <TableCell>
+                                          <IconButton onClick={() => handleEditMaterial(material)} size="small" disabled={loadingMateriais[rota.id] || !material}>
+                                            <EditIcon />
+                                          </IconButton>
+                                          <IconButton onClick={() => handleDeleteMaterial(material)} size="small" disabled={loadingMateriais[rota.id] || !material}>
+                                            <DeleteIcon />
+                                          </IconButton>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </TableContainer>
+                            )}
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-                    <Grid item xs={12} sm={6}>
-                      <Autocomplete
-                        options={cidades}
-                        getOptionLabel={(option) => option.nome}
-                        value={editingRota?.id === rota.id ? editingRota.cidade_origem : cidades.find(c => String(c.id) === String(rota.cidade_origem))}
-                        onChange={(_, newValue) => setEditingRota({...editingRota, cidade_origem: newValue})}
-                        renderInput={(params) => <TextField {...params} label="Cidade de Origem" size="small" />}
-                        disabled={editingRota?.id !== rota.id}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <Autocomplete
-                        options={cidades}
-                        getOptionLabel={(option) => option.nome}
-                        value={editingRota?.id === rota.id ? editingRota.cidade_destino : cidades.find(c => String(c.id) === String(rota.cidade_destino))}
-                        onChange={(_, newValue) => setEditingRota({...editingRota, cidade_destino: newValue})}
-                        renderInput={(params) => <TextField {...params} label="Cidade de Destino" size="small" />}
-                        disabled={editingRota?.id !== rota.id}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        type="date"
-                        label="Data de Saída"
-                        value={editingRota?.id === rota.id ? editingRota.data_saida.split('T')[0] : rota.data_saida.split('T')[0]}
-                        onChange={(e) => setEditingRota({...editingRota, data_saida: e.target.value})}
-                        InputLabelProps={{ shrink: true }}
-                        disabled={editingRota?.id !== rota.id}
-                        size="small"
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <TextField
-                        fullWidth
-                        type="date"
-                        label="Data de Retorno"
-                        value={editingRota?.id === rota.id ? editingRota.data_retorno.split('T')[0] : rota.data_retorno.split('T')[0]}
-                        onChange={(e) => setEditingRota({...editingRota, data_retorno: e.target.value})}
-                        InputLabelProps={{ shrink: true }}
-                        disabled={editingRota?.id !== rota.id}
-                        size="small"
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <FormControl fullWidth>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                          value={editingRota?.status || ''}
-                          onChange={(e) => setEditingRota({...editingRota, status: e.target.value})}
-                          label="Status"
-                          disabled={!editingRota}
-                          displayEmpty
-                          renderValue={(value) => value || 'Selecione um status'}
-                        >
-                          {routeStatusOptions.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                              {option.label}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    
-                    {/* Adicionando um Chip para mostrar o status quando não estiver em modo de edição */}
-                    {!editingRota && rota?.status && (
-                      <Grid item xs={12} sm={6}>
-                        <Chip
-                          label={rota.status}
-                          color={rota.status === 'Agendada' ? 'primary' : 
-                                rota.status === 'Andamento' ? 'warning' : 
-                                rota.status === 'Concluida' ? 'success' : 
-                                'error'}
-                          size="small"
-                          style={{ marginTop: 8 }}
-                        />
-                      </Grid>
-                    )}
-
-                    <Grid item xs={12}>
-                      <Autocomplete
-                        multiple
-                        options={cidades}
-                        getOptionLabel={(option) => option.nome}
-                        value={editingRota?.id === rota.id ? editingRota.cidades_intermediarias_ida : (rota.cidades_intermediarias_ida || []).map(id => cidades.find(c => String(c.id) === String(id))).filter(Boolean)}
-                        onChange={(_, newValue) => setEditingRota({...editingRota, cidades_intermediarias_ida: newValue})}
-                        renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Ida" size="small" />}
-                        disabled={editingRota?.id !== rota.id}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                      <Autocomplete
-                        multiple
-                        options={cidades}
-                        getOptionLabel={(option) => option.nome}
-                        value={editingRota?.id === rota.id ? editingRota.cidades_intermediarias_volta : (rota.cidades_intermediarias_volta || []).map(id => cidades.find(c => String(c.id) === String(id))).filter(Boolean)}
-                        onChange={(_, newValue) => setEditingRota({...editingRota, cidades_intermediarias_volta: newValue})}
-                        renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Retorno" size="small" />}
-                        disabled={editingRota?.id !== rota.id}
-                      />
-                    </Grid>
-
-                    {/* Seção de Materiais */}
-                    <Grid item xs={12}>
-                      <Divider sx={{ my: 1 }} />
-                      {isLoadingMateriais[rota.id] ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 1 }}>
-                          <CircularProgress size={20} />
-                        </Box>
-                      ) : !materiaisPorRota[rota.id] || materiaisPorRota[rota.id].length === 0 ? (
-                        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 1 }}>
-                          Nenhum material cadastrado para esta rota.
-                        </Typography>
-                      ) : (
-                        <TableContainer component={Paper} sx={{ mt: 1 }}>
-                          <Table size="small">
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Tipo</TableCell>
-                                <TableCell>Quantidade</TableCell>
-                                <TableCell>Observações</TableCell>
-                                <TableCell>Ações</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {materiaisPorRota[rota.id]?.map((material, index) => (
-                                <TableRow key={index}>
-                                  <TableCell>{material.tipo}</TableCell>
-                                  <TableCell align="right">{material.quantidade}</TableCell>
-                                  <TableCell>{material.observacoes || 'N/A'}</TableCell>
-                                  <TableCell>
-                                    <IconButton
-                                      onClick={() => handleEditMaterial(material)}
-                                      size="small"
-                                      disabled={loadingMateriais[rota.id] || !material}
-                                    >
-                                      <EditIcon />
-                                    </IconButton>
-                                    <IconButton
-                                      onClick={() => handleDeleteMaterial(material)}
-                                      size="small"
-                                      disabled={loadingMateriais[rota.id] || !material}
-                                    >
-                                      <DeleteIcon />
-                                    </IconButton>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      )}
-                    </Grid>
-                  </Grid>
-                </Collapse>
-              </Paper>
-            </Grid>
-          );
-        })}
-      </Grid>
+        <TablePagination
+          component="div"
+          count={rotas.length}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          labelRowsPerPage="Itens por página"
+          labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+          rowsPerPageOptions={[6, 12, 24, 48]}
+          sx={{ borderTop: 1, borderColor: 'divider' }}
+        />
+      </Paper>
 
       <Snackbar 
         open={snackbar.open} 
@@ -515,7 +511,97 @@ const RotasPage = () => {
         </Alert>
       </Snackbar>
 
-      {/* Dialog para edição de material */}
+      {/* Dialog: Editar Rota */}
+      <Dialog open={Boolean(editingRota)} onClose={() => setEditingRota(null)} maxWidth="md" fullWidth>
+        <DialogTitle>Editar Rota</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Identificação"
+              value={editingRota?.identificacao || ''}
+              onChange={(e) => setEditingRota(prev => ({ ...prev, identificacao: e.target.value }))}
+              size="small"
+            />
+            <Autocomplete
+              options={cidades}
+              getOptionLabel={(option) => option.nome}
+              value={editingRota?.cidade_origem || null}
+              onChange={(_, newValue) => setEditingRota(prev => ({ ...prev, cidade_origem: newValue }))}
+              renderInput={(params) => <TextField {...params} label="Cidade de Origem" size="small" />}
+            />
+            <Autocomplete
+              options={cidades}
+              getOptionLabel={(option) => option.nome}
+              value={editingRota?.cidade_destino || null}
+              onChange={(_, newValue) => setEditingRota(prev => ({ ...prev, cidade_destino: newValue }))}
+              renderInput={(params) => <TextField {...params} label="Cidade de Destino" size="small" />}
+            />
+            <Autocomplete
+              multiple
+              options={cidades}
+              getOptionLabel={(option) => option.nome}
+              value={editingRota?.cidades_intermediarias_ida || []}
+              onChange={(_, newValue) => setEditingRota(prev => ({ ...prev, cidades_intermediarias_ida: newValue }))}
+              renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Ida" size="small" />}
+            />
+            <Autocomplete
+              multiple
+              options={cidades}
+              getOptionLabel={(option) => option.nome}
+              value={editingRota?.cidades_intermediarias_volta || []}
+              onChange={(_, newValue) => setEditingRota(prev => ({ ...prev, cidades_intermediarias_volta: newValue }))}
+              renderInput={(params) => <TextField {...params} label="Cidades Intermediárias - Retorno" size="small" />}
+            />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Data de Saída"
+                  value={editingRota?.data_saida ? editingRota.data_saida.split('T')[0] : ''}
+                  onChange={(e) => setEditingRota(prev => ({ ...prev, data_saida: e.target.value }))}
+                  InputLabelProps={{ shrink: true }}
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Data de Retorno"
+                  value={editingRota?.data_retorno ? editingRota.data_retorno.split('T')[0] : ''}
+                  onChange={(e) => setEditingRota(prev => ({ ...prev, data_retorno: e.target.value }))}
+                  InputLabelProps={{ shrink: true }}
+                  size="small"
+                />
+              </Grid>
+            </Grid>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={editingRota?.status || ''}
+                label="Status"
+                onChange={(e) => setEditingRota(prev => ({ ...prev, status: e.target.value }))}
+                displayEmpty
+                renderValue={(value) => value || 'Selecione um status'}
+              >
+                {routeStatusOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditingRota(null)}>Cancelar</Button>
+          <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveRota}>Salvar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Dialog para edição de material (permanece inalterado) */}
       <Dialog open={editMaterialDialogOpen} onClose={() => setEditMaterialDialogOpen(false)}>
         <DialogTitle>Editar Material</DialogTitle>
         <DialogContent>

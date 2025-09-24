@@ -16,6 +16,7 @@ import {
   Alert,
   useTheme
 } from '@mui/material';
+import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import api from '../services/api';
 
 const AvaliacoesPage = () => {
@@ -97,7 +98,8 @@ const AvaliacoesPage = () => {
     <Box component="main" sx={{ flexGrow: 1, p: 2 }}>
       <Container maxWidth="xl">
         <Paper elevation={3} sx={{ p: 2, backgroundColor: '#FFFFFF', borderRadius: 2 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, textAlign: 'left' }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ThumbUpAltIcon sx={{ fontSize: '2rem' }} />
             Pesquisa de Satisfação
           </Typography>
 
