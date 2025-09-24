@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Paper, Typography, Grid, Chip, Divider, Button, Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Select, FormControl, InputLabel, Snackbar, Alert, IconButton, TextField, Autocomplete, CircularProgress, TableContainer, Table, TableHead, TableBody, TableRow, TableCell } from '@mui/material';
-import { DirectionsBus, LocationOn, ArrowForward, LocalShipping as LocalShippingIcon, Edit, CalendarToday, Forward as ForwardIcon, Close, Delete as DeleteIcon, Add as AddIcon, DoubleArrow } from '@mui/icons-material';
+import { DirectionsBus, LocationOn, ArrowForward, LocalShipping as LocalShippingIcon, Edit, CalendarToday, Forward as ForwardIcon, Close, Delete as DeleteIcon, Add as AddIcon, DoubleArrow, Send as SendIcon } from '@mui/icons-material';
 import api from '../services/api';
 import { cidadesPI } from '../services/cidadesPI';
 import { RouteStatus } from '../constants/routeStatus';
@@ -109,6 +109,32 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [editedMaterial, setEditedMaterial] = useState(null);
   const [openMaterialDialog, setOpenMaterialDialog] = useState(false);
+  
+  // Retorna a lista de cidades (ida + volta) da rota, sem duplicadas
+  const getCidadesRota = (rota) => {
+    if (!rota) return [];
+    const list = [
+      { id: rota.cidade_origem, nome: getCidadeNome(rota.cidade_origem) },
+      ...((rota.cidades_intermediarias_ida || []).map((cid) => ({ id: cid, nome: getCidadeNome(cid) }))),
+      { id: rota.cidade_destino, nome: getCidadeNome(rota.cidade_destino) },
+      ...((rota.cidades_intermediarias_volta || []).map((cid) => ({ id: cid, nome: getCidadeNome(cid) })))
+    ];
+    // Remover duplicatas mantendo a primeira ocorrência
+    return list.filter((c, idx, arr) => arr.findIndex((x) => x.id === c.id) === idx);
+  };
+  
+  const handleEnviarEncomenda = (rota) => {
+    setMaterialInfo({
+      tipo: '',
+      quantidade: '',
+      peso: '',
+      observacoes: '',
+      rota_id: rota.id,
+      cidade_origem_id: rota.cidade_origem,
+      cidade_destino_id: rota.cidade_destino
+    });
+    setOpenMaterialDialog(true);
+  };
 
   useEffect(() => {
     console.log('Rotas recebidas:', rotas);
@@ -270,10 +296,10 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
   };
 
   const handleConfirmarInteresse = async () => {
-    if (!materialInfo.rota_id) {
+    if (!materialInfo.rota_id || !materialInfo.cidade_origem_id || !materialInfo.cidade_destino_id || !materialInfo.tipo || !materialInfo.quantidade) {
       setSnackbar({
         open: true,
-        message: 'Por favor, selecione uma rota',
+        message: 'Por favor, preencha todos os campos obrigatórios (rota, cidade de coleta, cidade de destino, tipo e quantidade).',
         severity: 'warning'
       });
       return;
@@ -505,6 +531,34 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
                         size="small"
                         sx={{ ml: 1 }}
                       />
+                      <Button 
+                        variant="contained"
+                        size="small"
+                        startIcon={<SendIcon sx={{ fontSize: 18 }} />}
+                        onClick={() => handleEnviarEncomenda(rota)}
+                        sx={{
+                          ml: 1,
+                          bgcolor: '#FF9800',
+                          color: 'white',
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          '&:hover': {
+                            transform: 'scale(1.02)',
+                            bgcolor: '#F57C00'
+                          }
+                        }}
+                        aria-label="Envie Encomendas"
+                      >
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontWeight: 600,
+                            display: { xs: 'none', sm: 'inline' }
+                          }}
+                        >
+                          Envie Encomendas
+                        </Typography>
+                      </Button>
                     </Box>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, justifyContent: 'center' }}>
@@ -693,17 +747,55 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
                       cidade_origem_id: selectedRota.cidade_origem,
                       cidade_destino_id: selectedRota.cidade_destino
                     }));
+                  } else {
+                    setMaterialInfo(prev => ({ ...prev, rota_id: selectedRotaId }));
                   }
                 }}
                 label="Selecione a Rota"
                 displayEmpty
+                disabled={Boolean(materialInfo.rota_id)}
               >
                 <MenuItem value="" disabled>
                   <em>Selecione uma rota</em>
                 </MenuItem>
-                {rotas.filter(r => r.status === 'ativo').map((rota) => (
+                {(materialInfo.rota_id
+                  ? rotas.filter(r => r.id === materialInfo.rota_id)
+                  : rotas
+                 ).map((rota) => (
                   <MenuItem key={rota.id} value={rota.id}>
                     Rota {rota.identificacao} - {getCidadeNome(rota.cidade_origem)} → {getCidadeNome(rota.cidade_destino)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Cidade de Coleta do Material */}
+            <FormControl fullWidth required>
+              <InputLabel>Cidade de Coleta do Material</InputLabel>
+              <Select
+                value={materialInfo.cidade_origem_id}
+                onChange={(e) => setMaterialInfo(prev => ({ ...prev, cidade_origem_id: e.target.value }))}
+                label="Cidade de Coleta do Material"
+              >
+                {materialInfo.rota_id && getCidadesRota(rotas.find(r => r.id === materialInfo.rota_id)).map((cidade) => (
+                  <MenuItem key={cidade.id} value={cidade.id}>
+                    {cidade.nome}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Cidade de Destino do Material */}
+            <FormControl fullWidth required>
+              <InputLabel>Cidade de Destino do Material</InputLabel>
+              <Select
+                value={materialInfo.cidade_destino_id}
+                onChange={(e) => setMaterialInfo(prev => ({ ...prev, cidade_destino_id: e.target.value }))}
+                label="Cidade de Destino do Material"
+              >
+                {materialInfo.rota_id && getCidadesRota(rotas.find(r => r.id === materialInfo.rota_id)).map((cidade) => (
+                  <MenuItem key={cidade.id} value={cidade.id}>
+                    {cidade.nome}
                   </MenuItem>
                 ))}
               </Select>
@@ -746,7 +838,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
             onClick={handleConfirmarInteresse} 
             variant="contained" 
             color="primary"
-            disabled={!materialInfo.rota_id || !materialInfo.tipo || !materialInfo.quantidade}
+            disabled={!materialInfo.rota_id || !materialInfo.cidade_origem_id || !materialInfo.cidade_destino_id || !materialInfo.tipo || !materialInfo.quantidade}
           >
             Enviar
           </Button>

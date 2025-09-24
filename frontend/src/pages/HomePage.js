@@ -310,27 +310,7 @@ const HomePage = () => {
             </Button>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              startIcon={<AddIcon sx={{ fontSize: 28 }} />}
-              onClick={() => history.push('/registrar-viagem')}
-              sx={{
-                bgcolor: '#FF9800',
-                color: 'white',
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  bgcolor: '#F57C00'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Nova Viagem</Typography>
-            </Button>
-          </Grid>
+          
 
           <Grid item xs={12} md={4}>
             <Button 
@@ -417,28 +397,6 @@ const HomePage = () => {
               }}
             >
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Usuários</Typography>
-            </Button>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Button 
-              variant="contained" 
-              fullWidth
-              startIcon={<SendIcon sx={{ fontSize: 28 }} />}
-              onClick={handleEncomendaClick}
-              sx={{
-                bgcolor: '#FF9800',
-                color: 'white',
-                textTransform: 'none',
-                borderRadius: 2,
-                mb: 1,
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                  bgcolor: '#F57C00'
-                }
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Envie Encomendas</Typography>
             </Button>
           </Grid>
           <Grid item xs={12} md={4}>
