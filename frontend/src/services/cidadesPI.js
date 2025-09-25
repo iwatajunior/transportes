@@ -211,3 +211,26 @@ export const cidadesPI = [
 export const getCidadesPI = () => cidadesPI;
 export const getCidadeById = (id) => cidadesPI.find(cidade => cidade.id === id);
 export const getCidadeByNome = (nome) => cidadesPI.find(cidade => cidade.nome === nome);
+
+// Coordenadas oficiais aproximadas (fallback) para cidades-chave do Piauí
+// Fonte: Open data / OSM aproximado para centro urbano
+export const cidadeCoordsPI = {
+  'Teresina': { lat: -5.091944, lng: -42.803364 },
+  'José de Freitas': { lat: -4.751528, lng: -42.574707 },
+  'Campo Maior': { lat: -4.821034, lng: -42.167412 },
+  'Parnaíba': { lat: -2.905705, lng: -41.775364 },
+  'Piracuruca': { lat: -3.933273, lng: -41.708069 }
+};
+
+export const getCoordsByNome = (nome) => {
+  if (!nome) return null;
+  const key = String(nome).trim();
+  if (cidadeCoordsPI[key]) return cidadeCoordsPI[key];
+  // tentativa sem acentos/caso
+  const deaccent = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const norm = deaccent(key).toLowerCase();
+  for (const k of Object.keys(cidadeCoordsPI)) {
+    if (deaccent(k).toLowerCase() === norm) return cidadeCoordsPI[k];
+  }
+  return null;
+};

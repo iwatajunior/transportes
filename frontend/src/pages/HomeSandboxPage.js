@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Container, Typography, Box, Button, Grid, Link as RouterLink, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, TextField, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, CircularProgress, Tooltip, IconButton, Avatar, Collapse } from '@mui/material';
 import { Pagination } from '@mui/material';
 import {
@@ -30,7 +30,7 @@ import { Link, useHistory } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import RouteMap from '../components/RouteMap';
 import api from '../services/api';
-import { cidadesPI } from '../services/cidadesPI';
+import { cidadesPI, getCoordsByNome } from '../services/cidadesPI';
 
 const BUTTON_COLOR = '#FFA500';
 
@@ -114,6 +114,8 @@ const HomeSandboxPage = () => {
 
     fetchRotas();
   }, []);
+
+  
 
   // Persist and restore sticky note content
   useEffect(() => {
@@ -441,41 +443,59 @@ const HomeSandboxPage = () => {
           </Box>
           <Collapse in={showTestArea}>
             <Box sx={{ p: 2 }}>
-              <Grid container spacing={2}>
+              <Grid container spacing={2} justifyContent="flex-end">
                 <Grid item xs={12} md={4}>
-                  <Paper 
-                    variant="outlined" 
-                    sx={{ 
-                      p: 2, 
-                      height: 180,
-                      bgcolor: '#FFF59D',
-                      backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 24px)',
-                      boxShadow: 1,
-                      borderColor: '#FDD835'
-                    }}
-                  >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, color: 'text.primary' }}>
-                      Nota (Avisos)
+                  <Paper variant="outlined" sx={{ p: 2, minHeight: 100 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                      Atalhos
                     </Typography>
-                    <TextField
-                      value={stickyNote}
-                      onChange={(e) => setStickyNote(e.target.value)}
-                      placeholder="Escreva aqui seus avisos..."
-                      multiline
-                      minRows={5}
-                      fullWidth
-                      variant="standard"
-                      InputProps={{ disableUnderline: true }}
-                      sx={{
-                        fontFamily: 'inherit',
-                        '& textarea': { fontSize: '0.95rem', lineHeight: 1.4 },
-                        bgcolor: 'transparent'
-                      }}
-                    />
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      <Button 
+                        variant="contained" 
+                        fullWidth
+                        startIcon={<LuggageIcon sx={{ fontSize: 28 }} />}
+                        onClick={() => history.push('/minhasviagens')}
+                        sx={{
+                          bgcolor: '#FF9800',
+                          color: 'white',
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          mb: 1,
+                          '&:hover': {
+                            transform: 'scale(1.02)',
+                            bgcolor: '#F57C00'
+                          }
+                        }}
+                      >
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>
+                          Minhas Viagens
+                        </Typography>
+                      </Button>
+                    </Box>
                   </Paper>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <Paper variant="outlined" sx={{ p: 2 }}>
+                  <LeafletTripMap routes={(rotas || []).filter(r => (r.status || '').toLowerCase() === 'andamento')} />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Paper elevation={3} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2 }}>
+                    {/* Sticky note embedded above the calendar */}
+                    <Box sx={{ p: 1, mb: 1, bgcolor: '#FFF59D', border: '1px solid', borderColor: '#FDD835', borderRadius: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
+                        Nota (Avisos)
+                      </Typography>
+                      <TextField
+                        value={stickyNote}
+                        onChange={(e) => setStickyNote(e.target.value)}
+                        placeholder="Escreva aqui seus avisos..."
+                        multiline
+                        minRows={3}
+                        fullWidth
+                        variant="standard"
+                        InputProps={{ disableUnderline: true }}
+                        sx={{ fontFamily: 'inherit', '& textarea': { fontSize: '0.95rem', lineHeight: 1.4 }, bgcolor: 'transparent' }}
+                      />
+                    </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                       <IconButton size="small" onClick={handlePrevMonth} aria-label="Mês anterior">
                         <ArrowBack fontSize="small" />
@@ -488,7 +508,7 @@ const HomeSandboxPage = () => {
                       </IconButton>
                     </Box>
                     <Box>
-                      <Grid container columns={7} spacing={0.5} sx={{ mb: 0.5 }}>
+                      <Grid container columns={7} spacing={0.5} sx={{ mb: 0.5, bgcolor: (theme) => theme.palette.grey[100], borderRadius: 1, px: 0.5, py: 0.5 }}>
                         {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map((w) => (
                           <Grid item xs={1} key={w}>
                             <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{w}</Typography>
@@ -503,16 +523,18 @@ const HomeSandboxPage = () => {
                           return (
                             <Grid item xs={1} key={idx}>
                               <Box sx={{
-                                height: 32,
+                                height: 34,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 borderRadius: 1,
                                 position: 'relative',
-                                bgcolor: hasTrips ? 'warning.light' : (cell.inMonth ? 'background.paper' : 'action.hover'),
+                                bgcolor: hasTrips ? 'warning.light' : (cell.inMonth ? '#FFFFFF' : 'action.hover'),
                                 color: cell.inMonth ? 'text.primary' : 'text.disabled',
-                                border: isToday ? 2 : 1,
-                                borderColor: isToday ? 'primary.main' : (hasTrips ? 'warning.main' : 'divider')
+                                border: 1,
+                                borderColor: 'divider',
+                                outline: isToday ? '2px solid' : 'none',
+                                outlineColor: isToday ? 'primary.main' : 'transparent'
                               }}>
                                 <Typography variant="caption" sx={{ fontWeight: hasTrips ? 700 : 400 }}>
                                   {cell.day}
@@ -535,9 +557,6 @@ const HomeSandboxPage = () => {
                       </Grid>
                     </Box>
                   </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Paper variant="outlined" sx={{ p: 2, height: 120 }}>Card Placeholder 3</Paper>
                 </Grid>
               </Grid>
             </Box>
@@ -914,3 +933,360 @@ const HomeSandboxPage = () => {
 };
 
 export default HomeSandboxPage;
+
+// --- LeafletTripMap Component ---
+function LeafletTripMap({ routes }) {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const markersRef = useRef([]);
+  const polylinesRef = useRef([]);
+  const maskRef = useRef(null);
+  const highlightRef = useRef(null);
+  const borderRef = useRef(null);
+  const leafletLoadedRef = useRef(false);
+
+  // Dynamic route identifier based on first route in 'routes'
+  const routeId = useMemo(() => {
+    const r = (routes && routes.length > 0) ? routes[0] : null;
+    if (!r) return '01/2025';
+    return (
+      r.referencia || r.codigo || r.numero || r.identificador || r.nome || r.titulo || '01/2025'
+    );
+  }, [routes]);
+
+  const piauiCenter = useMemo(() => ({ lat: -8.28, lng: -43.0, zoom: 6 }), []);
+  const piauiBounds = useMemo(() => {
+    // bbox: [west, south, east, north]
+    const west = -48.0, south = -13.5, east = -38.0, north = -3.0;
+    return [[south, west], [north, east]]; // [southWest, northEast]
+  }, []);
+
+  // Helpers to normalize city inputs
+  const norm = (s) => String(s || '').trim();
+  const deaccent = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const toCityName = (item) => {
+    if (!item) return '';
+    if (typeof item === 'string') return norm(item);
+    if (typeof item === 'object') {
+      return norm(item.nome || item.cidade || item.label || item.name || '');
+    }
+    return '';
+  };
+  // Fuzzy resolver against cidadesPI list
+  const resolvePiauiCityName = (rawName) => {
+    const name = norm(rawName);
+    if (!name) return '';
+    const nameNA = deaccent(name).toLowerCase();
+    // Exact match first
+    const exact = cidadesPI.find(c => deaccent(c.nome).toLowerCase() === nameNA);
+    if (exact) return exact.nome;
+    // StartsWith or includes heuristic
+    const starts = cidadesPI.find(c => deaccent(c.nome).toLowerCase().startsWith(nameNA));
+    if (starts) return starts.nome;
+    const incl = cidadesPI.find(c => deaccent(c.nome).toLowerCase().includes(nameNA));
+    if (incl) return incl.nome;
+    // Fallback to original name
+    return name;
+  };
+  // Helper to extract origin/destination + intermediates from a route object
+  const getRoutePlaces = (r) => {
+    const origemQ = resolvePiauiCityName(toCityName(r?.cidade_origem || r?.origem || r?.origem_completa));
+    const destinoQ = resolvePiauiCityName(toCityName(r?.cidade_destino || r?.destino || r?.destino_completo));
+    const idaArr = Array.isArray(r?.cidades_intermediarias_ida) ? r.cidades_intermediarias_ida : [];
+    const voltaArr = Array.isArray(r?.cidades_intermediarias_volta) ? r.cidades_intermediarias_volta : [];
+    const ida = idaArr.map(toCityName).map(resolvePiauiCityName).filter(Boolean);
+    const volta = voltaArr.map(toCityName).map(resolvePiauiCityName).filter(Boolean);
+    return { origemQ, destinoQ, ida, volta };
+  };
+
+  const loadLeaflet = () => new Promise((resolve) => {
+    if (leafletLoadedRef.current || window.L) {
+      leafletLoadedRef.current = true;
+      return resolve();
+    }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.async = true;
+    script.onload = () => {
+      leafletLoadedRef.current = true;
+      resolve();
+    };
+    document.body.appendChild(script);
+  });
+
+  const getCacheKey = (q) => `geo:${q}`;
+  const geocode = async (query) => {
+    if (!query) return null;
+    const raw = resolvePiauiCityName(String(query).trim());
+    // 0) Official fallback coords first
+    const official = getCoordsByNome(raw);
+    if (official) return { lat: official.lat, lng: official.lng };
+    const deaccent = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const candidates = Array.from(new Set([raw, deaccent(raw)]));
+    const [south, west] = [piauiBounds[0][0], piauiBounds[0][1]];
+    const [north, east] = [piauiBounds[1][0], piauiBounds[1][1]];
+    const viewbox = `${west},${south},${east},${north}`;
+
+    const pickInPiaui = (arr) => {
+      if (!Array.isArray(arr)) return null;
+      // Prefer strictly within bounds and address.state === 'Piauí'
+      const inBounds = (lat, lng) => lat >= south && lat <= north && lng >= west && lng <= east;
+      const preferred = arr.find(it => {
+        const lat = parseFloat(it.lat);
+        const lng = parseFloat(it.lon);
+        const state = it.address?.state || '';
+        const name = it.display_name || '';
+        return inBounds(lat, lng) && (state === 'Piauí' || /Piau[ií]/i.test(state) || /Piau[ií]/i.test(name));
+      });
+      if (preferred) return preferred;
+      const fallback = arr.find(it => {
+        const lat = parseFloat(it.lat);
+        const lng = parseFloat(it.lon);
+        return inBounds(lat, lng);
+      });
+      return fallback || null;
+    };
+
+    for (const name of candidates) {
+      // Try 1: simple q with state/country
+      const key1 = getCacheKey(`q:${name}, Piauí, Brasil`);
+      try {
+        const cached1 = localStorage.getItem(key1);
+        if (cached1) return JSON.parse(cached1);
+      } catch {}
+      try {
+        const url1 = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&q=${encodeURIComponent(name + ', Piauí, Brasil')}`;
+        const resp1 = await fetch(url1, { headers: { 'Accept-Language': 'pt-BR' } });
+        const data1 = await resp1.json();
+        const chosen1 = pickInPiaui(data1);
+        if (chosen1) {
+          const item1 = { lat: parseFloat(chosen1.lat), lng: parseFloat(chosen1.lon) };
+          try { localStorage.setItem(key1, JSON.stringify(item1)); } catch {}
+          return item1;
+        }
+      } catch {}
+
+      // Try 2: structured with state parameter
+      const key2 = getCacheKey(`structured:${name}`);
+      try {
+        const cached2 = localStorage.getItem(key2);
+        if (cached2) return JSON.parse(cached2);
+      } catch {}
+      try {
+        const url2 = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&state=${encodeURIComponent('Piauí')}&city=${encodeURIComponent(name)}`;
+        const resp2 = await fetch(url2, { headers: { 'Accept-Language': 'pt-BR' } });
+        const data2 = await resp2.json();
+        const chosen2 = pickInPiaui(data2);
+        if (chosen2) {
+          const item2 = { lat: parseFloat(chosen2.lat), lng: parseFloat(chosen2.lon) };
+          try { localStorage.setItem(key2, JSON.stringify(item2)); } catch {}
+          return item2;
+        }
+      } catch {}
+
+      // Try 3: viewbox-bounded search within Piauí
+      const key3 = getCacheKey(`bbox:${name}`);
+      try {
+        const cached3 = localStorage.getItem(key3);
+        if (cached3) return JSON.parse(cached3);
+      } catch {}
+      try {
+        const url3 = `https://nominatim.openstreetmap.org/search?format=json&limit=5&bounded=1&viewbox=${encodeURIComponent(viewbox)}&q=${encodeURIComponent(name)}`;
+        const resp3 = await fetch(url3, { headers: { 'Accept-Language': 'pt-BR' } });
+        const data3 = await resp3.json();
+        const chosen3 = pickInPiaui(data3);
+        if (chosen3) {
+          const item3 = { lat: parseFloat(chosen3.lat), lng: parseFloat(chosen3.lon) };
+          try { localStorage.setItem(key3, JSON.stringify(item3)); } catch {}
+          return item3;
+        }
+      } catch {}
+    }
+    return null;
+  };
+  // Load and draw Piauí border as a styled GeoJSON line (scoped inside component)
+  const loadPiauiBorder = async () => {
+    if (!window.L || !mapRef.current || borderRef.current) return;
+    try {
+      const cacheKey = 'geojson:piauiborder';
+      let gj = null;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        gj = JSON.parse(cached);
+      } else {
+        const url = 'https://nominatim.openstreetmap.org/search?format=json&polygon_geojson=1&limit=1&countrycodes=br&q=' + encodeURIComponent('Piauí, Brasil');
+        const resp = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+        const data = await resp.json();
+        if (Array.isArray(data) && data[0] && data[0].geojson) {
+          gj = data[0].geojson;
+          try { localStorage.setItem(cacheKey, JSON.stringify(gj)); } catch {}
+        }
+      }
+      if (gj) {
+        borderRef.current = window.L.geoJSON(gj, {
+          style: {
+            color: '#bdbdbd',
+            weight: 3,
+            opacity: 0.9,
+            fill: false
+          },
+          interactive: false
+        }).addTo(mapRef.current);
+      }
+    } catch (e) {
+      console.warn('Falha ao carregar fronteira do Piauí', e);
+    }
+  };
+
+  const clearMarkers = () => {
+    if (!markersRef.current) return;
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+  };
+  const clearPolylines = () => {
+    if (!polylinesRef.current) return;
+    polylinesRef.current.forEach(p => p.remove());
+    polylinesRef.current = [];
+  };
+
+  const plotMarkers = async () => {
+    if (!window.L || !mapRef.current) return;
+    clearMarkers();
+    clearPolylines();
+    const L = window.L;
+    const pinSvg = (color) => `
+      <svg width="12" height="20" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12.5 0C5.596 0 0 5.596 0 12.5S12.5 41 12.5 41 25 19.404 25 12.5C25 5.596 19.404 0 12.5 0z" fill="${color}"/>
+        <circle cx="12.5" cy="12.5" r="5.5" fill="#fff"/>
+      </svg>`;
+    const originIcon = window.L.divIcon({
+      className: 'origin-pin',
+      html: pinSvg('green'),
+      iconSize: [12, 20],
+      iconAnchor: [6, 20],
+      popupAnchor: [1, -18]
+    });
+    const destIcon = window.L.divIcon({
+      className: 'dest-pin',
+      html: pinSvg('red'),
+      iconSize: [12, 20],
+      iconAnchor: [6, 20],
+      popupAnchor: [1, -18]
+    });
+    const midIcon = window.L.divIcon({
+      className: 'mid-pin',
+      html: pinSvg('gold'),
+      iconSize: [12, 20],
+      iconAnchor: [6, 20],
+      popupAnchor: [1, -18]
+    });
+    // Temporary validation: mark only 01/2025 cities, city-by-city (no lines)
+    const cities = [
+      { name: 'Teresina', icon: originIcon, label: '<b>Origem</b><br/>Teresina' },
+      { name: 'José de Freitas', icon: midIcon, label: '<b>Intermediária (ida)</b><br/>José de Freitas' },
+      { name: 'Campo Maior', icon: midIcon, label: '<b>Intermediária (ida)</b><br/>Campo Maior' },
+      { name: 'Parnaíba', icon: destIcon, label: '<b>Destino</b><br/>Parnaíba' },
+      { name: 'Piracuruca', icon: midIcon, label: '<b>Intermediária (volta)</b><br/>Piracuruca' }
+    ];
+    for (const c of cities) {
+      const coord = getCoordsByNome(c.name);
+      if (coord) {
+        const mk = L.marker([coord.lat, coord.lng], { icon: c.icon }).addTo(mapRef.current);
+        mk.bindPopup(c.label);
+        markersRef.current.push(mk);
+      }
+    }
+    // Draw ida and volta lines using official coordinates
+    const idaSeq = ['Teresina', 'José de Freitas', 'Campo Maior', 'Parnaíba']
+      .map(n => getCoordsByNome(n))
+      .filter(Boolean)
+      .map(c => [c.lat, c.lng]);
+    if (idaSeq.length >= 2) {
+      const lineI = L.polyline(idaSeq, { color: 'royalblue', weight: 2.5, opacity: 0.9 }).addTo(mapRef.current);
+      polylinesRef.current.push(lineI);
+    }
+    const voltaSeq = ['Parnaíba', 'Piracuruca', 'Teresina']
+      .map(n => getCoordsByNome(n))
+      .filter(Boolean)
+      .map(c => [c.lat, c.lng]);
+    if (voltaSeq.length >= 2) {
+      const lineV = L.polyline(voltaSeq, { color: '#7b1fa2', weight: 2.5, opacity: 0.9 }).addTo(mapRef.current);
+      polylinesRef.current.push(lineV);
+    }
+    // Ajuste exato: extremos norte/sul justos às bordas superior/inferior
+    // 1) Zera qualquer padding e calcula o zoom exato para conter os bounds
+    const exactZoom = mapRef.current.getBoundsZoom(piauiBounds, true);
+    const center = window.L.latLngBounds(piauiBounds).getCenter();
+    mapRef.current.setView(center, exactZoom, { animate: false });
+    // Desce um pouco o mapa (conteúdo vai ligeiramente para baixo), criando margem superior
+    mapRef.current.panBy([0, -70], { animate: false });
+  };
+
+  const handleClear = () => {
+    if (!mapRef.current) return;
+    clearMarkers();
+    clearPolylines();
+    const exactZoom = mapRef.current.getBoundsZoom(piauiBounds, true);
+    const center = window.L.latLngBounds(piauiBounds).getCenter();
+    mapRef.current.setView(center, exactZoom, { animate: false });
+    mapRef.current.panBy([0, -65], { animate: false });
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    loadLeaflet().then(() => {
+      if (cancelled) return;
+      const L = window.L;
+      if (!mapRef.current && mapContainerRef.current) {
+        mapRef.current = L.map(mapContainerRef.current, { zoomSnap: 0.5, zoomDelta: 0.5 }).setView([piauiCenter.lat, piauiCenter.lng], piauiCenter.zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(mapRef.current);
+        // (Revert) Do not add mask/highlight; show default map tiles without dimming
+        // Ajuste exato inicial: extremos norte/sul justos às bordas superior/inferior
+        const exactZoomInit = mapRef.current.getBoundsZoom(piauiBounds, true);
+        const centerInit = window.L.latLngBounds(piauiBounds).getCenter();
+        mapRef.current.setView(centerInit, exactZoomInit, { animate: false });
+        // Desce um pouco o mapa na inicialização
+        mapRef.current.panBy([0, -65], { animate: false });
+        mapRef.current.setMaxBounds(piauiBounds);
+        mapRef.current.setMaxBounds(mapRef.current.getBounds());
+      }
+      // Draw state border and then plot markers
+      loadPiauiBorder().then(() => {
+        plotMarkers();
+      });
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!leafletLoadedRef.current || !mapRef.current) return;
+    plotMarkers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routes]);
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+          Rota em Andamento
+        </Typography>
+      </Box>
+      <Box sx={{ position: 'relative', width: '100%', height: 380, borderRadius: 1, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
+        <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+      </Box>
+      <Box sx={{ mt: 0.5 }}>
+        <Typography variant="caption">
+          {`Fonte: OpenStreetMap • Exibindo rota ${routeId} (ida/volta)`}
+        </Typography>
+      </Box>
+    </Paper>
+  );
+}
