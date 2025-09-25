@@ -14,6 +14,7 @@ const tripModel = {
             horario_saida,
             data_retorno_prevista,
             horario_retorno_previsto,
+            origem,
             destino_completo,
             finalidade,
             quantidade_passageiros,
@@ -27,14 +28,14 @@ const tripModel = {
         const query = `
             INSERT INTO viagens (
                 data_saida, horario_saida, data_retorno_prevista, horario_retorno_previsto,
-                destino_completo, finalidade, quantidade_passageiros, tipo_veiculo_desejado, 
+                origem, destino_completo, finalidade, quantidade_passageiros, tipo_veiculo_desejado, 
                 veiculo_solicitado_id, solicitante_usuarioid, observacoes
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING *;
         `;
         const values = [
             data_saida, horario_saida, data_retorno_prevista, horario_retorno_previsto,
-            destino_completo, finalidade, quantidade_passageiros, tipo_veiculo_desejado,
+            origem, destino_completo, finalidade, quantidade_passageiros, tipo_veiculo_desejado,
             veiculo_solicitado_id, solicitante_usuarioid, observacoes
         ];
 
