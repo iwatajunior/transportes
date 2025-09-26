@@ -15,7 +15,8 @@ import {
   ArrowBack,
   Send as SendIcon,
   Luggage as LuggageIcon,
-  Poll as PollIcon
+  Poll as PollIcon,
+  Explore as ExploreIcon
 } from '@mui/icons-material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
@@ -34,7 +35,7 @@ import { cidadesPI, getCoordsByNome } from '../services/cidadesPI';
 
 const BUTTON_COLOR = '#FFA500';
 
-const HomeSandboxPage = () => {
+const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = false }) => {
   const { user } = useAuth();
   const history = useHistory();
   const theme = useTheme();
@@ -192,6 +193,52 @@ const HomeSandboxPage = () => {
       }
     });
     return s;
+  }, [filteredTrips]);
+
+  // Build a mapping day(YYYY-MM-DD) -> list of trip labels for tooltip
+  const tripsByDay = useMemo(() => {
+    const map = new Map();
+    const add = (key, label) => {
+      if (!key || !label) return;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(label);
+    };
+    const toKey = (d) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+    const labelFor = (t) => {
+      const ref = t?.referencia || t?.identificacao || '';
+      const ori = t?.origem || '';
+      const dest = t?.destino_completo || t?.destino || '';
+      if (ref && (ori || dest)) return `${ref}: ${ori} → ${dest}`;
+      if (ref) return `${ref}`;
+      if (ori || dest) return `${ori} → ${dest}`;
+      return 'Viagem';
+    };
+    (filteredTrips || []).forEach((t) => {
+      const startStr = toDateKey(t.data_saida);
+      const endStr = toDateKey(t.data_retorno_prevista || t.data_saida);
+      if (!startStr) return;
+      const [sy, sm, sd] = startStr.split('-').map(Number);
+      const [ey, em, ed] = endStr.split('-').map(Number);
+      const start = new Date(sy, sm - 1, sd);
+      const end = new Date(ey, em - 1, ed);
+      const label = labelFor(t);
+      if (isNaN(start.getTime())) return;
+      if (isNaN(end.getTime()) || end < start) {
+        add(startStr, label);
+        return;
+      }
+      const cur = new Date(start);
+      while (cur <= end) {
+        add(toKey(cur), label);
+        cur.setDate(cur.getDate() + 1);
+      }
+    });
+    return map;
   }, [filteredTrips]);
 
   // Today key for highlighting current day
@@ -398,6 +445,7 @@ const HomeSandboxPage = () => {
 
   const getCidadesRota = (rota) => {
     if (!rota) return [];
+    
     const cidadesRota = [
       { id: rota.cidade_origem, nome: getCidadeNome(rota.cidade_origem) },
       ...((rota.cidades_intermediarias_ida || []).map(cid => ({ id: cid, nome: getCidadeNome(cid) }))),
@@ -406,6 +454,28 @@ const HomeSandboxPage = () => {
     ];
     return cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
   };
+
+  // Helper component to render Rotas Programadas section (moved out of useEffect)
+  const RotasProgramadasSection = () => (
+    <React.Fragment>
+      <RouteMap rotas={rotasFiltradas} currentPage={currentPage} itemsPerPage={itemsPerPage} />
+      {rotasFiltradas.length > 0 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+          <Pagination
+            count={Math.ceil(rotasFiltradas.length / itemsPerPage)}
+            page={currentPage}
+            onChange={(e, page) => setCurrentPage(page)}
+            color="primary"
+            size="small"
+            sx={{
+              '& .MuiPaginationItem-root': { minWidth: 24, fontSize: '0.875rem' },
+              '& .MuiPaginationItem-page': { padding: '0 4px' }
+            }}
+          />
+        </Box>
+      )}
+    </React.Fragment>
+  );
 
   if (loading) {
     return (
@@ -446,10 +516,49 @@ const HomeSandboxPage = () => {
               <Grid container spacing={2} justifyContent="flex-end">
                 <Grid item xs={12} md={4}>
                   <Paper variant="outlined" sx={{ p: 2, minHeight: 100 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
-                      Atalhos
-                    </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      <Button 
+                        variant="contained" 
+                        fullWidth
+                        startIcon={<ListIcon sx={{ fontSize: 28 }} />}
+                        onClick={() => history.push('/viagens')}
+                        sx={{
+                          bgcolor: '#FF9800',
+                          color: 'white',
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          mb: 1,
+                          '&:hover': {
+                            transform: 'scale(1.02)',
+                            bgcolor: '#F57C00'
+                          }
+                        }}
+                      >
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>
+                          Painel de Viagens
+                        </Typography>
+                      </Button>
+                      <Button 
+                        variant="contained" 
+                        fullWidth
+                        startIcon={<ExploreIcon sx={{ fontSize: 28 }} />}
+                        onClick={() => history.push('/rotasprogramadas')}
+                        sx={{
+                          bgcolor: '#FF9800',
+                          color: 'white',
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          mb: 1,
+                          '&:hover': {
+                            transform: 'scale(1.02)',
+                            bgcolor: '#F57C00'
+                          }
+                        }}
+                      >
+                        <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>
+                          Rotas Programadas
+                        </Typography>
+                      </Button>
                       <Button 
                         variant="contained" 
                         fullWidth
@@ -520,37 +629,50 @@ const HomeSandboxPage = () => {
                           const cellKey = toDateKey(cell.date);
                           const hasTrips = cell.inMonth && markedDays.has(cellKey);
                           const isToday = cell.inMonth && cellKey === todayKey;
+                          const tipItems = hasTrips ? (tripsByDay.get(cellKey) || []) : [];
                           return (
                             <Grid item xs={1} key={idx}>
-                              <Box sx={{
-                                height: 34,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                borderRadius: 1,
-                                position: 'relative',
-                                bgcolor: hasTrips ? 'warning.light' : (cell.inMonth ? '#FFFFFF' : 'action.hover'),
-                                color: cell.inMonth ? 'text.primary' : 'text.disabled',
-                                border: 1,
-                                borderColor: 'divider',
-                                outline: isToday ? '2px solid' : 'none',
-                                outlineColor: isToday ? 'primary.main' : 'transparent'
-                              }}>
-                                <Typography variant="caption" sx={{ fontWeight: hasTrips ? 700 : 400 }}>
-                                  {cell.day}
-                                </Typography>
-                                {hasTrips && (
-                                  <Box sx={{
-                                    position: 'absolute',
-                                    bottom: 3,
-                                    right: 3,
-                                    width: 6,
-                                    height: 6,
-                                    borderRadius: '50%',
-                                    bgcolor: 'warning.main'
-                                  }} />
-                                )}
-                              </Box>
+                              <Tooltip
+                                title={hasTrips ? (
+                                  <Box sx={{ px: 0.5 }}>
+                                    {tipItems.map((lbl, i) => (
+                                      <Typography key={i} variant="caption" sx={{ display: 'block' }}>{lbl}</Typography>
+                                    ))}
+                                  </Box>
+                                ) : ''}
+                                arrow
+                                disableInteractive
+                              >
+                                <Box sx={{
+                                  height: 34,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  borderRadius: 1,
+                                  position: 'relative',
+                                  bgcolor: hasTrips ? 'warning.light' : (cell.inMonth ? '#FFFFFF' : 'action.hover'),
+                                  color: cell.inMonth ? 'text.primary' : 'text.disabled',
+                                  border: 1,
+                                  borderColor: 'divider',
+                                  outline: isToday ? '2px solid' : 'none',
+                                  outlineColor: isToday ? 'primary.main' : 'transparent'
+                                }}>
+                                  <Typography variant="caption" sx={{ fontWeight: hasTrips ? 700 : 400 }}>
+                                    {cell.day}
+                                  </Typography>
+                                  {hasTrips && (
+                                    <Box sx={{
+                                      position: 'absolute',
+                                      bottom: 3,
+                                      right: 3,
+                                      width: 6,
+                                      height: 6,
+                                      borderRadius: '50%',
+                                      bgcolor: 'warning.main'
+                                    }} />
+                                  )}
+                                </Box>
+                              </Tooltip>
                             </Grid>
                           );
                         })}
@@ -674,6 +796,7 @@ const HomeSandboxPage = () => {
         </Paper>
 
         {/* Tabela de Viagens (Teste) */}
+        {!hidePainelViagens && (
         <Paper elevation={3} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2, mb: 2 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
             <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.primary' }}>
@@ -814,30 +937,10 @@ const HomeSandboxPage = () => {
             </>
           )}
         </Paper>
-
-
-        <RouteMap rotas={rotasFiltradas} currentPage={currentPage} itemsPerPage={itemsPerPage} />
-
-        {rotasFiltradas.length > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
-            <Pagination
-              count={Math.ceil(rotasFiltradas.length / itemsPerPage)}
-              page={currentPage}
-              onChange={(e, page) => setCurrentPage(page)}
-              color="primary"
-              size="small"
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  minWidth: 24,
-                  fontSize: '0.875rem'
-                },
-                '& .MuiPaginationItem-page': {
-                  padding: '0 4px'
-                }
-              }}
-            />
-          </Box>
         )}
+        <React.Fragment>
+          {!hideRotasProgramadas && <RotasProgramadasSection />}
+        </React.Fragment>
 
         <Dialog open={openEncomendaDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
           <DialogTitle>
@@ -1274,7 +1377,7 @@ function LeafletTripMap({ routes }) {
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           Rota em Andamento
         </Typography>

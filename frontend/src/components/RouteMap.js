@@ -81,7 +81,7 @@ const RoutePath = ({ rota, onClick }) => {
   );
 };
 
-const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
+const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -473,9 +473,11 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
 
   return (
     <Box sx={{ mt: 2 }}>
-      <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2', textAlign: 'left' }}>
-        Rotas Programadas
-      </Typography>
+      {!hideTitle && (
+        <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 'bold', color: '#1976d2', textAlign: 'left' }}>
+          Rotas Programadas
+        </Typography>
+      )}
       {currentRotas.length === 0 ? (
         <Box sx={{ 
           display: 'flex', 
@@ -519,8 +521,8 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
             
             return (
               <Grid item xs={12} key={rota.id}>
-                <Paper elevation={3} sx={{ p: 3, backgroundColor: '#f8f9fa' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Paper elevation={3} sx={{ p: 3, px: 1, backgroundColor: '#f8f9fa' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, position: 'relative', minHeight: 64 }}>
                     <Box sx={{ color: '#666', display: 'flex', alignItems: 'center', gap: 1 }}>
                       <span style={{ fontSize: 14 }}>
                         <strong>Rota:</strong> {rota.identificacao}
@@ -548,7 +550,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
                               bgcolor: '#F57C00'
                             }
                           }}
-                          aria-label="Envie Encomendas"
+                          aria-label="Envios"
                         >
                           <Typography 
                             variant="body2" 
@@ -557,24 +559,26 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
                               display: { xs: 'none', sm: 'inline' }
                             }}
                           >
-                            Envie Encomendas
+                            Envios
                           </Typography>
                         </Button>
                       )}
                     </Box>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, justifyContent: 'center' }}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="caption" color="text.secondary">Cidade de Origem</Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+                      <Box sx={{ textAlign: 'center', minWidth: 220 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Cidade de Origem</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                           <LocationOn sx={{ color: '#1976d2' }} />
                           <Typography variant="body1" sx={{ fontWeight: 'medium' }}>{getCidadeNome(rota.cidade_origem)}</Typography>
                         </Box>
                       </Box>
-                      <LocalShippingIcon sx={{ color: '#1976d2', mx: 4, mt: 2 }} />
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="caption" color="text.secondary">Cidade de Destino</Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mx: 3 }}>
+                        <DoubleArrow sx={{ fontSize: 18, color: 'primary.main' }} />
+                        <DoubleArrow sx={{ fontSize: 18, color: 'secondary.main', transform: 'rotate(180deg)' }} />
+                      </Box>
+                      <Box sx={{ textAlign: 'center', minWidth: 220 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Cidade de Destino</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                           <Typography variant="body1" sx={{ fontWeight: 'medium' }}>{getCidadeNome(rota.cidade_destino)}</Typography>
                           <LocationOn sx={{ color: '#c2185b' }} />
                         </Box>
@@ -682,6 +686,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2 }) => {
                         </TableContainer>
                       )}
                     </Grid>
+                  
                   </Grid>
                 </Paper>
               </Grid>
