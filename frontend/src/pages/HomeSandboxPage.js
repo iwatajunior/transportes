@@ -375,13 +375,88 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     return (rotas || []).filter((r) => (r.status || '').toLowerCase() === 'andamento').length;
   }, [rotas]);
 
-  // Counter card - Theme 3 (dark elegant)
-  const CounterCard = ({ leftLabel, rightLabel, value, numberColor, leftColor = '#D1D5DB', rightColor = '#9CA3AF' }) => (
+  // Build destination counts (use filteredTrips when available)
+  const destinationData = useMemo(() => {
+    const list = (filteredTrips && filteredTrips.length ? filteredTrips : trips) || [];
+    const nameOf = (t) => t?.destino_completo || t?.destino || 'Destino';
+    const map = new Map();
+    list.forEach((t) => {
+      const n = nameOf(t) || 'Destino';
+      map.set(n, (map.get(n) || 0) + 1);
+    });
+    const entries = Array.from(map.entries()).sort((a,b)=> b[1]-a[1]);
+    const total = entries.reduce((s, [,v])=> s+v, 0) || 1;
+    return { entries, total };
+  }, [filteredTrips, trips]);
+
+  // Tiny SVG Pie component (no external deps) with simple rotation + highlight animation
+  const PieChart = ({ data, size = 220, thickness = 28, centerTitle = 'Destinos' }) => {
+    const radius = (size - thickness) / 2;
+    const center = size / 2;
+    const circumference = 2 * Math.PI * radius;
+    const [activeIdx, setActiveIdx] = React.useState(0);
+    const [angle, setAngle] = React.useState(0);
+    React.useEffect(() => {
+      const id = setInterval(() => {
+        setActiveIdx((i) => (i + 1) % Math.max(1, data.entries.length));
+        setAngle((a) => (a + 20) % 360);
+      }, 1800);
+      return () => clearInterval(id);
+    }, [data.entries.length]);
+
+    const colors = ['#60A5FA', '#34D399', '#FBBF24', '#F472B6', '#A78BFA', '#22D3EE', '#F59E0B', '#EF4444', '#10B981'];
+    let offset = 0;
+    const content = data.entries.map(([label, value], idx) => {
+      const fraction = value / data.total;
+      const dash = circumference * fraction;
+      const dashArray = `${dash} ${circumference - dash}`;
+      const isActive = idx === activeIdx;
+      const strokeWidth = isActive ? thickness + 6 : thickness;
+      const strokeOpacity = isActive ? 1 : 0.45;
+      const node = (
+        <g key={label}>
+          <circle
+            cx={center}
+            cy={center}
+            r={radius}
+            fill="none"
+            stroke={colors[idx % colors.length]}
+            strokeWidth={strokeWidth}
+            strokeDasharray={dashArray}
+            strokeDashoffset={-offset}
+            strokeLinecap="butt"
+            style={{ cursor: 'default', pointerEvents: 'visibleStroke', opacity: strokeOpacity }}
+          >
+            <title>{`${label}: ${value} (${Math.round(fraction * 100)}%)`}</title>
+          </circle>
+        </g>
+      );
+      offset += dash;
+      return node;
+    });
+
+    const activeLabel = data.entries[activeIdx]?.[0] || centerTitle;
+
+    return (
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ pointerEvents: 'auto' }}>
+        <g transform={`rotate(${angle} ${center} ${center})`}>
+          {content}
+        </g>
+        {/* Center active label (city name) */}
+        <text x={center} y={center-2} textAnchor="middle" fontWeight="700" fontSize={14} fill="#111111">
+          {activeLabel}
+        </text>
+      </svg>
+    );
+  };
+
+  // Counter card with custom background color (#808080)
+  const CounterCard = ({ leftLabel, rightLabel, value, numberColor, leftColor = '#E5E7EB', rightColor = '#CBD5E1' }) => (
     <Box sx={{
-      bgcolor: '#2B2F36',
-      color: '#E5E7EB',
+      bgcolor: '#808080',
+      color: '#FFFFFF',
       borderRadius: 2,
-      border: '1px solid #3B4150',
+      border: '1px solid #8A8A8A',
       p: 2,
       height: '100%',
       display: 'flex',
@@ -395,7 +470,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
       </Box>
       <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Typography sx={{ fontSize: { xs: '2.5rem', sm: '3.25rem' }, fontWeight: 800, lineHeight: 1, color: numberColor || 'inherit' }}>
-          {value}
+          {String(value ?? 0).padStart(2, '0')}
         </Typography>
       </Box>
     </Box>
@@ -847,16 +922,19 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                   </Paper>
                   </Grid>
                 <Grid item xs={12} md={4}>
-                  <Paper elevation={3} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2, height: '100%' }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                      Painel Central
-                    </Typography>
+                  <Paper elevation={3} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2, minHeight: 430 }}>
+                    
                     <Grid container spacing={1.2}>
                       <Grid item xs={12} sm={6}>
                         <CounterCard leftLabel={'Viagens/mês'} rightLabel={''} value={tripsCompletedThisMonthCount} numberColor={'#22D3EE'} leftColor={'#D1D5DB'} rightColor={'#9CA3AF'} />
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <CounterCard leftLabel={'Viagens/ano'} rightLabel={''} value={tripsCompletedThisYearCount} numberColor={'#F59E0B'} leftColor={'#D1D5DB'} rightColor={'#9CA3AF'} />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
+                          <PieChart data={destinationData} />
+                        </Box>
                       </Grid>
                     </Grid>
                   </Paper>
