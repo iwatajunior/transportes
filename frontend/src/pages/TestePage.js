@@ -5,7 +5,7 @@ import HomeSandboxPage from './HomeSandboxPage';
 const TestePage = () => {
   return (
     <Box sx={{ p: 0 }}>
-      <HomeSandboxPage hideRotasProgramadas={true} hidePainelViagens={true} />
+      <HomeSandboxPage hideRotasProgramadas={true} hidePainelViagens={true} hideFiltros={true} headerFirst={true} />
     </Box>
   );
 };

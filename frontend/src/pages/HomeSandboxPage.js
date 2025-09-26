@@ -27,7 +27,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PlaceIcon from '@mui/icons-material/Place';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
 import { useTheme } from '@mui/material/styles';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import RouteMap from '../components/RouteMap';
 import api from '../services/api';
@@ -35,9 +35,11 @@ import { cidadesPI, getCoordsByNome } from '../services/cidadesPI';
 
 const BUTTON_COLOR = '#FFA500';
 
-const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = false }) => {
+const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = false, hideFiltros = false, headerFirst = false }) => {
   const { user } = useAuth();
   const history = useHistory();
+  const location = useLocation();
+  const isTeste = !!location && typeof location.pathname === 'string' && location.pathname.startsWith('/teste');
   const theme = useTheme();
   const [rotas, setRotas] = useState([]);
   const [rotasFiltradas, setRotasFiltradas] = useState([]);
@@ -493,25 +495,45 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     );
   }
 
+  const welcomeHeader = (
+    <React.Fragment>
+      <Box sx={{ textAlign: 'center', mb: -1 }}>
+        <Typography variant="h5" component="h1" sx={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 'bold', color: '#1976d2', mb: -0.5, textAlign: 'left' }}>
+          {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
+          <Typography variant="subtitle1" sx={{ fontFamily: "'Exo 2', sans-serif", color: 'text.secondary', display: 'inline', ml: 1 }}>
+            Gerencie aqui suas viagens e encomendas.
+          </Typography>
+        </Typography>
+      </Box>
+      <Box sx={{ height: '15px' }} />
+    </React.Fragment>
+  );
+
   return (
     <Box component="main" sx={{ flexGrow: 1, p: 0, mt: -2 }}>
       <Container maxWidth="lg" sx={{ py: 0, px: 0 }}>
         {/* Sticky banner inside the page content (below global logo/header) */}
+        {!isTeste && (
         <Box sx={{ mb: 1, position: 'sticky', top: { xs: 56, sm: 64 } }}>
           <Alert severity="error" variant="filled" sx={{ fontWeight: 700, borderRadius: 0, textAlign: 'center' }}>
             Ambiente de Teste
           </Alert>
         </Box>
+        )}
+
+        {(headerFirst || isTeste) && welcomeHeader}
 
         {/* Área de Testes (colapsável) - movida para o topo */}
-        <Paper elevation={1} sx={{ mb: 2 }}>
+        <Paper elevation={isTeste ? 0 : 1} sx={{ mb: 2, backgroundColor: isTeste ? 'transparent' : undefined, boxShadow: isTeste ? 'none' : undefined, border: 'none' }}>
+          {!isTeste && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Área de Testes</Typography>
             <Button size="small" onClick={() => setShowTestArea((v) => !v)}>
               {showTestArea ? 'Ocultar' : 'Mostrar'}
             </Button>
           </Box>
-          <Collapse in={showTestArea}>
+          )}
+          <Collapse in={isTeste ? true : showTestArea} sx={{ display: isTeste ? 'contents' : 'block' }}>
             <Box sx={{ p: 2 }}>
               <Grid container spacing={2} justifyContent="flex-end">
                 <Grid item xs={12} md={4}>
@@ -582,6 +604,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                       </Button>
                     </Box>
                   </Paper>
+        )}
                 </Grid>
                 <Grid item xs={12} md={4}>
                   <LeafletTripMap routes={(rotas || []).filter(r => (r.status || '').toLowerCase() === 'andamento')} />
@@ -684,17 +707,10 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
             </Box>
           </Collapse>
         </Paper>
-        <Box sx={{ textAlign: 'center', mb: -1 }}>
-          <Typography variant="h5" component="h1" sx={{ fontFamily: "'Exo 2', sans-serif", fontWeight: 'bold', color: '#1976d2', mb: -0.5, textAlign: 'left' }}>
-            {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
-            <Typography variant="subtitle1" sx={{ fontFamily: "'Exo 2', sans-serif", color: 'text.secondary', display: 'inline', ml: 1 }}>
-              Gerencie aqui suas viagens e encomendas.
-            </Typography>
-          </Typography>
-        </Box>
-        <Box sx={{ height: '15px' }} />
+        {!(headerFirst || isTeste) && welcomeHeader}
 
         {/* Filtros - Viagens (Teste) */}
+        {!hideFiltros && (
         <Paper elevation={0} sx={{ p: 1, mb: 1.5, border: (theme) => `1px solid ${theme.palette.grey[200]}`, borderRadius: 1 }}>
           <Grid container spacing={1} columns={12} sx={{ mb: 1 }}>
             <Grid item xs={12} sm={6} md={3}>
@@ -794,6 +810,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
             </Grid>
           </Grid>
         </Paper>
+        )}
 
         {/* Tabela de Viagens (Teste) */}
         {!hidePainelViagens && (
