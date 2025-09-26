@@ -829,28 +829,11 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                   </Paper>
                   {/* Calendário movido para baixo dos botões, mesma coluna (esquerda) */}
                   <Paper elevation={0} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 3, mt: 2, border: 'none', boxShadow: 'none' }}>
-                    {/* Sticky note embedded above the calendar */}
-                    <Box sx={{ p: 1, mb: 1, bgcolor: '#FFF59D', border: '1px solid', borderColor: '#FDD835', borderRadius: 1 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
-                        Nota (Avisos)
-                      </Typography>
-                      <TextField
-                        value={stickyNote}
-                        onChange={(e) => setStickyNote(e.target.value)}
-                        placeholder="Escreva aqui seus avisos..."
-                        multiline
-                        minRows={3}
-                        fullWidth
-                        variant="standard"
-                        InputProps={{ disableUnderline: true }}
-                        sx={{ fontFamily: 'inherit', '& textarea': { fontSize: '0.95rem', lineHeight: 1.4 }, bgcolor: 'transparent' }}
-                      />
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
                       <IconButton size="small" onClick={handlePrevMonth} aria-label="Mês anterior">
                         <ArrowBack fontSize="small" />
                       </IconButton>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
                         {calendarDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                       </Typography>
                       <IconButton size="small" onClick={handleNextMonth} aria-label="Próximo mês">
@@ -858,7 +841,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                       </IconButton>
                     </Box>
                     <Box>
-                      <Grid container columns={7} spacing={0.5} sx={{ mb: 0.5, bgcolor: (theme) => theme.palette.grey[100], borderRadius: 1, px: 0.5, py: 0.5 }}>
+                      <Grid container columns={7} spacing={0.5} sx={{ mb: 0.4, bgcolor: (theme) => theme.palette.grey[100], borderRadius: 1, px: 0.25, py: 0.25 }}>
                         {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map((w) => (
                           <Grid item xs={1} key={w}>
                             <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{w}</Typography>
@@ -885,7 +868,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                                 disableInteractive
                               >
                                 <Box sx={{
-                                  height: 34,
+                                  height: 28,
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -922,6 +905,25 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                   </Paper>
                   </Grid>
                 <Grid item xs={12} md={4}>
+                  {/* Sticky note moved to the middle column, separate from the graphs card */}
+                  <Paper elevation={0} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 3, mb: 1.5, border: 'none', boxShadow: 'none' }}>
+                    <Box sx={{ p: 1, bgcolor: '#FFF59D', border: '1px solid', borderColor: '#FDD835', borderRadius: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
+                        Nota (Avisos)
+                      </Typography>
+                      <TextField
+                        value={stickyNote}
+                        onChange={(e) => setStickyNote(e.target.value)}
+                        placeholder="Escreva aqui seus avisos..."
+                        multiline
+                        minRows={3}
+                        fullWidth
+                        variant="standard"
+                        InputProps={{ disableUnderline: true }}
+                        sx={{ fontFamily: 'inherit', '& textarea': { fontSize: '0.95rem', lineHeight: 1.4 }, bgcolor: 'transparent' }}
+                      />
+                    </Box>
+                  </Paper>
                   <Paper elevation={0} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2, minHeight: 430, border: 'none', boxShadow: 'none' }}>
                     
                     <Grid container spacing={1.2}>
