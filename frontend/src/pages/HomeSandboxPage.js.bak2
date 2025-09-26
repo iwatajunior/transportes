@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Container, Typography, Box, Button, Grid, Link as RouterLink, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, TextField, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, CircularProgress, Tooltip, IconButton, Avatar, Collapse } from '@mui/material';
+﻿import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Container, Typography, Box, Button, Grid, Link as RouterLink, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, TextField, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, CircularProgress, Tooltip, IconButton, Avatar, Collapse, Chip } from '@mui/material';
 import { Pagination } from '@mui/material';
 import {
   Add as AddIcon,
@@ -90,8 +90,8 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
         const response = await api.get('/routes?home=true');
         const rotasData = response.data || [];
         if (!rotasData || !Array.isArray(rotasData)) {
-          console.error('Resposta inválida da API:', rotasData);
-          throw new Error('Resposta inválida da API');
+          console.error('Resposta invÃ¡lida da API:', rotasData);
+          throw new Error('Resposta invÃ¡lida da API');
         }
         const rotasFiltradas = rotasData
           .sort((a, b) => {
@@ -215,9 +215,9 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
       const ref = t?.referencia || t?.identificacao || '';
       const ori = t?.origem || '';
       const dest = t?.destino_completo || t?.destino || '';
-      if (ref && (ori || dest)) return `${ref}: ${ori} → ${dest}`;
+      if (ref && (ori || dest)) return `${ref}: ${ori} â†’ ${dest}`;
       if (ref) return `${ref}`;
-      if (ori || dest) return `${ori} → ${dest}`;
+      if (ori || dest) return `${ori} â†’ ${dest}`;
       return 'Viagem';
     };
     (filteredTrips || []).forEach((t) => {
@@ -252,154 +252,6 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     const day = String(now.getDate()).padStart(2, '0');
     return `${y}-${mth}-${day}`;
   }, []);
-
-  // Labels for the counter cards (weekday/month short in pt-BR)
-  const weekdayLabel = useMemo(() => {
-    const s = new Date().toLocaleDateString('pt-BR', { weekday: 'short' });
-    const withDot = s.endsWith('.') ? s : s + '.';
-    return withDot.charAt(0).toUpperCase() + withDot.slice(1);
-  }, []);
-  const monthLabel = useMemo(() => {
-    const s = new Date().toLocaleDateString('pt-BR', { month: 'short' });
-    return s.endsWith('.') ? s : s + '.';
-  }, []);
-
-  // Helpers: normalize text and parse date safely (avoid TZ shifts)
-  const normalizeText = (str) => {
-    return (str || '')
-      .toString()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase();
-  };
-  const parseToLocalDate = (value) => {
-    if (!value) return null;
-    if (value instanceof Date) {
-      if (isNaN(value.getTime())) return null;
-      return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-    }
-    if (typeof value === 'string') {
-      const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (m) {
-        const y = parseInt(m[1], 10);
-        const mo = parseInt(m[2], 10) - 1;
-        const d = parseInt(m[3], 10);
-        return new Date(y, mo, d);
-      }
-    }
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return null;
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  };
-
-  // Try multiple fields that can represent the conclusion/return date
-  const getTripConclusionDate = (t) => {
-    const candidates = [
-      t?.data_retorno,
-      t?.data_retorno_real,
-      t?.data_retorno_efetiva,
-      t?.data_chegada,
-      t?.data_retorno_prevista,
-      t?.data_saida
-    ];
-    for (const c of candidates) {
-      const d = parseToLocalDate(c);
-      if (d) return d;
-    }
-    return null;
-  };
-
-  // Strict conclusion date for month counter: only definitive fields
-  const getMonthConclusionDateStrict = (t) => {
-    const candidates = [t?.data_retorno, t?.data_chegada];
-    for (const c of candidates) {
-      const d = parseToLocalDate(c);
-      if (d) return d;
-    }
-    return null;
-  };
-
-  // Only consider DB column status_viagem equal to 'Concluida'
-  const isStatusConcluida = (value) => normalizeText(value) === 'concluida';
-
-  // Count trips concluded in the current month
-  const tripsCompletedThisMonthCount = useMemo(() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth(); // 0-based
-    return (trips || []).filter((t) => {
-      const status = t?.status_viagem;
-      if (!isStatusConcluida(status)) return false;
-      const d = getMonthConclusionDateStrict(t);
-      if (!d) return false;
-      return d.getFullYear() === y && d.getMonth() === m;
-    }).length;
-  }, [trips]);
-
-  // Count trips concluded in the current year
-  const tripsCompletedThisYearCount = useMemo(() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    return (trips || []).filter((t) => {
-      const status = t?.status_viagem;
-      if (!isStatusConcluida(status)) return false;
-      const d = getTripConclusionDate(t);
-      if (!d) return false;
-      return d.getFullYear() === y;
-    }).length;
-  }, [trips]);
-
-  // Values for the counters
-  const tripsActiveTodayCount = useMemo(() => {
-    const isActiveOn = (trip, dateKey) => {
-      const startStr = toDateKey(trip?.data_saida);
-      const endStr = toDateKey(trip?.data_retorno_prevista || trip?.data_saida);
-      if (!startStr) return false;
-      const [sy, sm, sd] = startStr.split('-').map(Number);
-      const [ey, em, ed] = (endStr || startStr).split('-').map(Number);
-      const [ty, tm, td] = dateKey.split('-').map(Number);
-      const start = new Date(sy, sm - 1, sd);
-      const end = new Date(ey, em - 1, ed);
-      const target = new Date(ty, tm - 1, td);
-      if (isNaN(start.getTime()) || isNaN(target.getTime())) return false;
-      if (isNaN(end.getTime())) return target.getTime() === start.getTime();
-      start.setHours(0,0,0,0);
-      end.setHours(0,0,0,0);
-      target.setHours(0,0,0,0);
-      return target >= start && target <= end;
-    };
-    return (trips || []).filter((t) => isActiveOn(t, todayKey)).length;
-  }, [trips, todayKey]);
-
-  const rotasAndamentoCount = useMemo(() => {
-    return (rotas || []).filter((r) => (r.status || '').toLowerCase() === 'andamento').length;
-  }, [rotas]);
-
-  // Counter card - Theme 3 (dark elegant)
-  const CounterCard = ({ leftLabel, rightLabel, value, numberColor, leftColor = '#D1D5DB', rightColor = '#9CA3AF' }) => (
-    <Box sx={{
-      bgcolor: '#2B2F36',
-      color: '#E5E7EB',
-      borderRadius: 2,
-      border: '1px solid #3B4150',
-      p: 2,
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: leftColor, textTransform: 'none' }}>{leftLabel}</Typography>
-        {rightLabel ? (
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: rightColor, textTransform: 'none' }}>{rightLabel}</Typography>
-        ) : null}
-      </Box>
-      <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Typography sx={{ fontSize: { xs: '2.5rem', sm: '3.25rem' }, fontWeight: 800, lineHeight: 1, color: numberColor || 'inherit' }}>
-          {value}
-        </Typography>
-      </Box>
-    </Box>
-  );
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -447,6 +299,11 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     apply();
   }, [filters, trips]);
 
+  // Quick counters for top cards
+  const countEmAndamento = useMemo(() => (trips || []).filter(t => (t.status_viagem || '').toLowerCase() === 'andamento').length, [trips]);
+  const countRotasAtivas = useMemo(() => (rotasFiltradas || []).filter(r => (r.status || '').toLowerCase() === 'andamento').length, [rotasFiltradas]);
+  const countMinhasViagens = useMemo(() => (trips || []).filter(t => (t.solicitante_nome || '').toLowerCase() === (user?.nome || '').toLowerCase()).length, [trips, user]);
+
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
   };
@@ -484,7 +341,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
       case 'Andamento':
         return { color: 'primary', icon: <AccessTimeIcon /> };
       case 'Concluida':
-      case 'Concluída':
+      case 'ConcluÃ­da':
         return { color: 'success', icon: <TaskAltIcon /> };
       case 'Cancelada':
         return { color: 'error', icon: <CancelIcon /> };
@@ -539,12 +396,11 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
       if (!selectedRota || !selectedCidade || !materialInfo.cidade_destino || !materialInfo.tipo || !materialInfo.quantidade) {
         setSnackbar({
           open: true,
-          message: 'Por favor, preencha todos os campos obrigatórios',
+          message: 'Por favor, preencha todos os campos obrigatÃ³rios',
           severity: 'warning'
         });
         return;
       }
-
       const response = await api.post('/materials', {
         rota_id: selectedRota.id,
         cidade_origem_id: selectedRota.cidade_origem,
@@ -635,6 +491,149 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     );
   }
 
+// Charts components at module scope
+function StatusPieChart({ trips, todayKey, toDateKey }) {
+  const canvasRef = useRef(null);
+  const legendRef = useRef(null);
+
+  const data = useMemo(() => {
+    const todayTrips = (trips || []).filter(t => toDateKey(t.data_saida) === todayKey);
+    const map = new Map();
+    const norm = (s) => (s || '').toLowerCase();
+    for (const t of todayTrips) {
+      const k = norm(t.status_viagem);
+      map.set(k, (map.get(k) || 0) + 1);
+    }
+    const palette = {
+      andamento: '#42a5f5',
+      pendente: '#ef5350',
+      agendada: '#ffb300',
+      concluÃ­da: '#66bb6a',
+      concluida: '#66bb6a',
+      cancelada: '#9e9e9e',
+      default: '#90caf9'
+    };
+    const entries = Array.from(map.entries());
+    const total = entries.reduce((a, [,v]) => a+v, 0) || 1;
+    return { entries, total, palette };
+  }, [trips, todayKey, toDateKey]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 8;
+    let start = -Math.PI/2;
+    if (data.entries.length === 0) {
+      ctx.fillStyle = '#e0e0e0';
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI*2);
+      ctx.fill();
+    } else {
+      for (const [k, v] of data.entries) {
+        const angle = (v / data.total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, start, start + angle);
+        ctx.closePath();
+        const color = data.palette[k] || data.palette.default;
+        ctx.fillStyle = color;
+        ctx.fill();
+        start += angle;
+      }
+    }
+    // Legend
+    const lg = legendRef.current;
+    if (lg) {
+      lg.innerHTML = '';
+      for (const [k, v] of data.entries) {
+        const color = data.palette[k] || data.palette.default;
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.alignItems = 'center';
+        item.style.gap = '8px';
+        item.style.fontSize = '12px';
+        const sw = document.createElement('span');
+        sw.style.display = 'inline-block';
+        sw.style.width = '10px';
+        sw.style.height = '10px';
+        sw.style.borderRadius = '2px';
+        sw.style.background = color;
+        const tx = document.createElement('span');
+        tx.textContent = `${k || 'sem status'}: ${v}`;
+        item.appendChild(sw); item.appendChild(tx);
+        lg.appendChild(item);
+      }
+      if (data.entries.length === 0) {
+        lg.textContent = 'Sem viagens hoje';
+      }
+    }
+  }, [data]);
+
+  return (
+    <Box sx={{ display: 'flex', gap: 2 }}>
+      <canvas ref={canvasRef} width={130} height={110} style={{ maxWidth: 130, maxHeight: 110 }} />
+      <Box ref={legendRef} sx={{ display: 'grid', gap: 0.25 }} />
+    </Box>
+  );
+}
+
+function TripsLastDaysChart({ trips, toDateKey, days = 7 }) {
+  const canvasRef = useRef(null);
+  const data = useMemo(() => {
+    const today = new Date();
+    const keys = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      keys.push(toDateKey(d.toISOString().slice(0,10)));
+    }
+    const counts = keys.map(k => (trips || []).filter(t => toDateKey(t.data_saida) === k).length);
+    return { keys, counts };
+  }, [trips, toDateKey, days]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    const pad = 16;
+    const w = W - pad*2;
+    const h = H - pad*2;
+    const max = Math.max(1, ...data.counts);
+    ctx.strokeStyle = '#1976d2';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    data.counts.forEach((v, i) => {
+      const x = pad + (i/(data.counts.length-1)) * w;
+      const y = pad + h - (v/max) * h;
+      if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    ctx.fillStyle = '#1976d2';
+    data.counts.forEach((v, i) => {
+      const x = pad + (i/(data.counts.length-1)) * w;
+      const y = pad + h - (v/max) * h;
+      ctx.beginPath();
+      ctx.arc(x,y,2,0,Math.PI*2);
+      ctx.fill();
+    });
+  }, [data]);
+
+  return (
+    <Box>
+      <canvas ref={canvasRef} width={520} height={110} style={{ width: '100%', height: 110 }} />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
+        {data.keys.map((k, i) => (
+          <Typography key={i} variant="caption" color="text.secondary">{k}</Typography>
+        ))}
+      </Box>
+    </Box>
+  );
+}
   if (error) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
@@ -671,11 +670,11 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
 
         {(headerFirst || isTeste) && welcomeHeader}
 
-        {/* Área de Testes (colapsável) - movida para o topo */}
-        <Paper elevation={isTeste ? 0 : 1} sx={{ mb: 2, backgroundColor: isTeste ? 'transparent' : undefined, boxShadow: isTeste ? 'none' : undefined, border: 'none' }}>
+        {/* Ãrea de Testes (colapsÃ¡vel) - movida para o topo */}
+        <Paper elevation={isTeste ? 0 : 1} sx={{ mb: 2, mt: isTeste ? 0 : 0, backgroundColor: isTeste ? 'transparent' : undefined, boxShadow: isTeste ? 'none' : undefined, border: 'none' }}>
           {!isTeste && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Área de Testes</Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Ãrea de Testes</Typography>
             <Button size="small" onClick={() => setShowTestArea((v) => !v)}>
               {showTestArea ? 'Ocultar' : 'Mostrar'}
             </Button>
@@ -683,78 +682,57 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
           )}
           <Collapse in={isTeste ? true : showTestArea} sx={{ display: isTeste ? 'contents' : 'block' }}>
             <Box sx={{ p: 2 }}>
-              <Grid container spacing={2} columns={12} justifyContent="space-between" alignItems="stretch">
+              <Grid container spacing={2} justifyContent="flex-end">
+                {/* Quick Actions as cards */}
                 <Grid item xs={12} md={4}>
-                  <Paper variant="outlined" sx={{ p: 2 }}>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      <Button 
-                        variant="contained" 
-                        fullWidth
-                        startIcon={<ListIcon sx={{ fontSize: 28 }} />}
-                        onClick={() => history.push('/viagens')}
-                        sx={{
-                          bgcolor: '#FF9800',
-                          color: 'white',
-                          textTransform: 'none',
-                          borderRadius: 2,
-                          mb: 1,
-                          '&:hover': {
-                            transform: 'scale(1.02)',
-                            bgcolor: '#F57C00'
-                          }
-                        }}
-                      >
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>
-                          Painel de Viagens
+                  <Box sx={{ minHeight: 420, display: 'flex', flexDirection: 'column' }}>
+                  <Grid container spacing={2} sx={{ flex: 1 }}>
+                    <Grid item xs={12}>
+                      <Paper elevation={2} sx={{ p: 2, borderRadius: 2, cursor: 'pointer', '&:hover .qa-sub': { display: 'block', opacity: 1, maxHeight: 64, mt: 0.5 } }} onClick={() => history.push('/viagens')}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <ListIcon color="primary" />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Painel de Viagens</Typography>
+                          </Box>
+                          <Chip size="small" color="info" label={`${countEmAndamento} em andamento`} />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" className="qa-sub" sx={{ mt: 0, display: 'none', opacity: 0, maxHeight: 0, overflow: 'hidden', transition: 'opacity 180ms ease, max-height 180ms ease, margin-top 180ms ease' }}>
+                          Solicite carona ou uma nova viagem aqui!
                         </Typography>
-                      </Button>
-                      <Button 
-                        variant="contained" 
-                        fullWidth
-                        startIcon={<ExploreIcon sx={{ fontSize: 28 }} />}
-                        onClick={() => history.push('/rotasprogramadas')}
-                        sx={{
-                          bgcolor: '#FF9800',
-                          color: 'white',
-                          textTransform: 'none',
-                          borderRadius: 2,
-                          mb: 1,
-                          '&:hover': {
-                            transform: 'scale(1.02)',
-                            bgcolor: '#F57C00'
-                          }
-                        }}
-                      >
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>
-                          Rotas Programadas
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Paper elevation={2} sx={{ p: 2, borderRadius: 2, cursor: 'pointer', '&:hover .qa-sub': { display: 'block', opacity: 1, maxHeight: 64, mt: 0.5 } }} onClick={() => history.push('/rotasprogramadas')}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <ExploreIcon color="primary" />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Rotas Programadas</Typography>
+                          </Box>
+                          <Chip size="small" color="info" label={`${countRotasAtivas} em andamento`} />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" className="qa-sub" sx={{ mt: 0, display: 'none', opacity: 0, maxHeight: 0, overflow: 'hidden', transition: 'opacity 180ms ease, max-height 180ms ease, margin-top 180ms ease' }}>
+                          Visualize rotas e envie materiais.
                         </Typography>
-                      </Button>
-                      <Button 
-                        variant="contained" 
-                        fullWidth
-                        startIcon={<LuggageIcon sx={{ fontSize: 28 }} />}
-                        onClick={() => history.push('/minhasviagens')}
-                        sx={{
-                          bgcolor: '#FF9800',
-                          color: 'white',
-                          textTransform: 'none',
-                          borderRadius: 2,
-                          mb: 1,
-                          '&:hover': {
-                            transform: 'scale(1.02)',
-                            bgcolor: '#F57C00'
-                          }
-                        }}
-                      >
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>
-                          Minhas Viagens
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Paper elevation={2} sx={{ p: 2, borderRadius: 2, cursor: 'pointer', '&:hover .qa-sub': { display: 'block', opacity: 1, maxHeight: 64, mt: 0.5 } }} onClick={() => history.push('/minhasviagens')}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <LuggageIcon color="primary" />
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Minhas Viagens</Typography>
+                          </Box>
+                          <Chip size="small" color="success" label={`${countMinhasViagens} registradas`} />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" className="qa-sub" sx={{ mt: 0, display: 'none', opacity: 0, maxHeight: 0, overflow: 'hidden', transition: 'opacity 180ms ease, max-height 180ms ease, margin-top 180ms ease' }}>
+                          Visualize sua viagens percorridas
                         </Typography>
-                      </Button>
-                    </Box>
-                  </Paper>
-                  {/* Calendário movido para baixo dos botões, mesma coluna (esquerda) */}
-                  <Paper elevation={3} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2, mt: 2 }}>
-                    {/* Sticky note embedded above the calendar */}
+                      </Paper>
+                    </Grid>
+                  </Grid>
+                  </Box>
+                  {/* Notes/Calendar below quick actions */}
+                  <Paper elevation={0} sx={{ mt: 2, p: 1.5, backgroundColor: 'transparent', boxShadow: 'none', border: 'none', borderRadius: 2, display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{ p: 1, mb: 1, bgcolor: '#FFF59D', border: '1px solid', borderColor: '#FDD835', borderRadius: 1 }}>
                       <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
                         Nota (Avisos)
@@ -772,19 +750,19 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                       />
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                      <IconButton size="small" onClick={handlePrevMonth} aria-label="Mês anterior">
+                      <IconButton size="small" onClick={handlePrevMonth} aria-label="MÃªs anterior">
                         <ArrowBack fontSize="small" />
                       </IconButton>
                       <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                         {calendarDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
                       </Typography>
-                      <IconButton size="small" onClick={handleNextMonth} aria-label="Próximo mês">
+                      <IconButton size="small" onClick={handleNextMonth} aria-label="PrÃ³ximo mÃªs">
                         <ArrowForward fontSize="small" />
                       </IconButton>
                     </Box>
                     <Box>
                       <Grid container columns={7} spacing={0.5} sx={{ mb: 0.5, bgcolor: (theme) => theme.palette.grey[100], borderRadius: 1, px: 0.5, py: 0.5 }}>
-                        {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map((w) => (
+                        {['Seg','Ter','Qua','Qui','Sex','SÃ¡b','Dom'].map((w) => (
                           <Grid item xs={1} key={w}>
                             <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>{w}</Typography>
                           </Grid>
@@ -827,15 +805,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                                     {cell.day}
                                   </Typography>
                                   {hasTrips && (
-                                    <Box sx={{
-                                      position: 'absolute',
-                                      bottom: 3,
-                                      right: 3,
-                                      width: 6,
-                                      height: 6,
-                                      borderRadius: '50%',
-                                      bgcolor: 'warning.main'
-                                    }} />
+                                    <Box sx={{ position: 'absolute', bottom: 3, right: 3, width: 6, height: 6, borderRadius: '50%', bgcolor: 'warning.main' }} />
                                   )}
                                 </Box>
                               </Tooltip>
@@ -845,26 +815,25 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                       </Grid>
                     </Box>
                   </Paper>
-                  </Grid>
+                </Grid>
+                {/* Middle column with sparkline */}
                 <Grid item xs={12} md={4}>
-                  <Paper elevation={3} sx={{ p: 1.5, backgroundColor: '#FFFFFF', borderRadius: 2, height: '100%' }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                      Painel Central
-                    </Typography>
-                    <Grid container spacing={1.2}>
-                      <Grid item xs={12} sm={6}>
-                        <CounterCard leftLabel={'Viagens/mês'} rightLabel={''} value={tripsCompletedThisMonthCount} numberColor={'#22D3EE'} leftColor={'#D1D5DB'} rightColor={'#9CA3AF'} />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <CounterCard leftLabel={'Viagens/ano'} rightLabel={''} value={tripsCompletedThisYearCount} numberColor={'#F59E0B'} leftColor={'#D1D5DB'} rightColor={'#9CA3AF'} />
-                      </Grid>
-                    </Grid>
+                  <Paper elevation={1} sx={{ p: 2, borderRadius: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Ãšltimos 7 dias</Typography>
+                      <Typography variant="caption" color="text.secondary">Viagens por dia</Typography>
+                    </Box>
+                    <TripsLastDaysChart trips={trips} toDateKey={toDateKey} days={7} />
                   </Paper>
                 </Grid>
                 <Grid item xs={12} md={4}>
-                  <LeafletTripMap routes={(rotas || []).filter(r => (r.status || '').toLowerCase() === 'andamento')} />
-                </Grid>
+                  <Paper elevation={0} sx={{ p: 0, backgroundColor: 'transparent', boxShadow: 'none', border: 'none', minHeight: 420, display: 'flex', flexDirection: 'column' }}>
+                    <LeafletTripMap routes={(rotas || []).filter(r => (r.status || '').toLowerCase() === 'andamento')} />
+                  </Paper>
+                  </Grid>
               </Grid>
+
+              {/* Charts Row removido (Ã¡rea deixada vazia) */}
             </Box>
           </Collapse>
         </Paper>
@@ -917,7 +886,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
               <TextField
                 fullWidth
                 type="date"
-                label="Data Saída"
+                label="Data SaÃ­da"
                 value={filters.dataSaida}
                 onChange={(e) => handleFilterChange('dataSaida', e.target.value)}
                 size="small"
@@ -947,7 +916,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                   <MenuItem value="Pendente">Pendente</MenuItem>
                   <MenuItem value="Agendada">Agendada</MenuItem>
                   <MenuItem value="Em Andamento">Em Andamento</MenuItem>
-                  <MenuItem value="Concluída">Concluída</MenuItem>
+                  <MenuItem value="ConcluÃ­da">ConcluÃ­da</MenuItem>
                   <MenuItem value="Cancelada">Cancelada</MenuItem>
                 </Select>
               </FormControl>
@@ -956,7 +925,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <TextField
                   fullWidth
-                  label="Veículo"
+                  label="VeÃ­culo"
                   value={filters.veiculo}
                   onChange={(e) => handleFilterChange('veiculo', e.target.value)}
                   size="small"
@@ -1006,11 +975,11 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                       <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 140 }}>Origem</TableCell>
                       <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 140 }}>Destino</TableCell>
                       <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 160 }}>Solicitante</TableCell>
-                      <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 90 }}>Data/Hora<br/>Saída</TableCell>
+                      <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 90 }}>Data/Hora<br/>SaÃ­da</TableCell>
                       <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 90 }}>Data/Hora<br/>Retorno</TableCell>
-                      <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 140 }}>Veículo</TableCell>
+                      <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 140 }}>VeÃ­culo</TableCell>
                       <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 160 }}>Motorista</TableCell>
-                      <TableCell align="right" sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 64 }}>Ações</TableCell>
+                      <TableCell align="right" sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', py: 1, px: 2, width: 64 }}>AÃ§Ãµes</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -1081,7 +1050,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                               </Box>
                             </Box>
                           ) : (
-                            <Typography variant="body2" sx={{ color: 'text.disabled' }}>Não alocado</Typography>
+                            <Typography variant="body2" sx={{ color: 'text.disabled' }}>NÃ£o alocado</Typography>
                           )}
                         </TableCell>
                         <TableCell align="right" sx={{ py: 1, px: 2, width: 64 }}>
@@ -1107,7 +1076,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                   setRowsPerPage(parseInt(event.target.value, 10));
                   setPage(0);
                 }}
-                labelRowsPerPage="Itens por página"
+                labelRowsPerPage="Itens por pÃ¡gina"
                 labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 rowsPerPageOptions={[6, 12, 24, 48]}
                 sx={{ borderTop: 1, borderColor: 'divider' }}
@@ -1133,7 +1102,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                 Rota: {selectedRota?.identificacao}
               </Typography>
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                {getCidadeNome(selectedRota?.cidade_origem)} → {getCidadeNome(selectedRota?.cidade_destino)}
+                {getCidadeNome(selectedRota?.cidade_origem)} â†’ {getCidadeNome(selectedRota?.cidade_destino)}
               </Typography>
             </Box>
             <Box sx={{ mt: 3 }}>
@@ -1194,7 +1163,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
 
               <TextField fullWidth label="Tipo de Material" value={materialInfo.tipo} onChange={(e) => setMaterialInfo({...materialInfo, tipo: e.target.value})} sx={{ mb: 2 }} />
               <TextField fullWidth label="Quantidade" type="number" value={materialInfo.quantidade} onChange={(e) => setMaterialInfo({...materialInfo, quantidade: e.target.value})} sx={{ mb: 2 }} />
-              <TextField fullWidth label="Observações" multiline rows={3} value={materialInfo.observacoes} onChange={(e) => setMaterialInfo({...materialInfo, observacoes: e.target.value})} />
+              <TextField fullWidth label="ObservaÃ§Ãµes" multiline rows={3} value={materialInfo.observacoes} onChange={(e) => setMaterialInfo({...materialInfo, observacoes: e.target.value})} />
             </Box>
           </DialogContent>
           <DialogActions>
@@ -1314,14 +1283,14 @@ function LeafletTripMap({ routes }) {
 
     const pickInPiaui = (arr) => {
       if (!Array.isArray(arr)) return null;
-      // Prefer strictly within bounds and address.state === 'Piauí'
+      // Prefer strictly within bounds and address.state === 'PiauÃ­'
       const inBounds = (lat, lng) => lat >= south && lat <= north && lng >= west && lng <= east;
       const preferred = arr.find(it => {
         const lat = parseFloat(it.lat);
         const lng = parseFloat(it.lon);
         const state = it.address?.state || '';
         const name = it.display_name || '';
-        return inBounds(lat, lng) && (state === 'Piauí' || /Piau[ií]/i.test(state) || /Piau[ií]/i.test(name));
+        return inBounds(lat, lng) && (state === 'PiauÃ­' || /Piau[iÃ­]/i.test(state) || /Piau[iÃ­]/i.test(name));
       });
       if (preferred) return preferred;
       const fallback = arr.find(it => {
@@ -1334,13 +1303,13 @@ function LeafletTripMap({ routes }) {
 
     for (const name of candidates) {
       // Try 1: simple q with state/country
-      const key1 = getCacheKey(`q:${name}, Piauí, Brasil`);
+      const key1 = getCacheKey(`q:${name}, PiauÃ­, Brasil`);
       try {
         const cached1 = localStorage.getItem(key1);
         if (cached1) return JSON.parse(cached1);
       } catch {}
       try {
-        const url1 = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&q=${encodeURIComponent(name + ', Piauí, Brasil')}`;
+        const url1 = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&q=${encodeURIComponent(name + ', PiauÃ­, Brasil')}`;
         const resp1 = await fetch(url1, { headers: { 'Accept-Language': 'pt-BR' } });
         const data1 = await resp1.json();
         const chosen1 = pickInPiaui(data1);
@@ -1358,7 +1327,7 @@ function LeafletTripMap({ routes }) {
         if (cached2) return JSON.parse(cached2);
       } catch {}
       try {
-        const url2 = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&state=${encodeURIComponent('Piauí')}&city=${encodeURIComponent(name)}`;
+        const url2 = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&state=${encodeURIComponent('PiauÃ­')}&city=${encodeURIComponent(name)}`;
         const resp2 = await fetch(url2, { headers: { 'Accept-Language': 'pt-BR' } });
         const data2 = await resp2.json();
         const chosen2 = pickInPiaui(data2);
@@ -1369,7 +1338,7 @@ function LeafletTripMap({ routes }) {
         }
       } catch {}
 
-      // Try 3: viewbox-bounded search within Piauí
+      // Try 3: viewbox-bounded search within PiauÃ­
       const key3 = getCacheKey(`bbox:${name}`);
       try {
         const cached3 = localStorage.getItem(key3);
@@ -1389,7 +1358,7 @@ function LeafletTripMap({ routes }) {
     }
     return null;
   };
-  // Load and draw Piauí border as a styled GeoJSON line (scoped inside component)
+  // Load and draw PiauÃ­ border as a styled GeoJSON line (scoped inside component)
   const loadPiauiBorder = async () => {
     if (!window.L || !mapRef.current || borderRef.current) return;
     try {
@@ -1399,7 +1368,7 @@ function LeafletTripMap({ routes }) {
       if (cached) {
         gj = JSON.parse(cached);
       } else {
-        const url = 'https://nominatim.openstreetmap.org/search?format=json&polygon_geojson=1&limit=1&countrycodes=br&q=' + encodeURIComponent('Piauí, Brasil');
+        const url = 'https://nominatim.openstreetmap.org/search?format=json&polygon_geojson=1&limit=1&countrycodes=br&q=' + encodeURIComponent('PiauÃ­, Brasil');
         const resp = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
         const data = await resp.json();
         if (Array.isArray(data) && data[0] && data[0].geojson) {
@@ -1419,7 +1388,7 @@ function LeafletTripMap({ routes }) {
         }).addTo(mapRef.current);
       }
     } catch (e) {
-      console.warn('Falha ao carregar fronteira do Piauí', e);
+      console.warn('Falha ao carregar fronteira do PiauÃ­', e);
     }
   };
 
@@ -1468,10 +1437,10 @@ function LeafletTripMap({ routes }) {
     // Temporary validation: mark only 01/2025 cities, city-by-city (no lines)
     const cities = [
       { name: 'Teresina', icon: originIcon, label: '<b>Origem</b><br/>Teresina' },
-      { name: 'José de Freitas', icon: midIcon, label: '<b>Intermediária (ida)</b><br/>José de Freitas' },
-      { name: 'Campo Maior', icon: midIcon, label: '<b>Intermediária (ida)</b><br/>Campo Maior' },
-      { name: 'Parnaíba', icon: destIcon, label: '<b>Destino</b><br/>Parnaíba' },
-      { name: 'Piracuruca', icon: midIcon, label: '<b>Intermediária (volta)</b><br/>Piracuruca' }
+      { name: 'JosÃ© de Freitas', icon: midIcon, label: '<b>IntermediÃ¡ria (ida)</b><br/>JosÃ© de Freitas' },
+      { name: 'Campo Maior', icon: midIcon, label: '<b>IntermediÃ¡ria (ida)</b><br/>Campo Maior' },
+      { name: 'ParnaÃ­ba', icon: destIcon, label: '<b>Destino</b><br/>ParnaÃ­ba' },
+      { name: 'Piracuruca', icon: midIcon, label: '<b>IntermediÃ¡ria (volta)</b><br/>Piracuruca' }
     ];
     for (const c of cities) {
       const coord = getCoordsByNome(c.name);
@@ -1482,7 +1451,7 @@ function LeafletTripMap({ routes }) {
       }
     }
     // Draw ida and volta lines using official coordinates
-    const idaSeq = ['Teresina', 'José de Freitas', 'Campo Maior', 'Parnaíba']
+    const idaSeq = ['Teresina', 'JosÃ© de Freitas', 'Campo Maior', 'ParnaÃ­ba']
       .map(n => getCoordsByNome(n))
       .filter(Boolean)
       .map(c => [c.lat, c.lng]);
@@ -1490,7 +1459,7 @@ function LeafletTripMap({ routes }) {
       const lineI = L.polyline(idaSeq, { color: 'royalblue', weight: 2.5, opacity: 0.9 }).addTo(mapRef.current);
       polylinesRef.current.push(lineI);
     }
-    const voltaSeq = ['Parnaíba', 'Piracuruca', 'Teresina']
+    const voltaSeq = ['ParnaÃ­ba', 'Piracuruca', 'Teresina']
       .map(n => getCoordsByNome(n))
       .filter(Boolean)
       .map(c => [c.lat, c.lng]);
@@ -1498,12 +1467,12 @@ function LeafletTripMap({ routes }) {
       const lineV = L.polyline(voltaSeq, { color: '#7b1fa2', weight: 2.5, opacity: 0.9 }).addTo(mapRef.current);
       polylinesRef.current.push(lineV);
     }
-    // Ajuste exato: extremos norte/sul justos às bordas superior/inferior
+    // Ajuste exato: extremos norte/sul justos Ã s bordas superior/inferior
     // 1) Zera qualquer padding e calcula o zoom exato para conter os bounds
     const exactZoom = mapRef.current.getBoundsZoom(piauiBounds, true);
     const center = window.L.latLngBounds(piauiBounds).getCenter();
     mapRef.current.setView(center, exactZoom, { animate: false });
-    // Desce um pouco o mapa (conteúdo vai ligeiramente para baixo), criando margem superior
+    // Desce um pouco o mapa (conteÃºdo vai ligeiramente para baixo), criando margem superior
     mapRef.current.panBy([0, -70], { animate: false });
   };
 
@@ -1529,11 +1498,11 @@ function LeafletTripMap({ routes }) {
           attribution: '&copy; OpenStreetMap contributors'
         }).addTo(mapRef.current);
         // (Revert) Do not add mask/highlight; show default map tiles without dimming
-        // Ajuste exato inicial: extremos norte/sul justos às bordas superior/inferior
+        // Ajuste exato inicial: extremos norte/sul justos Ã s bordas superior/inferior
         const exactZoomInit = mapRef.current.getBoundsZoom(piauiBounds, true);
         const centerInit = window.L.latLngBounds(piauiBounds).getCenter();
         mapRef.current.setView(centerInit, exactZoomInit, { animate: false });
-        // Desce um pouco o mapa na inicialização
+        // Desce um pouco o mapa na inicializaÃ§Ã£o
         mapRef.current.panBy([0, -65], { animate: false });
         mapRef.current.setMaxBounds(piauiBounds);
         mapRef.current.setMaxBounds(mapRef.current.getBounds());
@@ -1557,17 +1526,16 @@ function LeafletTripMap({ routes }) {
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-          Rota em Andamento
+          {`Rota em Andamento: ${routeId}`}
         </Typography>
       </Box>
-      <Box sx={{ position: 'relative', width: '100%', height: 380, borderRadius: 1, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
+      <Box sx={{ position: 'relative', width: '100%', height: 380, borderRadius: 1, overflow: 'hidden' }}>
         <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
       </Box>
       <Box sx={{ mt: 0.5 }}>
-        <Typography variant="caption">
-          {`Fonte: OpenStreetMap • Exibindo rota ${routeId} (ida/volta)`}
-        </Typography>
+        <Typography variant="caption">Fonte: OpenStreetMap</Typography>
       </Box>
     </Paper>
   );
 }
+
