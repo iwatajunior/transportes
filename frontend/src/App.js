@@ -41,6 +41,7 @@ import MinhasViagensPage from './pages/MinhasViagensPage';
 import AvaliacoesPage from './pages/AvaliacoesPage';
 import TestePage from './pages/TestePage';
 import RotasProgramadasPage from './pages/RotasProgramadasPage';
+import ChatWidget from './components/chat/ChatWidget';
 
 const ALL_AUTHENTICATED_ROLES = Object.values(USER_ROLES);
 
@@ -211,6 +212,9 @@ const AppContent = () => {
           Gerenciado pela Coordenação de Transportes - COTRAN
         </Typography>
       </Box>
+      {isAuthenticated && (
+        <ChatWidget user={user} />
+      )}
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://10.1.1.42:3001/api/v1';
+// Prefer .env override. Otherwise, use the current page hostname to support LAN access, fallback to localhost
+const resolvedHost = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+const API_URL = process.env.REACT_APP_API_URL || `http://${resolvedHost}:3001/api/v1`;
 
 // Criar uma instância do Axios com a URL base e outras configurações globais
 const apiClient = axios.create({
