@@ -464,7 +464,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     <Grid container spacing={1.2}>
       <Grid item xs={12} sm={6}>
         <CounterCard
-          leftLabel={'Viagens/mês'}
+          leftLabel={'Viagens/Mês'}
           rightLabel={''}
           value={tripsCompletedThisMonthCount}
           numberColor={'#22D3EE'}
@@ -474,7 +474,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
       </Grid>
       <Grid item xs={12} sm={6}>
         <CounterCard
-          leftLabel={'Viagens/ano'}
+          leftLabel={'Viagens/Ano'}
           rightLabel={''}
           value={tripsCompletedThisYearCount}
           numberColor={'#F59E0B'}
