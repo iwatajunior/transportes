@@ -210,21 +210,7 @@ const HomePage = () => {
     return cidadesRota.filter((c, idx, arr) => arr.findIndex(x => x.id === c.id) === idx);
   };
 
-  if (loading) {
-    return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography>Carregando rotas...</Typography>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography color="error">{error}</Typography>
-      </Box>
-    );
-  }
+  // Evitar bloquear a página inteira: tratar loading/erro apenas na seção de rotas
 
   return (
     <Box
@@ -470,28 +456,38 @@ const HomePage = () => {
           </Grid>
         </Grid>
 
-        <RouteMap rotas={rotasFiltradas} currentPage={currentPage} itemsPerPage={itemsPerPage} />
-        
-        {/* Pagination */}
-        {rotasFiltradas.length > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
-            <Pagination
-              count={Math.ceil(rotasFiltradas.length / itemsPerPage)}
-              page={currentPage}
-              onChange={(e, page) => setCurrentPage(page)}
-              color="primary"
-              size="small"
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  minWidth: 24,
-                  fontSize: '0.875rem'
-                },
-                '& .MuiPaginationItem-page': {
-                  padding: '0 4px'
-                }
-              }}
-            />
+        {/* Seção de Rotas: loading/erro não bloqueiam o restante da página */}
+        {loading ? (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography>Carregando rotas...</Typography>
           </Box>
+        ) : error ? (
+          <Alert severity="error">{error}</Alert>
+        ) : (
+          <>
+            <RouteMap rotas={rotasFiltradas} currentPage={currentPage} itemsPerPage={itemsPerPage} />
+            {/* Pagination */}
+            {rotasFiltradas.length > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                <Pagination
+                  count={Math.ceil(rotasFiltradas.length / itemsPerPage)}
+                  page={currentPage}
+                  onChange={(e, page) => setCurrentPage(page)}
+                  color="primary"
+                  size="small"
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      minWidth: 24,
+                      fontSize: '0.875rem'
+                    },
+                    '& .MuiPaginationItem-page': {
+                      padding: '0 4px'
+                    }
+                  }}
+                />
+              </Box>
+            )}
+          </>
         )}
 
         {/* Dialog para Envio de Encomendas */}
