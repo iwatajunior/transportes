@@ -57,7 +57,7 @@ const RotasPage = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(6);
-  const [filters, setFilters] = useState({ origem: '', destino: '', dataSaida: '', dataRetorno: '' });
+  const [filters, setFilters] = useState({ origem: '', destino: '', dataSaida: '', dataRetorno: '', material: '' });
   
   useEffect(() => {
     if (editingRota) {
@@ -207,7 +207,7 @@ const RotasPage = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ origem: '', destino: '', dataSaida: '', dataRetorno: '' });
+    setFilters({ origem: '', destino: '', dataSaida: '', dataRetorno: '', material: '' });
     setPage(0);
   };
 
@@ -356,6 +356,15 @@ const RotasPage = () => {
                 </Tooltip>
               </Box>
             </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label="Material (tipo/obs/qtde)"
+                value={filters.material}
+                onChange={(e) => handleFilterChange('material', e.target.value)}
+                size="small"
+              />
+            </Grid>
           </Grid>
         </Paper>
 
@@ -374,7 +383,7 @@ const RotasPage = () => {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', width: 48 }} />
-                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 90 }}>ID</TableCell>
+                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 140 }}>Rota:</TableCell>
                 <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 110 }}>Status</TableCell>
                 <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Origem</TableCell>
                 <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Destino</TableCell>
@@ -392,13 +401,22 @@ const RotasPage = () => {
                   const fDes = filters.destino.trim().toLowerCase();
                   const fSaida = filters.dataSaida.trim();
                   const fRet = filters.dataRetorno.trim();
+                  const fMat = filters.material.trim().toLowerCase();
                   const dataOut = r?.data_saida ? String(r.data_saida).slice(0,10) : '';
                   const dataRet = r?.data_retorno ? String(r.data_retorno).slice(0,10) : '';
                   const matchOrigem = !fOri || nomeOrigem.includes(fOri);
                   const matchDestino = !fDes || nomeDestino.includes(fDes);
                   const matchSaida = !fSaida || dataOut === fSaida;
                   const matchRet = !fRet || dataRet === fRet;
-                  return matchOrigem && matchDestino && matchSaida && matchRet;
+                  // Filtro por material: verifica materiais carregados desta rota
+                  const mats = materiaisPorRota[r.id] || [];
+                  const matchMaterial = !fMat || mats.some(m => {
+                    const tipo = (m?.tipo || '').toString().toLowerCase();
+                    const obs = (m?.observacoes || '').toString().toLowerCase();
+                    const qt = (m?.quantidade != null ? String(m.quantidade) : '').toLowerCase();
+                    return tipo.includes(fMat) || obs.includes(fMat) || qt.includes(fMat);
+                  });
+                  return matchOrigem && matchDestino && matchSaida && matchRet && matchMaterial;
                 })
                 .sort((a, b) => {
                   const rank = { Agendada: 0, Andamento: 1, Concluida: 2, Cancelada: 3 };
@@ -419,7 +437,13 @@ const RotasPage = () => {
                           {expandedRotas[rota.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                         </IconButton>
                       </TableCell>
-                      <TableCell sx={{ py: 1, px: 2, whiteSpace: 'nowrap', width: 90 }}>#{rota.id}</TableCell>
+                      <TableCell sx={{ py: 1, px: 2, whiteSpace: 'nowrap', maxWidth: 200 }}>
+                        {rota.identificacao ? (
+                          <Typography variant="body2" title={`ID #${rota.id}`}>{rota.identificacao}</Typography>
+                        ) : (
+                          <>#{rota.id}</>
+                        )}
+                      </TableCell>
                       <TableCell sx={{ py: 1, px: 2, width: 110 }}>
                         <Chip label={rota.status || 'N/A'} color={getStatusColor(rota.status).color} size="small" />
                       </TableCell>

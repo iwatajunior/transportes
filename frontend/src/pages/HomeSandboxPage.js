@@ -25,11 +25,11 @@ import RouteMap from '../components/RouteMap';
 import api from '../services/api';
 import { cidadesPI, getCoordsByNome } from '../services/cidadesPI';
 
-const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = false, hideFiltros = false, headerFirst = false }) => {
+const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = false, hideFiltros = false, headerFirst = false, forceTestMode = false }) => {
   const { user } = useAuth();
   const history = useHistory();
   const location = useLocation();
-  const isTeste = !!location && typeof location.pathname === 'string' && location.pathname.startsWith('/teste');
+  const isTeste = forceTestMode || (!!location && typeof location.pathname === 'string' && location.pathname.startsWith('/teste'));
   const theme = useTheme();
 
   const [rotas, setRotas] = useState([]);
@@ -103,8 +103,17 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
   useEffect(() => {
     (async () => {
       setTripsLoading(true); setTripsError('');
-      try { const r = await api.get('/trips'); const data = r.data||[]; setTrips(data); setFilteredTrips(data); }
-      catch (e) { setTripsError('Falha ao buscar viagens.'); }
+      try {
+        const r = await api.get('/trips');
+        const data = r.data||[];
+        setTrips(data);
+        setFilteredTrips(data);
+      } catch (e) {
+        const status = e?.response?.status;
+        const detail = e?.response?.data?.message || e?.message || 'Sem detalhes.';
+        setTripsError(`Falha ao buscar viagens${status ? ` (HTTP ${status})` : ''}: ${detail}`);
+        try { console.error('[trips] fetch error:', e); } catch {}
+      }
       finally { setTripsLoading(false); }
     })();
   }, []);
@@ -360,7 +369,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
           </Box>
         )}
 
-        {(headerFirst || isTeste) && welcomeHeader}
+        {(headerFirst && !isTeste) && welcomeHeader}
 
         {/* Área de Testes */}
         <Paper elevation={isTeste ? 0 : 1} sx={{ mb:2, backgroundColor: isTeste ? 'transparent' : undefined, boxShadow: isTeste ? 'none' : undefined, border:'none' }}>
@@ -372,10 +381,25 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
           )}
           <Collapse in={isTeste ? true : showTestArea} sx={{ display: isTeste ? 'contents' : 'block' }}>
             <Box sx={{ p:2 }}>
+              {tripsError ? (
+                <Alert severity="error" sx={{ mb: 1.5 }}>
+                  {tripsError}
+                </Alert>
+              ) : null}
               <Grid container spacing={2} columns={12} justifyContent="space-between" alignItems="stretch">
                 {/* ESQUERDA: 3 botões iguais ao Painel de Viagens + Calendário */}
                 <Grid item xs={12} md={4}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
+                    {isTeste && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="h5" component="h1" sx={{ fontFamily:"'Exo 2', sans-serif", fontWeight:'bold', color:'#1976d2' }}>
+                          {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
+                        </Typography>
+                        <Typography variant="subtitle1" sx={{ fontFamily:"'Exo 2', sans-serif", color:'text.secondary' }}>
+                          Gerencie aqui suas viagens e encomendas.
+                        </Typography>
+                      </Box>
+                    )}
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                       <Button variant="contained" fullWidth startIcon={<ListIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/viagens')}
                         sx={{ bgcolor:'#FF9800', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
@@ -484,7 +508,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
       </Grid>
       <Grid item xs={12}>
         <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
-          <PieChart data={destinationData} />
+          <PieChart data={destinationData} thickness={36} />
         </Box>
       </Grid>
     </Grid>

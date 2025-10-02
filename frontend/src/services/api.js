@@ -2,7 +2,20 @@ import axios from 'axios';
 
 // Prefer .env override. Otherwise, use the current page hostname to support LAN access, fallback to localhost
 const resolvedHost = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
-const API_URL = process.env.REACT_APP_API_URL || `http://${resolvedHost}:3001/api/v1`;
+// Estratégia:
+// 1) Se REACT_APP_API_URL estiver definido, usa-o.
+// 2) Se estiver rodando no dev server (porta 3000), usar caminho relativo '/api/v1' para acionar o proxy do CRA.
+// 3) Caso contrário, fallback para http://<host>:3001/api/v1.
+let API_URL = process.env.REACT_APP_API_URL || '';
+if (!API_URL) {
+  const isBrowser = typeof window !== 'undefined' && window.location;
+  const port = isBrowser ? (window.location.port || '') : '';
+  if (isBrowser && port === '3000') {
+    API_URL = '/api/v1';
+  } else {
+    API_URL = `http://${resolvedHost}:3001/api/v1`;
+  }
+}
 
 // Criar uma instância do Axios com a URL base e outras configurações globais
 const apiClient = axios.create({
@@ -10,6 +23,13 @@ const apiClient = axios.create({
     // Você pode adicionar outros padrões aqui, como headers
     // headers: { 'Content-Type': 'application/json' }
 });
+
+// Diagnóstico: logar a baseURL efetiva (apenas em desenvolvimento)
+try {
+  if (typeof window !== 'undefined') {
+    console.log('[api] baseURL:', API_URL, 'resolvedHost:', resolvedHost, 'port:', window.location.port);
+  }
+} catch {}
 
 // Interceptor para adicionar o token JWT a todas as requisições automaticamente
 apiClient.interceptors.request.use(
