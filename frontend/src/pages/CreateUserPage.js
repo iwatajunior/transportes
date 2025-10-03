@@ -104,14 +104,19 @@ const CreateUserPage = () => {
             setSuccessMessage('Usuário criado com sucesso! ID: ' + response.data.user.userid);
             // O useEffect cuidará do redirecionamento após a mensagem de sucesso
         } catch (error) {
-            console.error('Erro ao criar usuário:', error);
-            
-            if (error.response?.status === 409) {
-                setError('Já existe um usuário cadastrado com este email.');
-            } else if (error.response?.status === 400) {
-                setError('Dados inválidos. Verifique se todos os campos obrigatórios estão preenchidos corretamente.');
+            console.error('Erro ao criar usuário:', error?.response?.data || error);
+
+            const status = error?.response?.status;
+            const serverMsg = error?.response?.data?.error || error?.response?.data?.message || error?.response?.data?.details;
+
+            if (status === 409) {
+                setError(serverMsg || 'Já existe um usuário cadastrado com este email.');
+            } else if (status === 400) {
+                setError(serverMsg || 'Dados inválidos. Verifique se todos os campos obrigatórios estão preenchidos corretamente.');
+            } else if (status === 500) {
+                setError(serverMsg || 'Erro interno do servidor ao criar usuário. Tente novamente e verifique os dados enviados.');
             } else {
-                setError('Erro ao criar usuário: ' + error.message);
+                setError(serverMsg || ('Erro ao criar usuário: ' + (error.message || 'desconhecido')));
             }
         } finally {
             setIsLoading(false);

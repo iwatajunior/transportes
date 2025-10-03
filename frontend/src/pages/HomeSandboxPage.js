@@ -21,6 +21,7 @@ import {
 import PushPinIcon from '@mui/icons-material/PushPin';
 import { useTheme, alpha } from '@mui/material/styles';
 import { Link, useHistory, useLocation } from 'react-router-dom';
+import { connectChatSocket } from '../services/chatSocket';
 import { useAuth } from '../contexts/AuthContext';
 import RouteMap from '../components/RouteMap';
 import api from '../services/api';
@@ -81,6 +82,39 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     if (saved) setStickyNote(saved);
   }, []);
   // Edição movida para AdminDashboardPage; Home não persiste mais a nota
+
+  // Buscar nota global no backend (sobrescreve localStorage se existir)
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await api.get('/settings/sticky-note');
+        const text = r?.data?.sticky_note;
+        if (typeof text === 'string') {
+          setStickyNote(text);
+        }
+      } catch (e) {
+        // mantém fallback do localStorage
+        try { console.warn('[sticky-note] fallback localStorage', e?.message || e); } catch {}
+      }
+    })();
+  }, []);
+
+  // Assinar atualização em tempo real via Socket.IO
+  useEffect(() => {
+    const s = connectChatSocket();
+    const handler = (payload) => {
+      const text = payload?.sticky_note;
+      if (typeof text === 'string') {
+        setStickyNote(text);
+        try { localStorage.setItem('sandboxStickyNote', text); } catch {}
+      }
+    };
+    s.on('settings:sticky_note_updated', handler);
+    if (!s.connected) s.connect();
+    return () => {
+      try { s.off('settings:sticky_note_updated', handler); } catch {}
+    };
+  }, []);
 
   const toDateKey = (value) => {
     if (!value) return '';
@@ -296,8 +330,13 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
   const welcomeHeader = (
     <>
       <Box sx={{ textAlign:'center', mb:-1 }}>
-        <Typography variant="h5" component="h1" sx={{ fontFamily:"'Exo 2', sans-serif", fontWeight:'bold', color:'#1976d2', mb:-0.5, textAlign:'left' }}>
-          {user?.nome ? `Bem-vindo, ${((user.nome||'').trim().split(/\s+/)[0])}!` : 'Bem-vindo ao Rotas e Viagens!'}
+        <Typography variant="h5" component="h1" sx={{ fontFamily:"'Exo 2', sans-serif", fontWeight:'bold', color:'#1976d2', mb:-0.5, textAlign:'left', fontSize:{ xs:'1rem', sm:'1.25rem' } }}>
+          {(() => {
+            const isAdmin = String(user?.perfil || user?.role || '').toLowerCase().includes('admin');
+            const firstName = ((user?.nome || '').trim().split(/\s+/)[0]);
+            if (isAdmin) return 'Bem-vindo(a), Administrador!';
+            return user?.nome ? `Bem-vindo, ${firstName}!` : 'Bem-vindo ao Rotas e Viagens!';
+          })()}
           <Typography variant="subtitle1" sx={{ fontFamily:"'Exo 2', sans-serif", color:'text.secondary', display:'inline', ml:1 }}>
             Gerencie aqui suas viagens e encomendas.
           </Typography>
@@ -320,6 +359,34 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
 
         {(headerFirst && !isTeste) && welcomeHeader}
 
+        {/* Nota/Avisos visível para todos (fora da área de testes) */}
+        {!isTeste && (stickyNote && String(stickyNote).trim().length > 0) && (
+          <Paper elevation={0} sx={{ p:1.5, backgroundColor:'#FFFFFF', borderRadius:3, mb:1.5, border:'none', boxShadow:'none' }}>
+            <Box sx={{
+              p: 1.5,
+              position: 'relative',
+              borderRadius: 2,
+              background: (t)=>`linear-gradient(135deg, ${t.palette.warning.light} 0%, #fffde7 100%)`,
+              borderLeft: (t)=>`6px solid ${t.palette.primary.main}`,
+              boxShadow: (t)=>t.shadows[4]
+            }}>
+              <Typography variant="subtitle1" sx={{ fontWeight:400, mb:1, color:'text.primary', display:'flex', alignItems:'center', gap:0.75 }}>
+                <PushPinIcon color="primary" sx={{ fontSize: 20 }} />
+                Nota/Avisos
+              </Typography>
+              <TextField
+                value={stickyNote}
+                multiline
+                minRows={3}
+                fullWidth
+                variant="standard"
+                InputProps={{ disableUnderline:true, readOnly:true }}
+                sx={{ fontFamily:'inherit', '& textarea':{ fontSize:'1rem', lineHeight:1.6, fontWeight:600, color:'text.primary', textAlign:'center' }, bgcolor:'transparent', textAlign:'center' }}
+              />
+            </Box>
+          </Paper>
+        )}
+
         {/* Área de Testes */}
         <Paper elevation={isTeste ? 0 : 1} sx={{ mb:2, backgroundColor: isTeste ? 'transparent' : undefined, boxShadow: isTeste ? 'none' : undefined, border:'none' }}>
           {!isTeste && (
@@ -341,8 +408,13 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     {isTeste && (
                       <Box sx={{ mb: 2 }}>
-                        <Typography variant="h5" component="h1" sx={{ fontFamily:"'Exo 2', sans-serif", fontWeight:'bold', color:'#1976d2' }}>
-                          {user?.nome ? `Bem-vindo, ${((user.nome||'').trim().split(/\s+/)[0])}!` : 'Bem-vindo ao Rotas e Viagens!'}
+                        <Typography variant="h5" component="h1" sx={{ fontFamily:"'Exo 2', sans-serif", fontWeight:'bold', color:'#1976d2', fontSize:{ xs:'1rem', sm:'1.25rem' } }}>
+                          {(() => {
+                            const isAdmin = String(user?.perfil || user?.role || '').toLowerCase().includes('admin');
+                            const firstName = ((user?.nome || '').trim().split(/\s+/)[0]);
+                            if (isAdmin) return 'Bem-vindo(a), Administrador!';
+                            return user?.nome ? `Bem-vindo, ${firstName}!` : 'Bem-vindo ao Rotas e Viagens!';
+                          })()}
                         </Typography>
                         <Typography variant="subtitle1" sx={{ fontFamily:"'Exo 2', sans-serif", color:'text.secondary' }}>
                           Gerencie aqui suas viagens e encomendas.
@@ -475,7 +547,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
         />
       </Grid>
       <Grid item xs={12}>
-        <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center' }}>
+        <Box sx={{ mt: 10, display: 'flex', justifyContent: 'center' }}>
           <PieChart data={destinationData} thickness={36} />
         </Box>
       </Grid>

@@ -66,6 +66,7 @@ const routeRoutes = require('./routes/routeRoutes'); // <-- Importação das rot
 const materialRoutes = require('./routes/materialRoutes'); // <-- Importação das rotas de materiais
 const caronasRoutes = require('./routes/caronasRoutes'); // <-- Importação das rotas de caronas
 const evaluationsRoutes = require('./routes/evaluationsRoutes'); // <-- Importação das rotas de avaliações
+const settingsRoutes = require('./routes/settingsRoutes'); // <-- Importação das rotas de configurações (nota)
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/vehicles', vehicleRoutes); // <-- Novas rotas de veículos
 app.use('/api/v1/trips', tripRoutes);
@@ -74,6 +75,7 @@ app.use('/api/v1/routes', routeRoutes); // <-- Uso das rotas de rotas
 app.use('/api/v1/materials', materialRoutes); // <-- Uso das rotas de materiais
 app.use('/api/v1/caronas', caronasRoutes); // <-- Uso das rotas de caronas
 app.use('/api/v1/evaluations', evaluationsRoutes); // <-- Uso das rotas de avaliações
+app.use('/api/v1/settings', settingsRoutes); // <-- Uso das rotas de configurações (nota)
 
 // --- Socket.IO setup ---
 const http = require('http');
@@ -85,6 +87,8 @@ const io = new Server(server, {
     methods: ['GET','POST']
   }
 });
+// Expor io para uso em controllers via req.app.get('io')
+app.set('io', io);
 // Track active users: Map<userId, { name, count }>
 const activeUsers = new Map();
 

@@ -33,10 +33,18 @@ const AdminDashboardPage = () => {
 
   const handleOpenNote = () => setNoteOpen(true);
   const handleCloseNote = () => setNoteOpen(false);
-  const handleSaveNote = () => {
-    try { localStorage.setItem('sandboxStickyNote', noteValue || ''); } catch {}
-    setSnack({ open: true, message: 'Nota atualizada com sucesso.', severity: 'success' });
-    setNoteOpen(false);
+  const handleSaveNote = async () => {
+    try {
+      // Persistir no backend como fonte de verdade
+      await api.post('/settings/sticky-note', { sticky_note: noteValue || '' });
+      // Cache local opcional para fallback
+      try { localStorage.setItem('sandboxStickyNote', noteValue || ''); } catch {}
+      setSnack({ open: true, message: 'Nota atualizada com sucesso.', severity: 'success' });
+      setNoteOpen(false);
+    } catch (e) {
+      const msg = e?.response?.data?.message || e?.message || 'Falha ao salvar nota';
+      setSnack({ open: true, message: `Erro: ${msg}`, severity: 'error' });
+    }
   };
 
   // Helpers de datas (versão reduzida da Home)

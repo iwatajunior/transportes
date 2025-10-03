@@ -29,9 +29,25 @@ const userController = {
                 });
             }
             
-            // Normalizar o perfil
+            // Normalizar o perfil (valor amigável) e depois mapear para o ENUM do banco
             const normalizedPerfil = normalizePerfil(req.body.perfil);
             console.log(`[userController.register] Perfil original: ${req.body.perfil}, Perfil normalizado: ${normalizedPerfil}`);
+            // O enum do banco aceita os seguintes valores (exemplos):
+            // 'Requisitante', 'Motorista', 'Gestor', 'administrador', 'usuario requisitante', 'usuario gestor', 'motorista'
+            // Mapeamos para um valor garantido do ENUM
+            const perfilLower = String(normalizedPerfil).toLowerCase();
+            let dbPerfil;
+            if (perfilLower.includes('admin')) {
+                dbPerfil = 'administrador';
+            } else if (perfilLower.includes('gestor')) {
+                dbPerfil = 'Gestor';
+            } else if (perfilLower.includes('motor')) {
+                dbPerfil = 'Motorista';
+            } else {
+                // padrão seguro
+                dbPerfil = 'Requisitante';
+            }
+            console.log(`[userController.register] Perfil para o banco (ENUM): ${dbPerfil}`);
             
             // Verificar se o email já existe
             const existingUser = await userModel.findByEmail(req.body.email);
@@ -44,12 +60,15 @@ const userController = {
             const hashedPassword = await bcrypt.hash(req.body.senha, salt);
             
             // Preparar dados para o modelo
+            const statusRaw = req.body.status;
+            const statusBool = typeof statusRaw === 'boolean' ? statusRaw : String(statusRaw).toLowerCase() === 'true';
             const userDataToSave = {
                 nome: req.body.nome,
                 email: req.body.email,
                 senha: hashedPassword,
-                perfil: normalizedPerfil,
-                setor: req.body.setor || null
+                perfil: dbPerfil,
+                setor: req.body.setor || null,
+                status: statusBool
             };
             
             // Processar o arquivo de foto, se existir

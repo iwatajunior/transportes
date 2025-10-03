@@ -148,6 +148,13 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
         if (!isEditMode && (!formData.senha || formData.senha.trim() === '')) {
             errors.senha = 'Senha é obrigatória';
         }
+        if (!isEditMode) {
+            if (!formData.confirmarSenha || formData.confirmarSenha.trim() === '') {
+                errors.confirmarSenha = 'Confirmação de senha é obrigatória';
+            } else if (formData.senha !== formData.confirmarSenha) {
+                errors.confirmarSenha = 'As senhas não coincidem';
+            }
+        }
         if (!formData.perfil || formData.perfil.trim() === '') {
             errors.perfil = 'Perfil é obrigatório';
         }
@@ -159,12 +166,12 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
         e.preventDefault();
         if (validateForm()) {
             console.log('[UserForm.handleSubmit] Dados do formulário:', formData);
-            
+            const perfilBackend = String(normalizePerfil(formData.perfil)).toLowerCase(); // esperado pelo enum do backend
             const submitData = {
                 nome: formData.nome.trim(),
                 email: formData.email.trim(),
                 senha: formData.senha,
-                perfil: normalizePerfil(formData.perfil),
+                perfil: perfilBackend,
                 status: formData.status
             };
 
@@ -177,7 +184,7 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
             if (selectedFile) {
                 const formDataWithFile = new FormData();
                 Object.entries(submitData).forEach(([key, value]) => {
-                    formDataWithFile.append(key, value);
+                    formDataWithFile.append(key, typeof value === 'boolean' ? String(value) : value);
                 });
                 formDataWithFile.append('foto', selectedFile);
                 onSubmit(formDataWithFile);
