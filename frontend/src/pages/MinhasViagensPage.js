@@ -107,6 +107,19 @@ const MinhasViagensPage = () => {
       .toLocaleDateString('pt-BR', { timeZone: 'UTC' });
   };
 
+  const formatTime = (value) => {
+    if (!value) return '--:--';
+    if (typeof value === 'string') {
+      const match = value.match(/^(\d{2}):(\d{2})(?::\d{2})?$/);
+      if (match) return `${match[1]}:${match[2]}h`;
+    }
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '--:--';
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}h`;
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'Pendente':
@@ -159,8 +172,8 @@ const MinhasViagensPage = () => {
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 110 }}>Status</TableCell>
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Origem</TableCell>
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Destino</TableCell>
-                  <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 120 }}>Data Saída</TableCell>
-                  <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 120 }}>Data Retorno</TableCell>
+                  <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 120 }}>Data/Hora<br/>Saída</TableCell>
+                  <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 120 }}>Data/Hora<br/>Retorno</TableCell>
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Veículo</TableCell>
                   <TableCell sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 160 }}>Motorista</TableCell>
                   <TableCell align="right" sx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText, fontWeight: 500, whiteSpace: 'nowrap', padding: '8px 16px', width: 90 }}>Ações</TableCell>
@@ -182,8 +195,18 @@ const MinhasViagensPage = () => {
                       </TableCell>
                       <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>{trip.origem || trip.origem_completa || 'N/A'}</TableCell>
                       <TableCell sx={{ py: 1, px: 2, maxWidth: 160, whiteSpace: 'nowrap' }}>{trip.destino_completo}</TableCell>
-                      <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(trip.data_saida)}</TableCell>
-                      <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>{formatDate(trip.data_retorno_prevista)}</TableCell>
+                      <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>
+                        <Box>
+                          <Typography variant="body2" noWrap>{formatDate(trip.data_saida)}</Typography>
+                          <Typography variant="caption" color="text.secondary" noWrap>{formatTime(trip.horario_saida)}</Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ py: 1, px: 2, maxWidth: 120, whiteSpace: 'nowrap' }}>
+                        <Box>
+                          <Typography variant="body2" noWrap>{formatDate(trip.data_retorno_prevista)}</Typography>
+                          <Typography variant="caption" color="text.secondary" noWrap>{formatTime(trip.horario_retorno_previsto)}</Typography>
+                        </Box>
+                      </TableCell>
                       <TableCell sx={{ py: 1, px: 2, maxWidth: 160 }}>
                         {trip.veiculo_alocado_modelo}
                         {trip.veiculo_alocado_placa && (
