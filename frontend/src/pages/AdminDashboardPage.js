@@ -98,7 +98,7 @@ const AdminDashboardPage = () => {
     })();
   }, []);
   return (
-    <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container component="main" maxWidth="lg" sx={{ mt: 0, mb: 3, py: 0, px: 0 }}>
       <Grid container spacing={2} columns={12}>
         {/* Esquerda: Card de botões (Acesso Rápido) */}
         <Grid item xs={12} md={4}>
