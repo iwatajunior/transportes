@@ -374,7 +374,7 @@ const AdminDashboardPage = () => {
 
         {/* Direita: Relatórios */}
         <Grid item xs={12} md={4}>
-          <Paper variant="outlined" sx={{ p: 2, minHeight: 200 }}>
+          <Paper elevation={0} sx={{ p: 2, minHeight: 200, border: 'none', boxShadow: 'none' }}>
             <Divider textAlign="left" sx={{ width:'100%', mb: 1, "&::before, &::after": { borderColor: 'divider' } }}>
               <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 0.6 }}>Relatórios</Typography>
             </Divider>
@@ -385,14 +385,14 @@ const AdminDashboardPage = () => {
                 startIcon={<ManageSearchIcon sx={{ fontSize: 28 }} />}
                 onClick={() => history.push('/relatorios/viagens-por-motorista')}
                 sx={{
-                  bgcolor: theme.palette.primary.main,
-                  color: 'white',
+                  bgcolor: theme.palette.primary.light,
+                  color: theme.palette.primary.contrastText,
                   textTransform: 'none',
                   borderRadius: 2,
                   py: 1,
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.main }
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Viagens por Motorista</Typography>
@@ -403,14 +403,14 @@ const AdminDashboardPage = () => {
                 startIcon={<DirectionsCarIcon sx={{ fontSize: 28 }} />}
                 onClick={() => history.push('/relatorios/viagens-por-veiculo')}
                 sx={{
-                  bgcolor: theme.palette.primary.main,
-                  color: 'white',
+                  bgcolor: theme.palette.primary.light,
+                  color: theme.palette.primary.contrastText,
                   textTransform: 'none',
                   borderRadius: 2,
                   py: 1,
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.main }
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Viagens por Veículo</Typography>
@@ -421,14 +421,14 @@ const AdminDashboardPage = () => {
                 startIcon={<ListIcon sx={{ fontSize: 28 }} />}
                 onClick={() => history.push('/relatorios/viagens-consolidado')}
                 sx={{
-                  bgcolor: theme.palette.primary.main,
-                  color: 'white',
+                  bgcolor: theme.palette.primary.light,
+                  color: theme.palette.primary.contrastText,
                   textTransform: 'none',
                   borderRadius: 2,
                   py: 1,
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.main }
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Viagens Consolidado</Typography>
@@ -439,14 +439,14 @@ const AdminDashboardPage = () => {
                 startIcon={<ForkRightIcon sx={{ fontSize: 28 }} />}
                 onClick={() => history.push('/relatorios/rotas-consolidado')}
                 sx={{
-                  bgcolor: theme.palette.primary.main,
-                  color: 'white',
+                  bgcolor: theme.palette.primary.light,
+                  color: theme.palette.primary.contrastText,
                   textTransform: 'none',
                   borderRadius: 2,
                   py: 1,
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.main }
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Rotas Consolidado</Typography>
@@ -457,14 +457,14 @@ const AdminDashboardPage = () => {
                 startIcon={<ReviewsIcon sx={{ fontSize: 28 }} />}
                 onClick={() => history.push('/relatorios/viagens-por-requisitante')}
                 sx={{
-                  bgcolor: theme.palette.primary.main,
-                  color: 'white',
+                  bgcolor: theme.palette.primary.light,
+                  color: theme.palette.primary.contrastText,
                   textTransform: 'none',
                   borderRadius: 2,
                   py: 1,
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.main }
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Viagens por Requisitante</Typography>
@@ -475,14 +475,14 @@ const AdminDashboardPage = () => {
                 startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
                 onClick={() => history.push('/relatorios/materiais-enviados')}
                 sx={{
-                  bgcolor: theme.palette.primary.main,
-                  color: 'white',
+                  bgcolor: theme.palette.primary.light,
+                  color: theme.palette.primary.contrastText,
                   textTransform: 'none',
                   borderRadius: 2,
                   py: 1,
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.main }
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Materiais Enviados</Typography>
