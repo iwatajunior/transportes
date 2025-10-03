@@ -4,7 +4,7 @@ import {
   Container, Typography, Button, CircularProgress, Alert, Box,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Grid, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField
+  TextField, TablePagination
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, History as HistoryIcon, Group as GroupIcon } from '@mui/icons-material';
 import { getUsers } from '../services/api';
@@ -15,6 +15,8 @@ const UserListPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(8);
 
   const [searchTerm, setSearchTerm] = useState('');
   const history = useHistory();
@@ -25,6 +27,14 @@ const UserListPage = () => {
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.userid.toString().includes(searchTerm)
   );
+
+  const pagedUsers = filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
     const fetchUsers = async () => {
       try {
@@ -120,33 +130,43 @@ const UserListPage = () => {
                 Nenhum usuário encontrado.
               </Typography>
             ) : (
+              <>
               <TableContainer component={Paper} elevation={0} sx={{ mt: 2 }}>
-                <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                  <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+                <Table 
+                  size="small"
+                  sx={{ 
+                    minWidth: 800,
+                    backgroundColor: '#fff',
+                    '& .MuiTableCell-root': {
+                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                      padding: '8px 16px'
+                    }
+                  }}
+                  aria-label="users table"
+                >
+                  <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Nome</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Email</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Perfil</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Setor</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }} align="center">Ações</TableCell>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 90 }}>ID</TableCell>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 200 }}>Nome</TableCell>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 260 }}>Email</TableCell>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 140 }}>Perfil</TableCell>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 160 }}>Setor</TableCell>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 120 }}>Status</TableCell>
+                      <TableCell align="right" sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 90 }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredUsers.map((user) => (
+                    {pagedUsers.map((user) => (
                       <TableRow
                         key={user.userid}
                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                       >
-                        <TableCell component="th" scope="row">
-                          {user.userid}
-                        </TableCell>
-                        <TableCell>{user.nome}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.perfil}</TableCell>
-                        <TableCell>{user.setor || 'N/A'}</TableCell>
-                        <TableCell>
+                        <TableCell component="th" scope="row" sx={{ whiteSpace:'nowrap', maxWidth: 90 }}>{user.userid}</TableCell>
+                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 200 }}>{user.nome}</TableCell>
+                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 260 }}>{user.email}</TableCell>
+                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 140 }}>{user.perfil}</TableCell>
+                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 160 }}>{user.setor || 'N/A'}</TableCell>
+                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 120 }}>
                           <Typography
                             variant="body1"
                             sx={{
@@ -157,7 +177,7 @@ const UserListPage = () => {
                             {user.status ? 'Ativo' : 'Inativo'}
                           </Typography>
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="right">
                           <Tooltip title="Editar">
                             <IconButton
                               onClick={() => {
@@ -176,6 +196,19 @@ const UserListPage = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+              <Box sx={{ display:'flex', justifyContent:'flex-end' }}>
+                <TablePagination
+                  component="div"
+                  count={filteredUsers.length}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  rowsPerPageOptions={[8]}
+                  labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
+                />
+              </Box>
+              </>
             )}
           </Grid>
         </Grid>

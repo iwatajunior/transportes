@@ -20,7 +20,7 @@ import {
     Button,
     TablePagination
 } from '@mui/material';
-import { Search as SearchIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Refresh as RefreshIcon, History as HistoryIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useHistory } from 'react-router-dom';
@@ -32,7 +32,7 @@ const LoginAttemptsPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredAttempts, setFilteredAttempts] = useState([]);
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(50);
+    const [rowsPerPage, setRowsPerPage] = useState(8);
     const [total, setTotal] = useState(0);
     const history = useHistory();
 
@@ -127,30 +127,24 @@ const LoginAttemptsPage = () => {
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Tentativas de Login
+                <Typography variant="h5" component="h1" sx={{ display:'flex', alignItems:'center', gap:1, color:'text.primary' }}>
+                    <HistoryIcon sx={{ fontSize: '2rem' }} />
+                    Registros de acesso
                 </Typography>
-                <Button
-                    variant="outlined"
-                    onClick={() => history.push('/admin/users')}
-                    sx={{ mr: 2 }}
-                >
-                    Voltar para Usuários
-                </Button>
+                <Box sx={{ display:'flex', alignItems:'center', gap: 1 }}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => history.push('/admin/users')}
+                        sx={{ mr: 2 }}
+                    >
+                        Voltar para Usuários
+                    </Button>
+                </Box>
             </Box>
 
             <Paper sx={{ p: 3 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                    <Tooltip title="Atualizar">
-                        <IconButton onClick={() => fetchAttempts(page)} disabled={loading}>
-                            <RefreshIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
-
-                <Box mb={3}>
+                <Box mb={3} sx={{ display:'flex', alignItems:'center', gap: 1 }}>
                     <TextField
-                        fullWidth
                         variant="outlined"
                         placeholder="Buscar por email..."
                         value={searchTerm}
@@ -158,37 +152,57 @@ const LoginAttemptsPage = () => {
                         InputProps={{
                             startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
                         }}
+                        sx={{ width: { xs: '100%', sm: 360 } }}
                     />
                 </Box>
 
                 <TableContainer>
-                    <Table>
+                    <Table
+                        size="small"
+                        sx={{
+                            minWidth: 800,
+                            backgroundColor: '#fff',
+                            '& .MuiTableCell-root': {
+                                borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                                padding: '8px 16px'
+                            }
+                        }}
+                    >
                         <TableHead>
                             <TableRow>
-                                <TableCell>Data/Hora</TableCell>
-                                <TableCell>Email</TableCell>
-                                <TableCell>IP</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Motivo</TableCell>
+                                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 220 }}>Data/Hora</TableCell>
+                                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 260 }}>Email</TableCell>
+                                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 140 }}>IP</TableCell>
+                                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 120 }}>Status</TableCell>
+                                <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                                    <Box sx={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                                        <span>Motivo</span>
+                                        <Tooltip title="Atualizar">
+                                            <IconButton onClick={() => fetchAttempts(page)} disabled={loading} size="small" sx={{ color: 'primary.contrastText' }}>
+                                                <RefreshIcon fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
+                                </TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {filteredAttempts.length > 0 ? (
                                 filteredAttempts.map((attempt) => (
                                     <TableRow key={attempt.id}>
-                                        <TableCell>
+                                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 220 }}>
                                             {formatDate(attempt.data_tentativa)}
                                         </TableCell>
-                                        <TableCell>{attempt.email}</TableCell>
-                                        <TableCell>{(attempt.ip_address || '').replace(/^::ffff:/, '')}</TableCell>
-                                        <TableCell>
+                                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 260 }}>{attempt.email}</TableCell>
+                                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 140 }}>{(attempt.ip_address || '').replace(/^::ffff:/, '')}</TableCell>
+                                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 120 }}>
                                             <Chip
                                                 label={getStatusLabel(attempt.status)}
                                                 color={getStatusColor(attempt.status)}
                                                 size="small"
                                             />
                                         </TableCell>
-                                        <TableCell>{attempt.motivo || '-'}</TableCell>
+                                        <TableCell sx={{ whiteSpace:'nowrap' }}>{attempt.motivo || '-'}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
@@ -208,7 +222,7 @@ const LoginAttemptsPage = () => {
                     onPageChange={handleChangePage}
                     rowsPerPage={rowsPerPage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
-                    rowsPerPageOptions={[50]}
+                    rowsPerPageOptions={[8]}
                     labelDisplayedRows={({ from, to, count }) => `${from}-${to} de ${count}`}
                 />
             </Paper>

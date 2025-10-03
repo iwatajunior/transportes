@@ -93,16 +93,27 @@ const VehicleListPage = () => {
             </Typography>
           ) : !error && (
             <TableContainer component={Paper} elevation={3}>
-              <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                <TableHead sx={{ backgroundColor: 'grey.200' }}>
+              <Table 
+                size="small"
+                sx={{ 
+                  minWidth: 800,
+                  backgroundColor: '#fff',
+                  '& .MuiTableCell-root': {
+                    borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                    padding: '8px 16px'
+                  }
+                }}
+                aria-label="vehicle table"
+              >
+                <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Placa</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Marca</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Modelo</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Ano</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Tipo</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 'bold' }}>Ações</TableCell>
+                    <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 140 }}>Placa</TableCell>
+                    <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 160 }}>Marca</TableCell>
+                    <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 180 }}>Modelo</TableCell>
+                    <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 100 }}>Ano</TableCell>
+                    <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 140 }}>Tipo</TableCell>
+                    <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 140 }}>Status</TableCell>
+                    <TableCell align="right" sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 90 }}>Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -111,12 +122,12 @@ const VehicleListPage = () => {
                       key={vehicle.veiculoid}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: 'grey.100'} }}
                     >
-                      <TableCell component="th" scope="row">{vehicle.placa}</TableCell>
-                      <TableCell>{vehicle.marca}</TableCell>
-                      <TableCell>{vehicle.modelo}</TableCell>
-                      <TableCell>{vehicle.ano}</TableCell>
-                      <TableCell>{vehicle.tipo}</TableCell>
-                      <TableCell>{vehicle.status}</TableCell>
+                      <TableCell component="th" scope="row" sx={{ whiteSpace:'nowrap', maxWidth: 140 }}>{vehicle.placa}</TableCell>
+                      <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 160 }}>{vehicle.marca}</TableCell>
+                      <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 180 }}>{vehicle.modelo}</TableCell>
+                      <TableCell sx={{ whiteSpace:'nowrap', width: 100 }}>{vehicle.ano}</TableCell>
+                      <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 140 }}>{vehicle.tipo}</TableCell>
+                      <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 140 }}>{vehicle.status}</TableCell>
                       <TableCell align="right">
                         <IconButton component={Link} to={`/editar-veiculo/${vehicle.veiculoid}`} color="primary" aria-label="edit">
                           <EditIcon />
