@@ -41,7 +41,8 @@ import {
   ExpandLess as ExpandLessIcon,
   Delete as DeleteIcon,
   ForkRight as ForkRightIcon,
-  FilterAltOff as FilterAltOffIcon
+  FilterAltOff as FilterAltOffIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import { RouteStatus, routeStatusOptions } from '../constants/routeStatus';
 import { cidadesPI } from '../services/cidadesPI';
@@ -280,6 +281,16 @@ const RotasPage = () => {
     }
   };
 
+  const handleMarkDelivered = async (material) => {
+    try {
+      await api.put(`/materials/${material.id}`, { status: 'entregue' });
+      await fetchMateriais(material.rota_id);
+      setSnackbar({ open: true, message: 'Material marcado como entregue!', severity: 'success' });
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Erro ao marcar como entregue: ' + (error.response?.data?.error || error.message || 'Erro desconhecido'), severity: 'error' });
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -359,7 +370,7 @@ const RotasPage = () => {
             <Grid item xs={12} sm={6} md={3}>
               <TextField
                 fullWidth
-                label="Material (tipo/obs/qtde)"
+                label="Material"
                 value={filters.material}
                 onChange={(e) => handleFilterChange('material', e.target.value)}
                 size="small"
@@ -476,6 +487,7 @@ const RotasPage = () => {
                                     <TableRow>
                                       <TableCell>Tipo</TableCell>
                                       <TableCell align="right">Quantidade</TableCell>
+                                      <TableCell>Destino do Material</TableCell>
                                       <TableCell>Observações</TableCell>
                                       <TableCell>Ações</TableCell>
                                     </TableRow>
@@ -483,15 +495,26 @@ const RotasPage = () => {
                                   <TableBody>
                                     {materiaisPorRota[rota.id]?.map((material, index) => (
                                       <TableRow key={index}>
-                                        <TableCell>{material.tipo}</TableCell>
+                                        <TableCell>
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <span>{material.tipo}</span>
+                                            {material?.status === 'entregue' && (
+                                              <Chip label="Entregue" color="success" size="small" />
+                                            )}
+                                          </Box>
+                                        </TableCell>
                                         <TableCell align="right">{material.quantidade}</TableCell>
+                                        <TableCell>{getCidadeNome(material.cidade_destino_id)}</TableCell>
                                         <TableCell>{material.observacoes || 'N/A'}</TableCell>
                                         <TableCell>
-                                          <IconButton onClick={() => handleEditMaterial(material)} size="small" disabled={loadingMateriais[rota.id] || !material}>
+                                          <IconButton onClick={() => handleEditMaterial(material)} size="small" disabled={loadingMateriais[rota.id] || !material || material?.status === 'entregue'}>
                                             <EditIcon />
                                           </IconButton>
-                                          <IconButton onClick={() => handleDeleteMaterial(material)} size="small" disabled={loadingMateriais[rota.id] || !material}>
+                                          <IconButton onClick={() => handleDeleteMaterial(material)} size="small" disabled={loadingMateriais[rota.id] || !material || material?.status === 'entregue'}>
                                             <DeleteIcon />
+                                          </IconButton>
+                                          <IconButton onClick={() => handleMarkDelivered(material)} size="small" color="success" disabled={loadingMateriais[rota.id] || !material || material?.status === 'entregue'}>
+                                            <CheckCircleIcon />
                                           </IconButton>
                                         </TableCell>
                                       </TableRow>

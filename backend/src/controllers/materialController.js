@@ -3,7 +3,7 @@ const Material = require('../models/materialModel');
 class MaterialController {
   static async create(req, res) {
     try {
-      const { rota_id, cidade_origem_id, cidade_destino_id, tipo, quantidade, observacoes } = req.body;
+      const { rota_id, cidade_origem_id, cidade_destino_id, tipo, quantidade, observacoes, status } = req.body;
       const user_id = req.user.userId; // Corrigindo para usar userId do token
 
       if (!rota_id || !cidade_origem_id || !cidade_destino_id || !tipo || !quantidade) {
@@ -17,7 +17,8 @@ class MaterialController {
         tipo,
         quantidade,
         observacoes,
-        user_id
+        user_id,
+        status: status || 'pendente'
       };
 
       const material = await Material.create(materialData);
@@ -78,12 +79,16 @@ class MaterialController {
   static async update(req, res) {
     try {
       const { id } = req.params;
-      const { tipo, quantidade, observacoes } = req.body;
+      const { tipo, quantidade, observacoes, status, entregue } = req.body;
 
       const materialData = {
         tipo,
         quantidade,
-        observacoes
+        observacoes,
+        // aceita atualização de status explícita
+        ...(typeof status !== 'undefined' ? { status } : {}),
+        // compatibilidade: se vier 'entregue' true, define status 'entregue'
+        ...(entregue === true ? { status: 'entregue' } : {})
       };
 
       const material = await Material.update(id, materialData);
