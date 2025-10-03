@@ -18,7 +18,8 @@ import {
   Place as PlaceIcon,
   FilterAltOff as FilterAltOffIcon
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import { useTheme, alpha } from '@mui/material/styles';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import RouteMap from '../components/RouteMap';
@@ -79,7 +80,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     const saved = localStorage.getItem('sandboxStickyNote');
     if (saved) setStickyNote(saved);
   }, []);
-  useEffect(() => { try { localStorage.setItem('sandboxStickyNote', stickyNote||''); } catch {} }, [stickyNote]);
+  // Edição movida para AdminDashboardPage; Home não persiste mais a nota
 
   const toDateKey = (value) => {
     if (!value) return '';
@@ -282,16 +283,17 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
   };
 
   const CounterCard = ({ leftLabel, rightLabel, value, numberColor, leftColor = '#E5E7EB', rightColor = '#CBD5E1' }) => (
-    <Box sx={{
-      bgcolor: '#808080',
-      color: '#FFFFFF',
-      borderRadius: 2,
-      border: '1px solid #8A8A8A',
+    <Box sx={(t)=>({
       p: 2,
       height: '100%',
       display: 'flex',
-      flexDirection: 'column'
-    }}>
+      flexDirection: 'column',
+      borderRadius: 2,
+      // Gradiente neutro para manter as cores anteriores perceptivamente iguais
+      background: `linear-gradient(135deg, ${alpha(t.palette.grey[300], 0.25)} 0%, ${alpha('#FFFFFF', 0.95)} 100%)`,
+      borderLeft: `6px solid ${numberColor || t.palette.primary.main}`,
+      boxShadow: t.shadows[2]
+    })}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 800, color: leftColor, textTransform: 'none' }}>{leftLabel}</Typography>
         {rightLabel ? (
@@ -467,18 +469,26 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
 {/* MEIO: nota + gráficos */}
 <Grid item xs={12} md={4}>
   <Paper elevation={0} sx={{ p:1.5, backgroundColor:'#FFFFFF', borderRadius:3, mb:1.5, border:'none', boxShadow:'none' }}>
-    <Box sx={{ p:1, bgcolor:'#FFF59D', border:'1px solid', borderColor:'#FDD835', borderRadius:1 }}>
-      <Typography variant="subtitle2" sx={{ fontWeight:700, mb:0.5, color:'text.primary' }}>Nota (Avisos)</Typography>
+    <Box sx={{
+      p: 1.5,
+      position: 'relative',
+      borderRadius: 2,
+      background: (t)=>`linear-gradient(135deg, ${t.palette.warning.light} 0%, #fffde7 100%)`,
+      borderLeft: (t)=>`6px solid ${t.palette.primary.main}`,
+      boxShadow: (t)=>t.shadows[4]
+    }}>
+      <Typography variant="subtitle1" sx={{ fontWeight:800, mb:1, color:'text.primary', display:'flex', alignItems:'center', gap:0.75 }}>
+        <PushPinIcon color="primary" sx={{ fontSize: 20 }} />
+        Nota/Avisos
+      </Typography>
       <TextField
         value={stickyNote}
-        onChange={(e)=>setStickyNote(e.target.value)}
-        placeholder="Escreva aqui seus avisos..."
         multiline
         minRows={3}
         fullWidth
         variant="standard"
-        InputProps={{ disableUnderline:true }}
-        sx={{ fontFamily:'inherit', '& textarea':{ fontSize:'0.95rem', lineHeight:1.4 }, bgcolor:'transparent' }}
+        InputProps={{ disableUnderline:true, readOnly:true }}
+        sx={{ fontFamily:'inherit', '& textarea':{ fontSize:'1rem', lineHeight:1.6, fontWeight:600, color:'text.primary', textAlign:'center' }, bgcolor:'transparent', textAlign:'center' }}
       />
     </Box>
   </Paper>
@@ -492,7 +502,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
           rightLabel={''}
           value={tripsCompletedThisMonthCount}
           numberColor={'#22D3EE'}
-          leftColor={'#D1D5DB'}
+          leftColor={'text.primary'}
           rightColor={'#9CA3AF'}
         />
       </Grid>
@@ -502,7 +512,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
           rightLabel={''}
           value={tripsCompletedThisYearCount}
           numberColor={'#F59E0B'}
-          leftColor={'#D1D5DB'}
+          leftColor={'text.primary'}
           rightColor={'#9CA3AF'}
         />
       </Grid>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Container, Paper, Box, Typography, Button, Grid, Divider } from '@mui/material';
+import React, { useState } from 'react';
+import { Container, Paper, Box, Typography, Button, Grid, Divider, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Snackbar, Alert } from '@mui/material';
 import { useHistory } from 'react-router-dom';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import {
@@ -10,11 +10,25 @@ import {
   DirectionsCar as DirectionsCarIcon,
   ManageSearch as ManageSearchIcon,
   ForkRight as ForkRightIcon,
-  LocalShipping as LocalShippingIcon
+  LocalShipping as LocalShippingIcon,
+  StickyNote2 as StickyNote2Icon
 } from '@mui/icons-material';
 
 const AdminDashboardPage = () => {
   const history = useHistory();
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteValue, setNoteValue] = useState(() => {
+    try { return localStorage.getItem('sandboxStickyNote') || ''; } catch { return ''; }
+  });
+  const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' });
+
+  const handleOpenNote = () => setNoteOpen(true);
+  const handleCloseNote = () => setNoteOpen(false);
+  const handleSaveNote = () => {
+    try { localStorage.setItem('sandboxStickyNote', noteValue || ''); } catch {}
+    setSnack({ open: true, message: 'Nota atualizada com sucesso.', severity: 'success' });
+    setNoteOpen(false);
+  };
   return (
     <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Grid container spacing={2} columns={12}>
@@ -161,6 +175,25 @@ const AdminDashboardPage = () => {
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Meus Envios</Typography>
               </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<StickyNote2Icon sx={{ fontSize: 28 }} />}
+                onClick={handleOpenNote}
+                sx={{
+                  bgcolor: '#FF9800',
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  mb: 1,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: '#F57C00' }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Gerenciar Nota/Aviso</Typography>
+              </Button>
             </Box>
           </Paper>
         </Grid>
@@ -181,6 +214,29 @@ const AdminDashboardPage = () => {
           </Paper>
         </Grid>
       </Grid>
+      {/* Dialogo para Gerenciar Nota/Aviso */}
+      <Dialog open={noteOpen} onClose={handleCloseNote} fullWidth maxWidth="sm">
+        <DialogTitle>Gerenciar Nota/Aviso</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            minRows={4}
+            value={noteValue}
+            onChange={(e) => setNoteValue(e.target.value)}
+            placeholder="Escreva aqui sua nota/aviso que será exibida na Home"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseNote}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSaveNote}>Salvar</Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack({ ...snack, open: false })} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert severity={snack.severity} onClose={() => setSnack({ ...snack, open: false })} sx={{ width: '100%' }}>
+          {snack.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
