@@ -372,11 +372,122 @@ const AdminDashboardPage = () => {
           </Paper>
         </Grid>
 
-        {/* Direita: Placeholder */}
+        {/* Direita: Relatórios */}
         <Grid item xs={12} md={4}>
           <Paper variant="outlined" sx={{ p: 2, minHeight: 200 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Métricas</Typography>
-            <Typography variant="body2" color="text.secondary">Conteúdo a ser definido.</Typography>
+            <Divider textAlign="left" sx={{ width:'100%', mb: 1, "&::before, &::after": { borderColor: 'divider' } }}>
+              <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 0.6 }}>Relatórios</Typography>
+            </Divider>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<ManageSearchIcon sx={{ fontSize: 28 }} />}
+                onClick={() => history.push('/relatorios/viagens-por-motorista')}
+                sx={{
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Viagens por Motorista</Typography>
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<DirectionsCarIcon sx={{ fontSize: 28 }} />}
+                onClick={() => history.push('/relatorios/viagens-por-veiculo')}
+                sx={{
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Viagens por Veículo</Typography>
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<ListIcon sx={{ fontSize: 28 }} />}
+                onClick={() => history.push('/relatorios/viagens-consolidado')}
+                sx={{
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Viagens Consolidado</Typography>
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<ForkRightIcon sx={{ fontSize: 28 }} />}
+                onClick={() => history.push('/relatorios/rotas-consolidado')}
+                sx={{
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Rotas Consolidado</Typography>
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<ReviewsIcon sx={{ fontSize: 28 }} />}
+                onClick={() => history.push('/relatorios/viagens-por-requisitante')}
+                sx={{
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Viagens por Requisitante</Typography>
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
+                onClick={() => history.push('/relatorios/materiais-enviados')}
+                sx={{
+                  bgcolor: theme.palette.primary.main,
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: theme.palette.primary.dark }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Materiais Enviados</Typography>
+              </Button>
+            </Box>
           </Paper>
         </Grid>
       </Grid>
