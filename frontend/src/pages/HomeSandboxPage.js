@@ -199,6 +199,11 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     }).length;
   }, [trips]);
 
+  // Memoize routes in andamento to avoid new array reference each render
+  const routesAndamento = useMemo(() => (
+    (rotas || []).filter(r => (r.status || '').toLowerCase() === 'andamento')
+  ), [rotas]);
+
   const tripsCompletedThisYearCount = useMemo(() => {
     const now = new Date();
     const y = now.getFullYear();
@@ -222,65 +227,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     return { entries, total };
   }, [filteredTrips, trips]);
 
-  // Tiny SVG PieChart (no external deps)
-  const PieChart = ({ data, size = 220, thickness = 28, centerTitle = 'Destinos' }) => {
-    const radius = (size - thickness) / 2;
-    const center = size / 2;
-    const circumference = 2 * Math.PI * radius;
-    const [activeIdx, setActiveIdx] = React.useState(0);
-    const [angle, setAngle] = React.useState(0);
-    React.useEffect(() => {
-      const id = setInterval(() => {
-        setActiveIdx((i) => (i + 1) % Math.max(1, data.entries.length));
-        setAngle((a) => (a + 20) % 360);
-      }, 1800);
-      return () => clearInterval(id);
-    }, [data.entries.length]);
-
-    const colors = ['#60A5FA', '#34D399', '#FBBF24', '#F472B6', '#A78BFA', '#22D3EE', '#F59E0B', '#EF4444', '#10B981'];
-    let offset = 0;
-    const content = data.entries.map(([label, value], idx) => {
-      const fraction = value / data.total;
-      const dash = circumference * fraction;
-      const dashArray = `${dash} ${circumference - dash}`;
-      const isActive = idx === activeIdx;
-      const strokeWidth = isActive ? thickness + 6 : thickness;
-      const strokeOpacity = isActive ? 1 : 0.45;
-      const node = (
-        <g key={label}>
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke={colors[idx % colors.length]}
-            strokeWidth={strokeWidth}
-            strokeDasharray={dashArray}
-            strokeDashoffset={-offset}
-            strokeLinecap="butt"
-            style={{ cursor: 'default', pointerEvents: 'visibleStroke', opacity: strokeOpacity }}
-          >
-            <title>{`${label}: ${value} (${Math.round(fraction * 100)}%)`}</title>
-          </circle>
-        </g>
-      );
-      offset += dash;
-      return node;
-    });
-
-    const activeLabel = data.entries[activeIdx]?.[0] || centerTitle;
-
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ pointerEvents: 'auto' }}>
-        <g transform={`rotate(${angle} ${center} ${center})`}>
-          {content}
-        </g>
-        <text x={center} y={center-2} textAnchor="middle" fontWeight="700" fontSize={14} fill="#111111">
-          {activeLabel}
-        </text>
-      </svg>
-    );
-  };
+  // PieChart moved to top-level to avoid re-definition on every render
 
   const CounterCard = ({ leftLabel, rightLabel, value, numberColor, leftColor = '#E5E7EB', rightColor = '#CBD5E1' }) => (
     <Box sx={(t)=>({
@@ -527,7 +474,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
 
                 {/* DIREITA: mapa */}
                 <Grid item xs={12} md={4}>
-                  <LeafletTripMap routes={(rotas||[]).filter(r=>(r.status||'').toLowerCase()==='andamento')} />
+                  <LeafletTripMap routes={routesAndamento} />
                 </Grid>
               </Grid>
             </Box>
@@ -754,6 +701,66 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
 };
 
 export default HomeSandboxPage;
+
+// Hoisted Tiny SVG PieChart (no external deps) to avoid remounting
+function PieChart({ data, size = 220, thickness = 28, centerTitle = 'Destinos' }) {
+  const radius = (size - thickness) / 2;
+  const center = size / 2;
+  const circumference = 2 * Math.PI * radius;
+  const [activeIdx, setActiveIdx] = React.useState(0);
+  const [angle, setAngle] = React.useState(0);
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      setActiveIdx((i) => (i + 1) % Math.max(1, data.entries.length));
+      setAngle((a) => (a + 20) % 360);
+    }, 1800);
+    return () => clearInterval(id);
+  }, [data.entries.length]);
+
+  const colors = ['#60A5FA', '#34D399', '#FBBF24', '#F472B6', '#A78BFA', '#22D3EE', '#F59E0B', '#EF4444', '#10B981'];
+  let offset = 0;
+  const content = data.entries.map(([label, value], idx) => {
+    const fraction = value / data.total;
+    const dash = circumference * fraction;
+    const dashArray = `${dash} ${circumference - dash}`;
+    const isActive = idx === activeIdx;
+    const strokeWidth = isActive ? thickness + 6 : thickness;
+    const strokeOpacity = isActive ? 1 : 0.45;
+    const node = (
+      <g key={label}>
+        <circle
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          stroke={colors[idx % colors.length]}
+          strokeWidth={strokeWidth}
+          strokeDasharray={dashArray}
+          strokeDashoffset={-offset}
+          strokeLinecap="butt"
+          style={{ cursor: 'default', pointerEvents: 'visibleStroke', opacity: strokeOpacity }}
+        >
+          <title>{`${label}: ${value} (${Math.round(fraction * 100)}%)`}</title>
+        </circle>
+      </g>
+    );
+    offset += dash;
+    return node;
+  });
+
+  const activeLabel = data.entries[activeIdx]?.[0] || centerTitle;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ pointerEvents: 'auto' }}>
+      <g transform={`rotate(${angle} ${center} ${center})`}>
+        {content}
+      </g>
+      <text x={center} y={center-2} textAnchor="middle" fontWeight="700" fontSize={14} fill="#111111">
+        {activeLabel}
+      </text>
+    </svg>
+  );
+}
 
 // LeafletTripMap (com Leaflet restaurado)
 function LeafletTripMap({ routes }) {
