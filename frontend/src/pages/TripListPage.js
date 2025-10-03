@@ -7,7 +7,7 @@ import {
     Grid, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Checkbox, Snackbar, Alert as MuiAlert
 } from '@mui/material';
 import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useHistory } from 'react-router-dom';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import HailIcon from '@mui/icons-material/Hail';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -29,6 +29,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const TripListPage = () => {
     const theme = useTheme();
+    const history = useHistory();
     const { user: authUser } = useAuth();
     const [trips, setTrips] = useState([]);
     const [page, setPage] = useState(0);
@@ -196,10 +197,38 @@ const TripListPage = () => {
                         <Button
                             variant="contained"
                             color="primary"
-                            component={RouterLink}
-                            to="/registrar-viagem"
                             startIcon={<AddCircleOutlineIcon />}
                             sx={{ fontFamily: "'Exo 2', sans-serif" }}
+                            onClick={async () => {
+                                try {
+                                    const myId = authUser?.userId;
+                                    // Considera apenas minhas viagens concluídas (solicitante_usuarioid == meu id)
+                                    const concluded = (trips || []).filter((t) => 
+                                        String(t.status_viagem || '').toLowerCase() === 'concluida' && 
+                                        Number(t.solicitante_usuarioid) === Number(myId)
+                                    );
+                                    if (concluded.length === 0) {
+                                        history.push('/registrar-viagem');
+                                        return;
+                                    }
+                                    const evalResp = await api.get('/evaluations');
+                                    const all = evalResp.data?.evaluations || evalResp.data || [];
+                                    const myEvalsByTrip = new Set(
+                                        (all || [])
+                                            .filter((e) => String(e.user_id) === String(myId))
+                                            .map((e) => String(e.tripid))
+                                    );
+                                    const hasPending = concluded.some((t) => !myEvalsByTrip.has(String(t.tripid)));
+                                    if (hasPending) {
+                                        setSnackbar({ open: true, message: 'Antes de solicitar uma nova viagem, é necessário avaliar sua última experiência. Acesse Minhas Viagens e conclua a avaliação.', severity: 'warning' });
+                                    } else {
+                                        history.push('/registrar-viagem');
+                                    }
+                                } catch (e) {
+                                    // Em caso de erro na checagem, permitir navegação para não travar o fluxo
+                                    history.push('/registrar-viagem');
+                                }
+                            }}
                         >
                             Nova Viagem
                         </Button>
@@ -966,12 +995,18 @@ const TripListPage = () => {
                 </Dialog>
                 <Snackbar
                     open={snackbar.open}
-                    autoHideDuration={3000}
+                    autoHideDuration={15000}
                     onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 >
                     <MuiAlert onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} severity={snackbar.severity} elevation={6} variant="filled">
-                        {snackbar.message}
+                        {snackbar.severity === 'warning' && typeof snackbar.message === 'string' && snackbar.message.startsWith('Antes de solicitar uma nova viagem') ? (
+                            <>
+                                Antes de solicitar uma nova viagem, é necessário avaliar sua última experiência. Acesse <RouterLink to="/minhasviagens" style={{ color: 'inherit', textDecoration: 'underline' }}>Minhas Viagens</RouterLink> e conclua a avaliação.
+                            </>
+                        ) : (
+                            snackbar.message
+                        )}
                     </MuiAlert>
                 </Snackbar>
             </Paper>

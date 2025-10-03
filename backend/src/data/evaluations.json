@@ -43,5 +43,53 @@
     "user_name": "Administrador",
     "user_setor": "",
     "created_at": "2025-09-24T18:53:56.072Z"
+  },
+  {
+    "id": "1759514582227",
+    "tripid": 25,
+    "user_id": 4,
+    "trip_rating": 4,
+    "driver_rating": 3,
+    "vehicle_rating": 4,
+    "feedback": "",
+    "user_name": "Administrador",
+    "user_setor": "",
+    "created_at": "2025-10-03T18:03:02.228Z"
+  },
+  {
+    "id": "1759514590932",
+    "tripid": 24,
+    "user_id": 4,
+    "trip_rating": 3,
+    "driver_rating": 3,
+    "vehicle_rating": 3,
+    "feedback": "",
+    "user_name": "Administrador",
+    "user_setor": "",
+    "created_at": "2025-10-03T18:03:10.932Z"
+  },
+  {
+    "id": "1759514596463",
+    "tripid": 18,
+    "user_id": 4,
+    "trip_rating": 3,
+    "driver_rating": 3,
+    "vehicle_rating": 1,
+    "feedback": "",
+    "user_name": "Administrador",
+    "user_setor": "",
+    "created_at": "2025-10-03T18:03:16.463Z"
+  },
+  {
+    "id": "1759514615034",
+    "tripid": 15,
+    "user_id": 4,
+    "trip_rating": 3,
+    "driver_rating": 1,
+    "vehicle_rating": 3,
+    "feedback": "Viagem péssima",
+    "user_name": "Administrador",
+    "user_setor": "",
+    "created_at": "2025-10-03T18:03:35.034Z"
   }
 ]
