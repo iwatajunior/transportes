@@ -105,7 +105,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     (async () => {
       setTripsLoading(true); setTripsError('');
       try {
-        const r = await api.get('/trips');
+        const r = await api.get('/trips?scope=home');
         const data = r.data||[];
         setTrips(data);
         setFilteredTrips(data);
@@ -297,7 +297,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
     <>
       <Box sx={{ textAlign:'center', mb:-1 }}>
         <Typography variant="h5" component="h1" sx={{ fontFamily:"'Exo 2', sans-serif", fontWeight:'bold', color:'#1976d2', mb:-0.5, textAlign:'left' }}>
-          {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
+          {user?.nome ? `Bem-vindo, ${((user.nome||'').trim().split(/\s+/)[0])}!` : 'Bem-vindo ao Rotas e Viagens!'}
           <Typography variant="subtitle1" sx={{ fontFamily:"'Exo 2', sans-serif", color:'text.secondary', display:'inline', ml:1 }}>
             Gerencie aqui suas viagens e encomendas.
           </Typography>
@@ -342,7 +342,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                     {isTeste && (
                       <Box sx={{ mb: 2 }}>
                         <Typography variant="h5" component="h1" sx={{ fontFamily:"'Exo 2', sans-serif", fontWeight:'bold', color:'#1976d2' }}>
-                          {user?.nome ? `Bem-vindo, ${user.nome}!` : 'Bem-vindo ao Rotas e Viagens!'}
+                          {user?.nome ? `Bem-vindo, ${((user.nome||'').trim().split(/\s+/)[0])}!` : 'Bem-vindo ao Rotas e Viagens!'}
                         </Typography>
                         <Typography variant="subtitle1" sx={{ fontFamily:"'Exo 2', sans-serif", color:'text.secondary' }}>
                           Gerencie aqui suas viagens e encomendas.
@@ -424,7 +424,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
       borderLeft: (t)=>`6px solid ${t.palette.primary.main}`,
       boxShadow: (t)=>t.shadows[4]
     }}>
-      <Typography variant="subtitle1" sx={{ fontWeight:800, mb:1, color:'text.primary', display:'flex', alignItems:'center', gap:0.75 }}>
+      <Typography variant="subtitle1" sx={{ fontWeight:400, mb:1, color:'text.primary', display:'flex', alignItems:'center', gap:0.75 }}>
         <PushPinIcon color="primary" sx={{ fontSize: 20 }} />
         Nota/Avisos
       </Typography>
@@ -749,15 +749,16 @@ function PieChart({ data, size = 220, thickness = 28, centerTitle = 'Destinos' }
   });
 
   const activeLabel = data.entries[activeIdx]?.[0] || centerTitle;
+  const activeValue = data.entries[activeIdx]?.[1] || 0;
+  const valueLabel = `${activeValue} ${activeValue === 1 ? 'viagem' : 'viagens'}`;
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ pointerEvents: 'auto' }}>
       <g transform={`rotate(${angle} ${center} ${center})`}>
         {content}
       </g>
-      <text x={center} y={center-2} textAnchor="middle" fontWeight="700" fontSize={14} fill="#111111">
-        {activeLabel}
-      </text>
+      <text x={center} y={center-6} textAnchor="middle" fontWeight="700" fontSize={14} fill="#111111">{activeLabel}</text>
+      <text x={center} y={center+12} textAnchor="middle" fontWeight="600" fontSize={12} fill="#374151">{valueLabel}</text>
     </svg>
   );
 }

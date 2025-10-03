@@ -71,7 +71,8 @@ const tripController = {
         try {
             const userData = {
                 userId: req.user.userId, // ou req.user.userid dependendo da consistência do seu token/authMiddleware
-                perfil: req.user.perfil
+                perfil: req.user.perfil,
+                includeAll: String(req.query.scope || '').toLowerCase() === 'home'
             };
 
             // Validação básica para garantir que os dados do usuário estão presentes

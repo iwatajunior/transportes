@@ -46,6 +46,25 @@ export const AuthProvider = ({ children }) => {
         };
 
         loadUser();
+        const onAuthUpdated = () => {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                const decodedToken = decodeToken(token);
+                if (decodedToken) {
+                    const normalizedUser = {
+                        ...decodedToken,
+                        perfil: normalizePerfil(decodedToken.perfil)
+                    };
+                    setUser(normalizedUser);
+                }
+            } catch (e) {
+                console.error('[AuthContext] onAuthUpdated decode error', e);
+            }
+        };
+        window.addEventListener('auth-token-updated', onAuthUpdated);
+        return () => window.removeEventListener('auth-token-updated', onAuthUpdated);
     }, []);
 
     const decodeToken = (token) => {

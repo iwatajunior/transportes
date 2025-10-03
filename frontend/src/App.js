@@ -90,6 +90,7 @@ const AppContent = () => {
         const decodedUser = JSON.parse(jsonPayload);
         setUser(decodedUser);
         setIsAuthenticated(true);
+        try { window.dispatchEvent(new Event('auth-token-updated')); } catch {}
         // Redireciona para a HomePage após o login
         history.push('/');
       } catch (error) {
@@ -111,6 +112,7 @@ const AppContent = () => {
     try { disconnectChatSocket(); } catch {}
     setUser(null);
     setIsAuthenticated(false);
+    try { window.dispatchEvent(new Event('auth-token-updated')); } catch {}
     history.replace({ pathname: '/login', state: { navigatedFromLogout: true } });
   };
 
