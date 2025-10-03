@@ -110,11 +110,11 @@ const ChatWidget = ({ user }) => {
             variant="extended"
             size="small"
             onClick={handleToggle}
-            aria-label="Fale com a COTRAN"
+            aria-label="Fale com a COTRAM"
             sx={{ px: 1.5, py: 0.5, minHeight: 32 }}
           >
             <SupportAgentIcon sx={{ mr: 0.75, fontSize: 18 }} />
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>Fale com a COTRAN</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>Fale com a COTRAM</Typography>
           </Fab>
         </Badge>
       </Box>
@@ -125,7 +125,7 @@ const ChatWidget = ({ user }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'primary.main', color: 'primary.contrastText', px: 1, py: 0.75 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
               <SupportAgentIcon />
-              Fale com a COTRAN
+              Fale com a COTRAM
             </Typography>
             <IconButton size="small" onClick={() => setOpen(false)} sx={{ color: 'inherit' }}>
               <CloseIcon fontSize="small" />

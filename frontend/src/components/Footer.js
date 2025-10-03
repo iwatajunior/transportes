@@ -19,7 +19,7 @@ const Footer = () => {
       }}
     >
       <Typography variant="body2" color="text.secondary">
-        Gerenciado pela Coordenação de Transportes - COTRAN
+        Gerenciado pela Coordenação de Transporte e Manutenção - COTRAM
       </Typography>
     </Box>
   );

@@ -192,7 +192,7 @@ const AdminDashboardPage = () => {
                   '&:hover': { transform: 'scale(1.02)', bgcolor: '#F57C00' }
                 }}
               >
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Gerenciar Rotas</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Gerenciar Rotas e Envios</Typography>
               </Button>
               <Button
                 variant="contained"

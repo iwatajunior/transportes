@@ -313,7 +313,7 @@ const RotasPage = () => {
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h5" component="h1" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.primary' }}>
             <ForkRightIcon sx={{ fontSize: '2rem' }} />
-            Painel de Rotas
+            Painel de Rotas e Envios
           </Typography>
         </Box>
 
