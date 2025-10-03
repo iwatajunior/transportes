@@ -195,19 +195,6 @@ const TripListPage = () => {
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button
                             variant="contained"
-                            startIcon={<HailIcon />}
-                            sx={{ 
-                                fontFamily: "'Exo 2', sans-serif",
-                                bgcolor: '#FF9800',
-                                color: 'white',
-                                '&:hover': { bgcolor: '#F57C00' }
-                            }}
-                            onClick={() => setOpenCaronaModal(true)}
-                        >
-                            Pedir Carona
-                        </Button>
-                        <Button
-                            variant="contained"
                             color="primary"
                             component={RouterLink}
                             to="/registrar-viagem"
