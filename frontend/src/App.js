@@ -43,6 +43,8 @@ import TestePage from './pages/TestePage';
 import RotasProgramadasPage from './pages/RotasProgramadasPage';
 import EnviosPage from './pages/EnviosPage';
 import ChatWidget from './components/chat/ChatWidget';
+import { disconnectChatSocket } from './services/chatSocket';
+import SupportChatDesk from './pages/SupportChatDesk';
 
 const ALL_AUTHENTICATED_ROLES = Object.values(USER_ROLES);
 
@@ -106,6 +108,7 @@ const AppContent = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    try { disconnectChatSocket(); } catch {}
     setUser(null);
     setIsAuthenticated(false);
     history.replace({ pathname: '/login', state: { navigatedFromLogout: true } });
@@ -155,6 +158,7 @@ const AppContent = () => {
           <ProtectedRoute path="/envios" component={EnviosPage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
           <ProtectedRoute path="/viagens/:id" component={TripDetailPage} allowedRoles={[USER_ROLES.REQUISITANTE, USER_ROLES.GESTOR, USER_ROLES.ADMINISTRADOR, USER_ROLES.MOTORISTA]} />
           <ProtectedRoute path="/registrar-viagem" component={RegisterTripPage} allowedRoles={ALL_AUTHENTICATED_ROLES} />
+          <ProtectedRoute path="/admin/suporte" component={SupportChatDesk} allowedRoles={[USER_ROLES.ADMINISTRADOR]} />
           <ProtectedRoute
             path="/admin/create-user"
             component={CreateUserPage}

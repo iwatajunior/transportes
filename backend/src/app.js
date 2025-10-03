@@ -85,6 +85,8 @@ const io = new Server(server, {
     methods: ['GET','POST']
   }
 });
+// Track active users: Map<userId, { name, count }>
+const activeUsers = new Map();
 
 // Chat model and routes
 const { createTableIfNotExists, insertMessage, fetchMessages } = require('./models/chatModel');
@@ -96,10 +98,14 @@ createTableIfNotExists().then(() => {
   console.log('[chat] chat_messages table is ready');
 }).catch(err => console.error('[chat] init table error', err));
 
-// Simple auth middleware on socket (reads token from auth)
+// Simple auth middleware on socket (reads token and profile from auth)
 io.use((socket, next) => {
-  const token = socket.handshake.auth?.token || '';
-  socket.user = { token }; // TODO: validate JWT if required
+  const auth = socket.handshake.auth || {};
+  const token = auth.token || '';
+  const userId = auth.userId || null;
+  const userName = auth.userName || 'Usuário';
+  const userRole = String(auth.userRole || '').toLowerCase();
+  socket.user = { token, userId, userName, userRole };
   next();
 });
 
@@ -111,37 +117,120 @@ io.on('connection', (socket) => {
   } catch (e) {
     console.warn('[socket] connection log error', e.message);
   }
-  // History on demand
-  socket.on('chat:history', async ({ limit = 50, before } = {}, cb) => {
+  const { userId, userName, userRole } = socket.user;
+  const isSupport = userRole === 'gestor' || userRole === 'administrador' || userRole === 'admin';
+  // Build a stable identity key for presence and rooms
+  const idKey = (userId !== null && typeof userId !== 'undefined') ? String(userId) : `sid:${socket.id}`;
+
+  // Join appropriate rooms
+  if (isSupport) {
+    socket.join('support');
+    // Send current active users to this support agent
+    const list = Array.from(activeUsers.entries()).map(([id, v]) => ({ userId: id, userName: v.name }));
+    socket.emit('chat:active_users', list);
+  } else {
+    // Join by numeric userId when present, otherwise by socket.id key
+    const room = (userId !== null && typeof userId !== 'undefined') ? `user:${userId}` : `user:${socket.id}`;
+    socket.join(room);
+    // Track presence (increase connection count) by idKey
+    const prev = activeUsers.get(idKey) || { name: userName, count: 0, numericUserId: (userId ?? null) };
+    activeUsers.set(idKey, { name: userName || prev.name, count: prev.count + 1, numericUserId: (userId ?? prev.numericUserId ?? null) });
+    const list = Array.from(activeUsers.entries()).map(([id, v]) => ({ userId: id, userName: v.name }));
+    io.to('support').emit('chat:active_users', list);
+  }
+  // History on demand (support can request a specific user; regular user gets own history)
+  socket.on('chat:history', async ({ limit = 50, before, userId: targetUserId } = {}, cb) => {
     try {
-      const data = await fetchMessages({ limit, before });
+      let queryUserId = null;
+      if (isSupport && (typeof targetUserId !== 'undefined')) {
+        // When target is a sid key, we cannot query by numeric user_id
+        if (typeof targetUserId === 'string' && targetUserId.startsWith('sid:')) {
+          queryUserId = null;
+        } else {
+          const parsed = Number(targetUserId);
+          queryUserId = Number.isFinite(parsed) ? parsed : null;
+        }
+      } else if (!isSupport && userId) {
+        queryUserId = userId;
+      }
+      const data = await fetchMessages({ limit, before, userId: queryUserId });
       cb && cb({ ok: true, data });
     } catch (e) {
       cb && cb({ ok: false, error: e.message });
     }
   });
 
-  // New message
-  socket.on('chat:message', async ({ message }, cb) => {
+  // New message (support must target a user; user messages are tied to their own userId)
+  socket.on('chat:message', async ({ message, toUserId }, cb) => {
     try {
-      const userName = socket.handshake.auth?.userName || 'Usuário';
-      const userId = socket.handshake.auth?.userId || null;
-      const userRole = String(socket.handshake.auth?.userRole || '').toLowerCase();
-      const isSupport = userRole === 'gestor';
-      const saved = await insertMessage({ user_id: userId, user_name: userName, message, is_support: isSupport });
-      io.emit('chat:message', saved);
+      if (!message || !String(message).trim()) {
+        cb && cb({ ok: false, error: 'Mensagem vazia' });
+        return;
+      }
+      let saved;
+      if (isSupport) {
+        const target = toUserId;
+        if (typeof target === 'undefined' || target === null) {
+          cb && cb({ ok: false, error: 'toUserId é obrigatório para mensagens do suporte' });
+          return;
+        }
+        // Determine delivery room and numeric user id for DB
+        let deliverRoom;
+        let numericUserId = null;
+        if (typeof target === 'string' && target.startsWith('sid:')) {
+          const sid = target.slice(4);
+          deliverRoom = `user:${sid}`;
+          numericUserId = null;
+        } else {
+          const parsed = Number(target);
+          if (!Number.isFinite(parsed)) {
+            cb && cb({ ok: false, error: 'toUserId inválido' });
+            return;
+          }
+          numericUserId = parsed;
+          deliverRoom = `user:${parsed}`;
+        }
+        saved = await insertMessage({ user_id: numericUserId, user_name: userName, message, is_support: true });
+        io.to(deliverRoom).emit('chat:message', saved);
+        io.to('support').emit('chat:message', saved);
+      } else {
+        // Regular user message
+        saved = await insertMessage({ user_id: userId || null, user_name: userName, message, is_support: false });
+        // Deliver to this user's room and to support room
+        const room = (userId !== null && typeof userId !== 'undefined') ? `user:${userId}` : `user:${socket.id}`;
+        io.to(room).emit('chat:message', saved);
+        io.to('support').emit('chat:message', saved);
+      }
       cb && cb({ ok: true });
     } catch (e) {
       cb && cb({ ok: false, error: e.message });
     }
   });
 
-  socket.on('chat:typing', (payload) => {
-    socket.broadcast.emit('chat:typing', payload);
+  socket.on('chat:typing', ({ toUserId } = {}) => {
+    if (isSupport && toUserId) {
+      socket.to(`user:${toUserId}`).emit('chat:typing', { from: 'support', toUserId });
+    } else if (!isSupport && userId) {
+      socket.to('support').emit('chat:typing', { from: userId });
+    }
   });
 
   socket.on('disconnect', (reason) => {
     console.log('[socket] disconnect', reason);
+    // Update presence
+    if (!isSupport) {
+      const prev = activeUsers.get(idKey);
+      if (prev) {
+        const nextCount = Math.max(0, (prev.count || 1) - 1);
+        if (nextCount === 0) {
+          activeUsers.delete(idKey);
+        } else {
+          activeUsers.set(idKey, { ...prev, count: nextCount });
+        }
+        const list = Array.from(activeUsers.entries()).map(([id, v]) => ({ userId: id, userName: v.name }));
+        io.to('support').emit('chat:active_users', list);
+      }
+    }
   });
 });
 

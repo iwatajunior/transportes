@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
+import { disconnectChatSocket } from '../services/chatSocket';
 import { normalizePerfil } from '../utils/userConstants';
 
 const AuthContext = createContext(null);
@@ -79,6 +80,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
+        try { disconnectChatSocket(); } catch {}
         localStorage.removeItem('token');
         api.defaults.headers.common['Authorization'] = '';
         setUser(null);

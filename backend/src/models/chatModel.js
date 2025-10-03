@@ -23,12 +23,20 @@ const insertMessage = async ({ user_id, user_name, message, is_support }) => {
   return rows[0];
 };
 
-const fetchMessages = async ({ limit = 50, before } = {}) => {
+const fetchMessages = async ({ limit = 50, before, userId } = {}) => {
   let sql = `SELECT * FROM chat_messages`;
+  const where = [];
   const params = [];
+  if (typeof userId !== 'undefined' && userId !== null) {
+    params.push(userId);
+    where.push(`user_id = $${params.length}`);
+  }
   if (before) {
     params.push(before);
-    sql += ` WHERE created_at < $${params.length}`;
+    where.push(`created_at < $${params.length}`);
+  }
+  if (where.length) {
+    sql += ` WHERE ` + where.join(' AND ');
   }
   sql += ` ORDER BY created_at DESC LIMIT $${params.length + 1}`;
   params.push(limit);

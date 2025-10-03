@@ -13,7 +13,8 @@ import {
   ManageSearch as ManageSearchIcon,
   ForkRight as ForkRightIcon,
   LocalShipping as LocalShippingIcon,
-  StickyNote2 as StickyNote2Icon
+  StickyNote2 as StickyNote2Icon,
+  SupportAgent as SupportAgentIcon
 } from '@mui/icons-material';
 
 const AdminDashboardPage = () => {
@@ -211,6 +212,25 @@ const AdminDashboardPage = () => {
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Gerenciar Nota/Aviso</Typography>
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<SupportAgentIcon sx={{ fontSize: 28 }} />}
+                onClick={() => history.push('/admin/suporte')}
+                sx={{
+                  bgcolor: '#FF9800',
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  mb: 1,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: '#F57C00' }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Suporte COTRAM</Typography>
               </Button>
               <Divider textAlign="left" sx={{ width:'100%', mt: 0.5, mb: 0.5, '&::before, &::after': { borderColor: 'divider' } }}>
                 <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 0.6 }}>Meus Itens</Typography>

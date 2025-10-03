@@ -4,7 +4,7 @@ import { Box, Badge, Fab, Paper, Typography, IconButton, TextField, Divider, Cir
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
-import { getChatSocket } from '../../services/chatSocket';
+import { getChatSocket, disconnectChatSocket } from '../../services/chatSocket';
 
 const ChatWidget = ({ user }) => {
   const [open, setOpen] = useState(false);
@@ -30,8 +30,21 @@ const ChatWidget = ({ user }) => {
     setConnecting(true);
     // Attach auth payload (token already set in service) and connect
     const token = localStorage.getItem('token') || '';
-    const userRole = String(user?.perfil || user?.role || '').toLowerCase();
-    socket.auth = { token, userId, userName, userRole };
+    let role = String(user?.perfil || user?.role || '').toLowerCase();
+    let uid = userId;
+    let uname = userName;
+    try {
+      if (token) {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        const payload = JSON.parse(jsonPayload);
+        uid = uid || payload.userId || payload.userid || payload.sub || payload.id || null;
+        uname = uname || payload.nome || payload.name || 'Usuário';
+        role = String(role || payload.perfil || payload.role || '').toLowerCase();
+      }
+    } catch {}
+    socket.auth = { token, userId: uid, userName: uname, userRole: role };
     if (!socket.connected) socket.connect();
 
     const onConnect = () => {
@@ -55,7 +68,8 @@ const ChatWidget = ({ user }) => {
     return () => {
       socket.off('connect', onConnect);
       socket.off('chat:message', onMessage);
-      // Mantém a conexão viva para receber notificações mesmo minimizado
+      // Ao desmontar (ex.: logout), desconectar para limpar presença no servidor
+      try { disconnectChatSocket(); } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, userId, userName]);
@@ -126,12 +140,14 @@ const ChatWidget = ({ user }) => {
               </Box>
             )}
             {messages.map((m) => {
-              const mine = m.user_id === userId;
+              const fromSupport = !!m.is_support;
+              // Backend grava user_id sempre do cliente; defina 'mine' apenas pelo is_support
+              const mine = !fromSupport;
               return (
                 <Box key={m.id || `${m.user_id}-${m.created_at}-${Math.random()}`} sx={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', mb: 0.5 }}>
                   <Box sx={{ px: 0.75, py: 0.5, borderRadius: 1.5, maxWidth: '78%', bgcolor: mine ? 'primary.light' : 'grey.200', color: mine ? 'primary.contrastText' : 'text.primary' }}>
-                    {!mine && (
-                      <Typography variant="caption" sx={{ display: 'block', fontWeight: 700 }}>{m.user_name || 'Usuário'}</Typography>
+                    {fromSupport && (
+                      <Typography variant="caption" sx={{ display: 'block', fontWeight: 700 }}>{m.user_name || 'Suporte'}</Typography>
                     )}
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{m.message}</Typography>
                     <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', opacity: 0.7 }}>
