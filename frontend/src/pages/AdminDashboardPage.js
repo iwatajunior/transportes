@@ -20,7 +20,7 @@ const AdminDashboardPage = () => {
       <Grid container spacing={2} columns={12}>
         {/* Esquerda: Card de botões (Acesso Rápido) */}
         <Grid item xs={12} md={4}>
-          <Paper variant="outlined" sx={{ p: 2 }}>
+          <Paper elevation={0} sx={{ p: 2, border: 'none', boxShadow: 'none' }}>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               <Divider textAlign="left" sx={{ width:'100%', mb: 1, '&::before, &::after': { borderColor: 'divider' } }}>
                 <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 0.6 }}>Operações</Typography>
