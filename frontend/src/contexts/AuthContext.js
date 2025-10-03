@@ -4,10 +4,15 @@ import { disconnectChatSocket } from '../services/chatSocket';
 import { normalizePerfil } from '../utils/userConstants';
 
 const AuthContext = createContext(null);
+const INACTIVITY_LIMIT_MS = 60 * 60 * 1000; // 1 hour
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [lastActivity, setLastActivity] = useState(() => {
+        const ts = parseInt(localStorage.getItem('lastActivity') || '0', 10);
+        return Number.isFinite(ts) ? ts : 0;
+    });
 
     useEffect(() => {
         const loadUser = async () => {
@@ -25,6 +30,10 @@ export const AuthProvider = ({ children }) => {
                         };
                         setUser(normalizedUser);
                         console.log('Usuário normalizado:', normalizedUser);
+                        // Inicializa atividade
+                        const now = Date.now();
+                        localStorage.setItem('lastActivity', String(now));
+                        setLastActivity(now);
                     } else {
                         throw new Error('Token inválido');
                     }
@@ -75,6 +84,9 @@ export const AuthProvider = ({ children }) => {
         // Define o usuário com os dados normalizados
         setUser(normalizedUser);
         console.log('DEBUG - Estado do usuário após setUser:', normalizedUser);
+        const now = Date.now();
+        localStorage.setItem('lastActivity', String(now));
+        setLastActivity(now);
         
         return normalizedUser;
     };
@@ -85,6 +97,48 @@ export const AuthProvider = ({ children }) => {
         api.defaults.headers.common['Authorization'] = '';
         setUser(null);
     };
+
+    // Atualiza lastActivity em eventos de interação e verifica inatividade
+    useEffect(() => {
+        const markActive = () => {
+            const now = Date.now();
+            localStorage.setItem('lastActivity', String(now));
+            setLastActivity(now);
+        };
+        const events = ['click', 'mousemove', 'keydown', 'scroll', 'touchstart', 'visibilitychange'];
+        events.forEach((ev) => window.addEventListener(ev, markActive, { passive: true }));
+        const onStorage = (e) => {
+            if (e.key === 'token' && !e.newValue) {
+                // Token foi removido em outra aba: redireciona imediatamente
+                try { disconnectChatSocket(); } catch {}
+                api.defaults.headers.common['Authorization'] = '';
+                setUser(null);
+                try { window.location.href = '/login'; } catch {}
+            }
+        };
+        window.addEventListener('storage', onStorage);
+        const interval = setInterval(() => {
+            const ts = parseInt(localStorage.getItem('lastActivity') || '0', 10);
+            const now = Date.now();
+            if (user && Number.isFinite(ts) && now - ts > INACTIVITY_LIMIT_MS) {
+                // Sessão expirada por inatividade
+                try { disconnectChatSocket(); } catch {}
+                localStorage.removeItem('token');
+                api.defaults.headers.common['Authorization'] = '';
+                setUser(null);
+                try {
+                    // Indica motivo e redireciona para login
+                    sessionStorage.setItem('sessionReason', 'timeout');
+                    window.location.href = '/login';
+                } catch {}
+            }
+        }, 60 * 1000); // checa a cada 60s
+        return () => {
+            events.forEach((ev) => window.removeEventListener(ev, markActive));
+            window.removeEventListener('storage', onStorage);
+            clearInterval(interval);
+        };
+    }, [user]);
 
     if (loading) {
         return null; // ou um componente de loading
