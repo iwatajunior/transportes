@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Container, Typography, Box, Button, Grid, Link as RouterLink, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, TextField, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, CircularProgress, Tooltip, IconButton, Avatar, Collapse } from '@mui/material';
+import { Container, Typography, Box, Button, Grid, Link as RouterLink, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, TextField, Snackbar, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, CircularProgress, Tooltip, IconButton, Avatar, Collapse, Divider } from '@mui/material';
 import { Pagination } from '@mui/material';
 import {
   List as ListIcon,
@@ -329,13 +329,13 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
             </Box>
           )}
           <Collapse in={isTeste ? true : showTestArea} sx={{ display: isTeste ? 'contents' : 'block' }}>
-            <Box sx={{ p:2 }}>
+            <Box sx={{ pt:1, px:2, pb:2 }}>
               {tripsError ? (
                 <Alert severity="error" sx={{ mb: 1.5 }}>
                   {tripsError}
                 </Alert>
               ) : null}
-              <Grid container spacing={2} columns={12} justifyContent="space-between" alignItems="stretch">
+              <Grid container spacing={1.5} columns={12} justifyContent="space-between" alignItems="stretch" sx={{ mt:-0.5 }}>
                 {/* ESQUERDA: 3 botões iguais ao Painel de Viagens + Calendário */}
                 <Grid item xs={12} md={4}>
                   <Paper variant="outlined" sx={{ p: 2 }}>
@@ -350,6 +350,9 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                       </Box>
                     )}
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      <Divider textAlign="left" sx={{ width:'100%', mt: 0.25, mb: 0.25, '&::before, &::after': { borderColor: 'divider' } }}>
+                        <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 0.6 }}>Operações</Typography>
+                      </Divider>
                       <Button variant="contained" fullWidth startIcon={<ListIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/viagens')}
                         sx={{ bgcolor:'#FF9800', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
                           '&:hover':{ transform:'scale(1.02)', bgcolor:'#F57C00' } }}>
@@ -360,28 +363,36 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                           '&:hover':{ transform:'scale(1.02)', bgcolor:'#F57C00' } }}>
                         <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Rotas Programadas</Typography>
                       </Button>
+                      <Divider textAlign="left" sx={{ width:'100%', mt: 0.25, mb: 0.25, '&::before, &::after': { borderColor: 'divider' } }}>
+                        <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 0.6 }}>Meus Itens</Typography>
+                      </Divider>
                       <Button variant="contained" fullWidth startIcon={<LuggageIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/minhasviagens')}
                         sx={{ bgcolor:'#FF9800', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
                           '&:hover':{ transform:'scale(1.02)', bgcolor:'#F57C00' } }}>
                         <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Minhas Viagens</Typography>
                       </Button>
+                      <Button variant="contained" fullWidth startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/envios')}
+                        sx={{ bgcolor:'#FF9800', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
+                          '&:hover':{ transform:'scale(1.02)', bgcolor:'#F57C00' } }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Meus Envios</Typography>
+                      </Button>
                     </Box>
                   </Paper>
 
                   {/* Calendário */}
-                  <Paper elevation={0} sx={{ p:1.5, backgroundColor:'#FFFFFF', borderRadius:3, mt:2, border:'none', boxShadow:'none' }}>
+                  <Paper elevation={0} sx={{ p:1, backgroundColor:'#FFFFFF', borderRadius:3, mt:1.5, border:'none', boxShadow:'none' }}>
                     <Box sx={{ display:'flex', alignItems:'center', justifyContent:'space-between', mb:0.5 }}>
                       <IconButton size="small" onClick={()=>setCalendarDate(d=>new Date(d.getFullYear(), d.getMonth()-1, 1))}><ArrowBack fontSize="small" /></IconButton>
                       <Typography variant="subtitle2" sx={{ fontWeight:700, fontSize:'0.9rem' }}>{calendarDate.toLocaleDateString('pt-BR', { month:'long', year:'numeric' })}</Typography>
                       <IconButton size="small" onClick={()=>setCalendarDate(d=>new Date(d.getFullYear(), d.getMonth()+1, 1))}><ArrowForward fontSize="small" /></IconButton>
                     </Box>
                     <Box>
-                      <Grid container columns={7} spacing={0.5} sx={{ mb:0.4, bgcolor:(t)=>t.palette.grey[100], borderRadius:1, px:0.25, py:0.25 }}>
+                      <Grid container columns={7} spacing={0.25} sx={{ mb:0.3, bgcolor:(t)=>t.palette.grey[100], borderRadius:1, px:0.25, py:0.25 }}>
                         {['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map(w=>(
-                          <Grid item xs={1} key={w}><Typography variant="caption" sx={{ fontWeight:600, color:'text.secondary' }}>{w}</Typography></Grid>
+                          <Grid item xs={1} key={w}><Typography variant="caption" sx={{ fontWeight:600, color:'text.secondary', fontSize:'0.7rem' }}>{w}</Typography></Grid>
                         ))}
                       </Grid>
-                      <Grid container columns={7} spacing={0.5}>
+                      <Grid container columns={7} spacing={0.25}>
                         {(()=>{
                           const startOfMonth = (d)=>new Date(d.getFullYear(), d.getMonth(), 1);
                           const endOfMonth = (d)=>new Date(d.getFullYear(), d.getMonth()+1, 0);
@@ -396,12 +407,12 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                             return (
                               <Grid item xs={1} key={idx}>
                                 <Tooltip title={has? <Box sx={{ px:0.5 }}>{(tripsByDay.get(key)||[]).map((lbl,i)=><Typography key={i} variant="caption" sx={{ display:'block' }}>{lbl}</Typography>)}</Box> : ''} arrow disableInteractive>
-                                  <Box sx={{ height:28, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:1, position:'relative',
+                                  <Box sx={{ height:24, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:1, position:'relative',
                                     bgcolor: has ? 'warning.light' : (cell.inMonth ? '#FFFFFF' : 'action.hover'),
                                     color: cell.inMonth ? 'text.primary' : 'text.disabled',
                                     border:1, borderColor:'divider', outline: isToday ? '2px solid' : 'none', outlineColor: isToday ? 'primary.main' : 'transparent' }}>
-                                    <Typography variant="caption" sx={{ fontWeight: has ? 700 : 400 }}>{cell.day}</Typography>
-                                    {has && <Box sx={{ position:'absolute', bottom:3, right:3, width:6, height:6, borderRadius:'50%', bgcolor:'warning.main' }} />}
+                                    <Typography variant="caption" sx={{ fontWeight: has ? 700 : 400, fontSize:'0.7rem' }}>{cell.day}</Typography>
+                                    {has && <Box sx={{ position:'absolute', bottom:2, right:2, width:5, height:5, borderRadius:'50%', bgcolor:'warning.main' }} />}
                                   </Box>
                                 </Tooltip>
                               </Grid>

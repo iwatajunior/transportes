@@ -110,7 +110,7 @@ const TripListPage = () => {
         setIsLoading(true);
         setError('');
         try {
-            const response = await api.get('/trips');
+            const response = await api.get('/trips?scope=home');
             console.log('Dados das viagens:', response.data);
             setTrips(response.data || []);
         } catch (err) {
@@ -667,16 +667,49 @@ const TripListPage = () => {
                                             </Typography>
                                         )}
                                     </TableCell>
-                                    <TableCell align="right" sx={{ py: 1, px: 2, width: 64 }}>
-                                        <Tooltip title="Ver Detalhes">
-                                            <IconButton
-                                                component={RouterLink}
-                                                to={`/viagens/${trip.tripid}`}
-                                                size="small"
-                                            >
-                                                <VisibilityIcon />
-                                            </IconButton>
-                                        </Tooltip>
+                                    <TableCell align="right" sx={{ py: 1, px: 2, width: 112 }}>
+                                        <Box sx={{ display:'flex', justifyContent:'flex-end', gap: 0.5 }}>
+                                            {String(trip.status_viagem).toLowerCase() === 'agendada' && (
+                                                <Tooltip title="Pedir Carona">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={async () => {
+                                                            setSelectedTrip(trip);
+                                                            setSelectUserOpen(true);
+                                                            setIncludeMe(true);
+                                                            if (authUser?.userId != null) {
+                                                                setSelectedUserIds([String(authUser.userId)]);
+                                                            } else {
+                                                                setSelectedUserIds([]);
+                                                            }
+                                                            if (!usersOptions || usersOptions.length === 0) {
+                                                                try {
+                                                                    setUsersLoading(true);
+                                                                    const data = await getUsers();
+                                                                    setUsersOptions(Array.isArray(data) ? data : (data?.users || []));
+                                                                } catch (e) {
+                                                                    console.error('Erro ao carregar usuários para carona:', e);
+                                                                    setUsersOptions([]);
+                                                                } finally {
+                                                                    setUsersLoading(false);
+                                                                }
+                                                            }
+                                                        }}
+                                                    >
+                                                        <HailIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+                                            <Tooltip title="Ver Detalhes">
+                                                <IconButton
+                                                    component={RouterLink}
+                                                    to={`/viagens/${trip.tripid}`}
+                                                    size="small"
+                                                >
+                                                    <VisibilityIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             )).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
