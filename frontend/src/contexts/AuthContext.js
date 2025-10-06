@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
-import { disconnectChatSocket } from '../services/chatSocket';
+import { connectChatSocket, disconnectChatSocket } from '../services/chatSocket';
 import { normalizePerfil } from '../utils/userConstants';
 
 const AuthContext = createContext(null);
@@ -34,6 +34,8 @@ export const AuthProvider = ({ children }) => {
                         const now = Date.now();
                         localStorage.setItem('lastActivity', String(now));
                         setLastActivity(now);
+                        // Conectar socket com auth atual
+                        try { connectChatSocket(); } catch {}
                     } else {
                         throw new Error('Token inválido');
                     }
@@ -64,6 +66,22 @@ export const AuthProvider = ({ children }) => {
             }
         };
         window.addEventListener('auth-token-updated', onAuthUpdated);
+        // Atualiza o contexto quando o perfil for alterado (ex.: nova foto)
+        const onProfileUpdated = async () => {
+            try {
+                const resp = await api.get('/auth/profile');
+                const profile = resp?.data || {};
+                // Atualiza apenas campos relevantes e normaliza perfil
+                setUser((prev) => ({
+                    ...(prev || {}),
+                    ...profile,
+                    perfil: normalizePerfil(profile.perfil || (prev?.perfil || ''))
+                }));
+            } catch (e) {
+                console.error('[AuthContext] onProfileUpdated error', e);
+            }
+        };
+        window.addEventListener('auth-profile-updated', onProfileUpdated);
         return () => window.removeEventListener('auth-token-updated', onAuthUpdated);
     }, []);
 
@@ -106,6 +124,7 @@ export const AuthProvider = ({ children }) => {
         const now = Date.now();
         localStorage.setItem('lastActivity', String(now));
         setLastActivity(now);
+        try { connectChatSocket(); } catch {}
         
         return normalizedUser;
     };

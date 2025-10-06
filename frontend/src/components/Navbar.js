@@ -1,11 +1,12 @@
 // src/components/Navbar.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { IconButton, Menu, MenuItem, Avatar, Box, Tooltip, Divider } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
 import './Navbar.css';
+import { resolvePhotoUrl, withCacheBuster } from '../utils/photoUrl';
 
 const Navbar = ({ onLogout, userRole, userName, userPhotoUrl }) => {
     const [anchorEl, setAnchorEl] = useState(null);
@@ -30,6 +31,21 @@ const Navbar = ({ onLogout, userRole, userName, userPhotoUrl }) => {
         // O redirecionamento após o logout geralmente é tratado em App.js ou onde onLogout é definido
     };
 
+    // Forçar re-render quando a foto de perfil for atualizada
+    const [photoVersion, setPhotoVersion] = useState(0);
+    useEffect(() => {
+        const onProfileUpdated = () => setPhotoVersion((v) => v + 1);
+        const onStorage = (e) => {
+            if (e.key === 'profilePhotoUpdatedAt') setPhotoVersion((v) => v + 1);
+        };
+        window.addEventListener('auth-profile-updated', onProfileUpdated);
+        window.addEventListener('storage', onStorage);
+        return () => {
+            window.removeEventListener('auth-profile-updated', onProfileUpdated);
+            window.removeEventListener('storage', onStorage);
+        };
+    }, []);
+
     return (
         <nav className="navbar-mui" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <IconButton component={Link} to="/" color="inherit" aria-label="home" sx={{ marginRight: 1 }}>
@@ -46,9 +62,18 @@ const Navbar = ({ onLogout, userRole, userName, userPhotoUrl }) => {
                         aria-haspopup="true"
                         aria-expanded={Boolean(anchorEl) ? 'true' : undefined}
                     >
-                        {console.log('DEBUG - Avatar Props:', { userName, userPhotoUrl })}
+                        {console.log('DEBUG - Avatar Props:', { userName, userPhotoUrl, photoVersion })}
                         <Avatar 
-                            src={userPhotoUrl ? `http://10.1.1.42:3001${userPhotoUrl}` : ''}
+                            src={(()=>{
+                                try {
+                                    const raw = (localStorage.getItem('profilePhotoUrl') || userPhotoUrl || '').trim();
+                                    if (!raw) return '';
+                                    const resolved = resolvePhotoUrl(raw);
+                                    return withCacheBuster(resolved);
+                                } catch {
+                                    return '';
+                                }
+                            })()}
                             alt={userName ? userName.charAt(0).toUpperCase() : 'U'}
                             sx={{ 
                                 width: 32, 

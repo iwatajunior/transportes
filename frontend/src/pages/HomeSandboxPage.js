@@ -335,7 +335,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
             const isAdmin = String(user?.perfil || user?.role || '').toLowerCase().includes('admin');
             const firstName = ((user?.nome || '').trim().split(/\s+/)[0]);
             if (isAdmin) return 'Bem-vindo(a), Administrador!';
-            return user?.nome ? `Bem-vindo, ${firstName}!` : 'Bem-vindo ao Rotas e Viagens!';
+            return user?.nome ? `Bem-vindo(a), ${firstName}!` : 'Bem-vindo ao Rotas e Viagens!';
           })()}
           <Typography variant="subtitle1" sx={{ fontFamily:"'Exo 2', sans-serif", color:'text.secondary', display:'inline', ml:1 }}>
             Gerencie aqui suas viagens e encomendas.
@@ -413,7 +413,7 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                             const isAdmin = String(user?.perfil || user?.role || '').toLowerCase().includes('admin');
                             const firstName = ((user?.nome || '').trim().split(/\s+/)[0]);
                             if (isAdmin) return 'Bem-vindo(a), Administrador!';
-                            return user?.nome ? `Bem-vindo, ${firstName}!` : 'Bem-vindo ao Rotas e Viagens!';
+                            return user?.nome ? `Bem-vindo(a), ${firstName}!` : 'Bem-vindo ao Rotas e Viagens!';
                           })()}
                         </Typography>
                         <Typography variant="subtitle1" sx={{ fontFamily:"'Exo 2', sans-serif", color:'text.secondary' }}>

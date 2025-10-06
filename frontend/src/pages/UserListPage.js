@@ -4,7 +4,7 @@ import {
   Container, Typography, Button, CircularProgress, Alert, Box,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
   Grid, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, TablePagination
+  TextField, TablePagination, Avatar
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, History as HistoryIcon, Group as GroupIcon } from '@mui/icons-material';
 import { getUsers } from '../services/api';
@@ -78,6 +78,27 @@ const UserListPage = () => {
     );
   }
 
+  const resolvePhotoUrl = (value) => {
+    if (!value) return null;
+    const s = String(value).trim();
+    if (!s) return null;
+    // Absolute URL
+    if (/^https?:\/\//i.test(s)) return s;
+    const host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+    const backendRoot = process.env.REACT_APP_BACKEND_URL || `http://${host}:3001`;
+    // If comes as "/uploads/filename.png" or any absolute path
+    if (s.startsWith('/')) return backendRoot + s;
+    // If it's a bare filename (common after profile update), prefix with /uploads/
+    return `${backendRoot}/uploads/${s}`;
+  };
+
+  const getInitials = (name) => {
+    const parts = String(name || '').trim().split(/\s+/);
+    const first = parts[0] ? parts[0][0] : '';
+    const second = parts[1] ? parts[1][0] : '';
+    return (first + second).toUpperCase() || 'U';
+  };
+
   return (
     <Container component="main" maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Paper elevation={3} sx={{ p: { xs: 2, md: 4 } }}>
@@ -146,8 +167,9 @@ const UserListPage = () => {
                 >
                   <TableHead>
                     <TableRow>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 70 }}>Foto</TableCell>
                       <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 90 }}>ID</TableCell>
-                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 200 }}>Nome</TableCell>
+                      <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 190 }}>Nome</TableCell>
                       <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 260 }}>Email</TableCell>
                       <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 140 }}>Perfil</TableCell>
                       <TableCell sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText', fontWeight: 500, whiteSpace: 'nowrap', width: 160 }}>Setor</TableCell>
@@ -161,6 +183,17 @@ const UserListPage = () => {
                         key={user.userid}
                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                       >
+                        <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 70 }}>
+                          {(() => {
+                            const url = resolvePhotoUrl(user.fotoperfilurl);
+                            const initials = getInitials(user.nome);
+                            return (
+                              <Avatar src={url || undefined} alt={user.nome} sx={{ width: 36, height: 36, bgcolor: url ? 'transparent' : 'primary.main', fontSize: 14 }}>
+                                {!url ? initials : null}
+                              </Avatar>
+                            );
+                          })()}
+                        </TableCell>
                         <TableCell component="th" scope="row" sx={{ whiteSpace:'nowrap', maxWidth: 90 }}>{user.userid}</TableCell>
                         <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 200 }}>{user.nome}</TableCell>
                         <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 260 }}>{user.email}</TableCell>

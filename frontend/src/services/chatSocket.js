@@ -12,9 +12,7 @@ export const getChatSocket = () => {
   socket = io(URL, {
     autoConnect: false,
     transports: ['websocket', 'polling'],
-    auth: {
-      token: token || '',
-    },
+    auth: buildAuthFromToken(token),
   });
   // Basic diagnostics
   socket.on('connect_error', (err) => {
@@ -28,8 +26,37 @@ export const getChatSocket = () => {
   return socket;
 };
 
+function buildAuthFromToken(token) {
+  const auth = { token: token || '' };
+  try {
+    if (!token) return auth;
+    const payload = decodeJwt(token);
+    // Try different fields commonly used across the app/backend
+    const userId = payload?.userId ?? payload?.userid ?? payload?.id ?? null;
+    const userName = payload?.nome ?? payload?.name ?? payload?.email ?? 'Usuário';
+    const roleRaw = payload?.perfil ?? payload?.role ?? '';
+    const role = typeof roleRaw === 'string' ? roleRaw.toLowerCase() : '';
+    auth.userId = userId;
+    auth.userName = userName;
+    auth.userRole = role;
+  } catch {}
+  return auth;
+}
+
+function decodeJwt(token) {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+  return JSON.parse(jsonPayload);
+}
+
 export const connectChatSocket = () => {
   const s = getChatSocket();
+  // Refresh auth before connect (in case token changed)
+  try {
+    const token = localStorage.getItem('token');
+    s.auth = buildAuthFromToken(token);
+  } catch {}
   if (!s.connected) s.connect();
   return s;
 };

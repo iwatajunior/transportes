@@ -62,7 +62,12 @@ const EditProfilePage = () => {
                 }));
                 
                 if (profileData.fotoperfilurl) {
-                    const fullUrl = `http://10.1.1.42:3001${profileData.fotoperfilurl}`;
+                    const host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+                    const backendRoot = process.env.REACT_APP_BACKEND_URL || `http://${host}:3001`;
+                    const raw = String(profileData.fotoperfilurl).trim();
+                    const fullUrl = /^https?:\/\//i.test(raw)
+                      ? raw
+                      : (raw.startsWith('/') ? `${backendRoot}${raw}` : `${backendRoot}/uploads/${raw}`);
                     setImagePreviewUrl(fullUrl);
                 }
                 setIsLoading(false);
@@ -97,10 +102,33 @@ const EditProfilePage = () => {
             if (senha) formDataToSend.append('senha', senha);
             if (selectedFile) formDataToSend.append('foto', selectedFile);
 
-            await updateUserProfile(formDataToSend);
+            const resp = await updateUserProfile(formDataToSend);
             setSuccess('Perfil atualizado com sucesso!');
             setFormData(prev => ({ ...prev, senha: '', confirmarSenha: '' }));
             setSelectedFile(null);
+            // Atualizar imediatamente a foto com base na resposta da API
+            try {
+                const updated = resp?.user || resp;
+                const raw = updated?.fotoperfilurl ? String(updated.fotoperfilurl).trim() : '';
+                if (raw) {
+                    const host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+                    const backendRoot = process.env.REACT_APP_BACKEND_URL || `http://${host}:3001`;
+                    const resolved = /^https?:\/\//i.test(raw)
+                        ? raw
+                        : (raw.startsWith('/') ? `${backendRoot}${raw}` : `${backendRoot}/uploads/${raw}`);
+                    // Cache-busting para refletir imediatamente
+                    const ts = Date.now();
+                    const withBuster = `${resolved}${resolved.includes('?') ? '&' : '?'}t=${ts}`;
+                    setImagePreviewUrl(withBuster);
+                    // Opcional: persistir como cache local
+                    try { 
+                        localStorage.setItem('profilePhotoUrl', resolved);
+                        localStorage.setItem('profilePhotoUpdatedAt', String(ts));
+                    } catch {}
+                }
+            } catch {}
+            // Notificar app para recarregar perfil e refletir nova foto (ex.: avatar no header)
+            try { window.dispatchEvent(new Event('auth-profile-updated')); } catch {}
         } catch (err) {
             setError('Falha ao atualizar perfil. ' + (err.response?.data?.message || err.message || ''));
         }
