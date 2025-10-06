@@ -1,6 +1,6 @@
 // frontend/src/components/chat/ChatWidget.js
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Badge, Fab, Paper, Typography, IconButton, TextField, Divider, CircularProgress } from '@mui/material';
+import { Box, Badge, Fab, Paper, Typography, IconButton, TextField, Divider, CircularProgress, Select, MenuItem } from '@mui/material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
@@ -9,14 +9,18 @@ import { getChatSocket, disconnectChatSocket } from '../../services/chatSocket';
 const ChatWidget = ({ user }) => {
   const [open, setOpen] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState([]);
   const [unread, setUnread] = useState(0);
   const [input, setInput] = useState('');
+  const [activeUsersList, setActiveUsersList] = useState([]); // [{ userId, userName }]
+  const [targetUserId, setTargetUserId] = useState(''); // string or number
   const listRef = useRef(null);
   const socket = useMemo(() => getChatSocket(), []);
 
   const userId = user?.userId || user?.userid || user?.sub || null;
   const userName = user?.nome || user?.name || 'Usuário';
+  const isSupport = String(user?.perfil || user?.role || '').toLowerCase().includes('admin') || String(user?.perfil || user?.role || '').toLowerCase().includes('gestor');
 
   const scrollToBottom = () => {
     const el = listRef.current;
@@ -48,6 +52,7 @@ const ChatWidget = ({ user }) => {
     if (!socket.connected) socket.connect();
 
     const onConnect = () => {
+      setConnected(true);
       // Load history
       socket.emit('chat:history', { limit: 50 }, (resp) => {
         if (resp?.ok) {
@@ -57,22 +62,63 @@ const ChatWidget = ({ user }) => {
         setConnecting(false);
       });
     };
+    const onDisconnect = () => {
+      setConnected(false);
+      setConnecting(false);
+    };
+    const onConnectError = () => {
+      setConnected(false);
+      setConnecting(false);
+    };
     const onMessage = (msg) => {
       setMessages((prev) => [...prev, msg]);
       if (!open) setUnread((c) => c + 1);
       setTimeout(scrollToBottom, 50);
     };
     socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
     socket.on('chat:message', onMessage);
+    const onActiveUsers = (list) => {
+      // list: [{ userId, userName }]
+      setActiveUsersList(Array.isArray(list) ? list : []);
+      // Auto-select first if none selected
+      if (isSupport && (!targetUserId || targetUserId === '')) {
+        const first = (Array.isArray(list) && list[0]) ? list[0].userId : '';
+        setTargetUserId(first || '');
+      }
+    };
+    socket.on('chat:active_users', onActiveUsers);
+
+    // If already connected (due to login auto-connect), trigger history
+    if (socket.connected) onConnect();
 
     return () => {
       socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
       socket.off('chat:message', onMessage);
+      socket.off('chat:active_users', onActiveUsers);
       // Ao desmontar (ex.: logout), desconectar para limpar presença no servidor
       try { disconnectChatSocket(); } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, userId, userName]);
+
+  // When support selects a different user, refetch history for that user
+  useEffect(() => {
+    if (!open || !isSupport) return;
+    if (!socket || !socket.connected) return;
+    setConnecting(true);
+    socket.emit('chat:history', { limit: 50, userId: targetUserId }, (resp) => {
+      if (resp?.ok) {
+        setMessages(resp.data || []);
+        setTimeout(scrollToBottom, 50);
+      }
+      setConnecting(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetUserId]);
 
   const handleToggle = () => {
     setOpen((v) => {
@@ -85,7 +131,12 @@ const ChatWidget = ({ user }) => {
   const handleSend = () => {
     const text = (input || '').trim();
     if (!text) return;
-    socket.emit('chat:message', { message: text }, (resp) => {
+    const payload = isSupport ? { message: text, toUserId: targetUserId } : { message: text };
+    if (isSupport && (!targetUserId || targetUserId === '')) {
+      console.warn('[chat] Nenhum usuário selecionado para envio (suporte)');
+      return;
+    }
+    socket.emit('chat:message', payload, (resp) => {
       if (!resp?.ok) {
         console.error('Falha ao enviar mensagem:', resp?.error);
       }
@@ -121,12 +172,34 @@ const ChatWidget = ({ user }) => {
 
       {/* Panel */}
       {open && (
-        <Paper elevation={6} sx={{ position: 'fixed', right: 16, bottom: 86, width: { xs: 280, sm: 380 }, height: 260, display: 'flex', flexDirection: 'column', borderRadius: 2, overflow: 'hidden', zIndex: 1300 }}>
+        <Paper elevation={6} sx={{ position: 'fixed', right: 16, bottom: 86, width: { xs: 280, sm: 380 }, height: 340, display: 'flex', flexDirection: 'column', borderRadius: 2, overflow: 'hidden', zIndex: 1300 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'primary.main', color: 'primary.contrastText', px: 1, py: 0.75 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <SupportAgentIcon />
-              Fale com a COTRAM
-            </Typography>
+            <Box sx={{ display:'flex', alignItems:'center', gap: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SupportAgentIcon />
+                Fale com a COTRAM
+              </Typography>
+              <Box sx={{ ml: 0.5, px: 0.75, py: 0.25, borderRadius: 1, bgcolor: connected ? 'success.main' : (connecting ? 'warning.main' : 'error.main'), color: 'common.white', fontSize: 10, fontWeight: 700 }}>
+                {connected ? 'Conectado' : (connecting ? 'Conectando…' : 'Offline')}
+              </Box>
+              {isSupport && (
+                <Box sx={{ ml: 1, bgcolor: 'rgba(255,255,255,0.15)', borderRadius: 1, px: 0.5 }}>
+                  <Select
+                    size="small"
+                    value={targetUserId || ''}
+                    onChange={(e) => setTargetUserId(e.target.value)}
+                    displayEmpty
+                    sx={{ color: 'primary.contrastText', '& .MuiSelect-icon': { color: 'primary.contrastText' }, minWidth: 140 }}
+                    inputProps={{ 'aria-label': 'Selecionar usuário' }}
+                  >
+                    <MenuItem value=""><em>Selecionar usuário…</em></MenuItem>
+                    {activeUsersList.map((u) => (
+                      <MenuItem key={String(u.userId)} value={u.userId}>{u.userName || u.userId}</MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+              )}
+            </Box>
             <IconButton size="small" onClick={() => setOpen(false)} sx={{ color: 'inherit' }}>
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -139,14 +212,31 @@ const ChatWidget = ({ user }) => {
                 <Typography variant="caption" sx={{ ml: 1 }}>Conectando…</Typography>
               </Box>
             )}
+            {(!connecting && !connected) && (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 1.25 }}>
+                <Typography variant="caption" sx={{ opacity: 0.85 }}>Sem conexão com o chat.</Typography>
+              </Box>
+            )}
             {messages.map((m) => {
               const fromSupport = !!m.is_support;
-              // Backend grava user_id sempre do cliente; defina 'mine' apenas pelo is_support
-              const mine = !fromSupport;
+              // Determine 'mine' properly for both roles
+              let mine = false;
+              if (isSupport) {
+                // Suporte: minhas mensagens têm is_support=true e meu nome como user_name
+                mine = fromSupport && (String(m.user_name || '') === String(userName || ''));
+              } else {
+                // Usuário: minhas mensagens têm is_support=false e, se possível, user_id igual ao meu id
+                const myNumericId = (typeof userId === 'number') ? userId : (Number(userId));
+                if (Number.isFinite(myNumericId)) {
+                  mine = !fromSupport && (Number(m.user_id) === myNumericId);
+                } else {
+                  mine = !fromSupport;
+                }
+              }
               return (
                 <Box key={m.id || `${m.user_id}-${m.created_at}-${Math.random()}`} sx={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', mb: 0.5 }}>
                   <Box sx={{ px: 0.75, py: 0.5, borderRadius: 1.5, maxWidth: '78%', bgcolor: mine ? 'primary.light' : 'grey.200', color: mine ? 'primary.contrastText' : 'text.primary' }}>
-                    {fromSupport && (
+                    {(!mine && fromSupport) && (
                       <Typography variant="caption" sx={{ display: 'block', fontWeight: 700 }}>{m.user_name || 'Suporte'}</Typography>
                     )}
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{m.message}</Typography>
@@ -160,16 +250,17 @@ const ChatWidget = ({ user }) => {
           </Box>
 
           <Divider />
-          <Box sx={{ p: 0.75, display: 'flex', gap: 0.75 }}>
+          <Box sx={{ p: 0.75, display: 'flex', gap: 0.75, alignItems: 'center' }}>
             <TextField
               fullWidth
               size="small"
-              placeholder="Digite sua mensagem…"
+              placeholder={isSupport && (!targetUserId || targetUserId==='') ? 'Selecione um usuário para enviar…' : 'Digite sua mensagem…'}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
+              disabled={!connected || (isSupport && (!targetUserId || targetUserId===''))}
             />
-            <IconButton color="primary" onClick={handleSend} aria-label="Enviar">
+            <IconButton color="primary" onClick={handleSend} aria-label="Enviar" disabled={!connected || (isSupport && (!targetUserId || targetUserId===''))}>
               <SendIcon />
             </IconButton>
           </Box>

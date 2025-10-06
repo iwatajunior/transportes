@@ -167,7 +167,7 @@ const SupportChatDesk = () => {
         <Grid item xs={12}>
           <Typography variant="h6" sx={{ fontWeight: 700 }}>Suporte COTRAM</Typography>
           <Typography variant="body2" color="text.secondary">
-            {connected ? 'Conectado' : 'Conectando…'} — Clique em um usuário para abrir uma janela de conversa.
+            Clique no usuário ativo para interagir.
           </Typography>
         </Grid>
         <Grid item xs={12} md={3}>

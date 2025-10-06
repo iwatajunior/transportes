@@ -60,6 +60,8 @@ export const AuthProvider = ({ children }) => {
                         perfil: normalizePerfil(decodedToken.perfil)
                     };
                     setUser(normalizedUser);
+                    // Garantir conexão do socket após atualização de token (login)
+                    try { connectChatSocket(); } catch {}
                 }
             } catch (e) {
                 console.error('[AuthContext] onAuthUpdated decode error', e);

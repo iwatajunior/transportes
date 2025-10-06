@@ -98,6 +98,8 @@ const EditProfilePage = () => {
         }
 
         try {
+            // Armazena preview para atualização imediata do avatar na navbar (UI otimista)
+            try { if (imagePreviewUrl) localStorage.setItem('profilePhotoPreviewDataUrl', imagePreviewUrl); } catch {}
             const formDataToSend = new FormData();
             if (senha) formDataToSend.append('senha', senha);
             if (selectedFile) formDataToSend.append('foto', selectedFile);
@@ -131,6 +133,9 @@ const EditProfilePage = () => {
             try { window.dispatchEvent(new Event('auth-profile-updated')); } catch {}
         } catch (err) {
             setError('Falha ao atualizar perfil. ' + (err.response?.data?.message || err.message || ''));
+        } finally {
+            // Limpa o preview independente do resultado
+            try { localStorage.removeItem('profilePhotoPreviewDataUrl'); } catch {}
         }
     };
 

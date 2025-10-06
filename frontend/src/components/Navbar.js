@@ -66,6 +66,10 @@ const Navbar = ({ onLogout, userRole, userName, userPhotoUrl }) => {
                         <Avatar 
                             src={(()=>{
                                 try {
+                                    // 1) Preview (data URL) set during save click (optimistic UI)
+                                    const preview = localStorage.getItem('profilePhotoPreviewDataUrl');
+                                    if (preview) return preview;
+                                    // 2) Persisted URL from backend or prop
                                     const raw = (localStorage.getItem('profilePhotoUrl') || userPhotoUrl || '').trim();
                                     if (!raw) return '';
                                     const resolved = resolvePhotoUrl(raw);
