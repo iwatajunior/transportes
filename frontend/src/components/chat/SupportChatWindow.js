@@ -46,9 +46,6 @@ const SupportChatWindow = ({ userId, userName, messages, loading, unreadCount = 
           )}
         </Box>
         <Box>
-          <IconButton size="small" onClick={() => onMinimize && onMinimize(userId, !minimized)} sx={{ color: 'inherit' }}>
-            {minimized ? <ExpandMoreIcon fontSize="small" /> : <RemoveIcon fontSize="small" />}
-          </IconButton>
           <IconButton size="small" onClick={() => onClose && onClose(userId)} sx={{ color: 'inherit' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
