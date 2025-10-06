@@ -30,6 +30,13 @@ const AdminDashboardPage = () => {
     try { return localStorage.getItem('sandboxStickyNote') || ''; } catch { return ''; }
   });
   const [snack, setSnack] = useState({ open: false, message: '', severity: 'success' });
+  const [verOpen, setVerOpen] = useState(false);
+  const [verValue, setVerValue] = useState(() => {
+    try { return (localStorage.getItem('appVersion') || (process.env.REACT_APP_VERSION || process.env.REACT_APP_BUILD || '') || '').trim(); } catch { return ''; }
+  });
+  const [verNotes, setVerNotes] = useState(() => {
+    try { return localStorage.getItem('appVersionNotes') || ''; } catch { return ''; }
+  });
 
   const handleOpenNote = () => setNoteOpen(true);
   const handleCloseNote = () => setNoteOpen(false);
@@ -43,6 +50,34 @@ const AdminDashboardPage = () => {
       setNoteOpen(false);
     } catch (e) {
       const msg = e?.response?.data?.message || e?.message || 'Falha ao salvar nota';
+      setSnack({ open: true, message: `Erro: ${msg}`, severity: 'error' });
+    }
+  };
+
+  // Version dialog handlers
+  const handleOpenVersion = async () => {
+    try {
+      const r = await api.get('/settings/version');
+      const v = (r?.data?.app_version || '').trim();
+      const n = r?.data?.app_version_notes || '';
+      setVerValue(v);
+      setVerNotes(n);
+    } catch {}
+    setVerOpen(true);
+  };
+  const handleCloseVersion = () => setVerOpen(false);
+  const handleSaveVersion = async () => {
+    try {
+      const payload = { app_version: (verValue || '').trim(), app_version_notes: (verNotes || '').trim() };
+      await api.post('/settings/version', payload);
+      // Atualiza cache local para fallback e UI imediata
+      try { localStorage.setItem('appVersion', payload.app_version); } catch {}
+      try { localStorage.setItem('appVersionNotes', payload.app_version_notes); } catch {}
+      try { window.dispatchEvent(new Event('app-version-updated')); } catch {}
+      setSnack({ open: true, message: 'Versão do sistema atualizada.', severity: 'success' });
+      setVerOpen(false);
+    } catch (e) {
+      const msg = e?.response?.data?.message || e?.message || 'Falha ao salvar versão';
       setSnack({ open: true, message: `Erro: ${msg}`, severity: 'error' });
     }
   };
@@ -220,6 +255,25 @@ const AdminDashboardPage = () => {
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Gerenciar Nota/Aviso</Typography>
+              </Button>
+              <Button
+                variant="contained"
+                fullWidth
+                startIcon={<ExploreIcon sx={{ fontSize: 28 }} />}
+                onClick={handleOpenVersion}
+                sx={{
+                  bgcolor: '#FF9800',
+                  color: 'white',
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  mb: 1,
+                  py: 1,
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: '#F57C00' }
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Versão do Sistema</Typography>
               </Button>
               <Button
                 variant="contained"
@@ -535,6 +589,37 @@ const AdminDashboardPage = () => {
         <DialogActions>
           <Button onClick={handleCloseNote}>Cancelar</Button>
           <Button variant="contained" onClick={handleSaveNote}>Salvar</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Dialogo para Versão do Sistema */}
+      <Dialog open={verOpen} onClose={handleCloseVersion} fullWidth maxWidth="sm">
+        <DialogTitle>Versão do Sistema</DialogTitle>
+        <DialogContent sx={{ minHeight: 280 }}>
+          <Box sx={{ display:'flex', flexDirection:'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Versão"
+              value={verValue}
+              onChange={(e) => setVerValue(e.target.value)}
+              placeholder="Ex.: v1.2.3 ou 2025.10.06"
+            />
+            <TextField
+              fullWidth
+              multiline
+              minRows={6}
+              label="Informações (próximas sprints)"
+              value={verNotes}
+              onChange={(e) => setVerNotes(e.target.value)}
+              placeholder="Descreva aqui os destaques, mudanças e itens da próxima sprint..."
+            />
+            <Typography variant="caption" color="text.secondary">
+              A versão aparecerá no botão de informação da Navbar. As informações poderão ser utilizadas em futuras telas.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseVersion}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSaveVersion}>Salvar</Button>
         </DialogActions>
       </Dialog>
       <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack({ ...snack, open: false })} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
