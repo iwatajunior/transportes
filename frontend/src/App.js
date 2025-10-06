@@ -6,7 +6,7 @@ import { useAuth } from './contexts/AuthContext';
 import { AppBar, Toolbar, Typography, Box, Container, Button, Paper } from '@mui/material';
 import senacLogo from './Senac_logo.png'; 
  
-import ExploreIcon from '@mui/icons-material/Explore';
+import SignpostIcon from '@mui/icons-material/Signpost';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import GroupIcon from '@mui/icons-material/Group';
@@ -123,7 +123,7 @@ const AppContent = () => {
           <Box component="img" sx={{ height: 40, marginRight: 2, display: 'flex' }} alt="Senac Logo" src={senacLogo} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontFamily: "'Exo 2', sans-serif", fontSize: '1.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Link to="/" style={{ color: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-              <ExploreIcon sx={{ mr: 1, fontSize: '2.25rem' }} />
+              <SignpostIcon sx={{ mr: 1, fontSize: '2.25rem' }} />
               Rotas e Viagens
             </Link>
           </Typography>
