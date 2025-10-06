@@ -303,7 +303,7 @@ const AdminDashboardPage = () => {
                 startIcon={<LuggageIcon sx={{ fontSize: 28 }} />}
                 onClick={() => history.push('/minhasviagens')}
                 sx={{
-                  bgcolor: '#FF9800',
+                  bgcolor: '#FFB74D',
                   color: 'white',
                   textTransform: 'none',
                   borderRadius: 2,
@@ -311,7 +311,7 @@ const AdminDashboardPage = () => {
                   py: 1,
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: '#F57C00' }
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: '#FFA726' }
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Minhas Viagens</Typography>
@@ -322,7 +322,7 @@ const AdminDashboardPage = () => {
                 startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />}
                 onClick={() => history.push('/envios')}
                 sx={{
-                  bgcolor: '#FF9800',
+                  bgcolor: '#FFB74D',
                   color: 'white',
                   textTransform: 'none',
                   borderRadius: 2,
@@ -330,7 +330,7 @@ const AdminDashboardPage = () => {
                   py: 1,
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: '#F57C00' }
+                  '&:hover': { transform: 'scale(1.02)', bgcolor: '#FFA726' }
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600, textAlign: 'left', flexGrow: 1, display: { xs: 'none', sm: 'inline' } }}>Meus Envios</Typography>

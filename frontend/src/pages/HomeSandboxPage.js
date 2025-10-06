@@ -9,6 +9,7 @@ import {
   ArrowForward, ArrowBack,
   Luggage as LuggageIcon,
   Explore as ExploreIcon,
+  Send as SendIcon,
   Visibility as VisibilityIcon,
   HelpOutline as HelpOutlineIcon,
   Event as EventIcon,
@@ -425,27 +426,27 @@ const HomeSandboxPage = ({ hideRotasProgramadas = false, hidePainelViagens = fal
                       <Divider textAlign="left" sx={{ width:'100%', mt: 0.25, mb: 0.25, '&::before, &::after': { borderColor: 'divider' } }}>
                         <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 0.6 }}>Operações</Typography>
                       </Divider>
-                      <Button variant="contained" fullWidth startIcon={<ListIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/viagens')}
+                      <Button variant="contained" fullWidth startIcon={<DirectionsCarIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/viagens')}
                         sx={{ bgcolor:'#FF9800', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
                           '&:hover':{ transform:'scale(1.02)', bgcolor:'#F57C00' } }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Painel de Viagens</Typography>
+                        <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Solicite Viagens</Typography>
                       </Button>
-                      <Button variant="contained" fullWidth startIcon={<ExploreIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/rotasprogramadas')}
+                      <Button variant="contained" fullWidth startIcon={<SendIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/rotasprogramadas')}
                         sx={{ bgcolor:'#FF9800', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
                           '&:hover':{ transform:'scale(1.02)', bgcolor:'#F57C00' } }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Rotas Programadas</Typography>
+                        <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Envie Encomendas</Typography>
                       </Button>
                       <Divider textAlign="left" sx={{ width:'100%', mt: 0.25, mb: 0.25, '&::before, &::after': { borderColor: 'divider' } }}>
                         <Typography variant="overline" sx={{ fontWeight: 700, color: 'text.secondary', letterSpacing: 0.6 }}>Meus Itens</Typography>
                       </Divider>
                       <Button variant="contained" fullWidth startIcon={<LuggageIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/minhasviagens')}
-                        sx={{ bgcolor:'#FF9800', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
-                          '&:hover':{ transform:'scale(1.02)', bgcolor:'#F57C00' } }}>
+                        sx={{ bgcolor:'#FFB74D', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
+                          '&:hover':{ transform:'scale(1.02)', bgcolor:'#FFA726' } }}>
                         <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Minhas Viagens</Typography>
                       </Button>
                       <Button variant="contained" fullWidth startIcon={<LocalShippingIcon sx={{ fontSize: 28 }} />} onClick={()=>history.push('/envios')}
-                        sx={{ bgcolor:'#FF9800', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
-                          '&:hover':{ transform:'scale(1.02)', bgcolor:'#F57C00' } }}>
+                        sx={{ bgcolor:'#FFB74D', color:'white', textTransform:'none', borderRadius:2, mb:1, py:1, justifyContent:'flex-start', alignItems:'center',
+                          '&:hover':{ transform:'scale(1.02)', bgcolor:'#FFA726' } }}>
                         <Typography variant="subtitle1" sx={{ fontWeight:600, textAlign:'left', flexGrow:1, display:{ xs:'none', sm:'inline' } }}>Meus Envios</Typography>
                       </Button>
                     </Box>
