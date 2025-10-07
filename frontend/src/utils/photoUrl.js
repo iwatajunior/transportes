@@ -4,8 +4,11 @@ export const resolvePhotoUrl = (value) => {
   const s = String(value).trim();
   if (!s) return null;
   if (/^https?:\/\//i.test(s)) return s;
-  const host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
-  const backendRoot = process.env.REACT_APP_BACKEND_URL || `http://${host}:3001`;
+  // Prefer same-origin (e.g., http://localhost:3000) so CRA proxy or reverse-proxy can handle
+  const origin = (typeof window !== 'undefined' && window.location && window.location.origin)
+    ? window.location.origin
+    : 'http://localhost:3000';
+  const backendRoot = process.env.REACT_APP_BACKEND_URL || origin;
   if (s.startsWith('/')) return backendRoot + s;
   return `${backendRoot}/uploads/${s}`;
 };

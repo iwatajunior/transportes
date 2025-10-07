@@ -15,6 +15,7 @@ import {
     FormControlLabel
 } from '@mui/material';
 import { USER_ROLES, normalizePerfil } from '../../utils/userConstants';
+import { resolvePhotoUrl, withCacheBuster } from '../../utils/photoUrl';
 
 // Criar opções de perfil a partir das constantes USER_ROLES
 const USER_ROLES_OPTIONS = [
@@ -57,18 +58,13 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
 
         if (initialData?.fotoUrl) {
             console.log('[UserForm] useEffect - initialData.fotoUrl:', initialData.fotoUrl);
-            if (initialData.fotoUrl.startsWith('http') || initialData.fotoUrl.startsWith('blob:')) {
-                setImagePreviewUrl(initialData.fotoUrl);
-                console.log('[UserForm] useEffect - imagePreviewUrl set to (already complete):', initialData.fotoUrl);
-            } else {
-                const backendUrl = process.env.REACT_APP_API_URL || 'http://10.1.1.42:3001';
-                console.log('[UserForm] useEffect - backendUrl:', backendUrl);
-                const fullUrl = `${backendUrl}${initialData.fotoUrl}`;
-                setImagePreviewUrl(fullUrl);
-                console.log('[UserForm] useEffect - imagePreviewUrl set to (prefixed):', fullUrl);
-            }
+            const resolved = resolvePhotoUrl(initialData.fotoUrl);
+            const url = withCacheBuster(resolved);
+            setImagePreviewUrl(url);
+            console.log('[UserForm] useEffect - imagePreviewUrl set to (resolved):', url);
         } else {
             console.log('[UserForm] useEffect - initialData.fotoUrl é nulo ou vazio.');
+            setImagePreviewUrl(null);
         }
     }, [initialData]);
 
@@ -202,6 +198,7 @@ const UserForm = ({ onSubmit, isEditMode = false, initialData = {} }) => {
                         src={imagePreviewUrl || undefined}
                         alt="Foto do Perfil" 
                         sx={{ width: 100, height: 100, mb: 1 }}
+                        imgProps={{ loading: 'lazy', decoding: 'async' }}
                     />
                     <input
                         type="file"
