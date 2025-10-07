@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Container, Typography } from '@mui/material';
-import ExploreIcon from '@mui/icons-material/Explore';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { Pagination } from '@mui/material';
 import RouteMap from '../components/RouteMap';
 import api from '../services/api';
@@ -61,7 +61,7 @@ const RotasProgramadasPage = () => {
       <Container maxWidth="lg" sx={{ py: 0, px: 0 }}>
         <Box sx={{ textAlign: 'left', mb: 1 }}>
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 1 }}>
-            <ExploreIcon sx={{ fontSize: '2rem' }} />
+            <LocalShippingIcon sx={{ fontSize: '2rem' }} />
             Rotas Programadas
           </Typography>
         </Box>

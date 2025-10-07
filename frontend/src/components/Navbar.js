@@ -115,14 +115,13 @@ const Navbar = ({ onLogout, userRole, userName, userPhotoUrl }) => {
                     </IconButton>
                 </Tooltip>
                 <Dialog open={verOpen} onClose={handleCloseVersion} maxWidth="xs" fullWidth>
-                    <DialogTitle sx={{ fontFamily: "'Exo 2', sans-serif" }}>Sobre o sistema: <strong>Rotas e Viagens</strong></DialogTitle>
+                    <DialogTitle sx={{ fontFamily: "'Exo 2', sans-serif" }}>Sobre o sistema:</DialogTitle>
                     <DialogContent dividers sx={{ minHeight: 80 }}>
                         <Typography variant="body2"><strong>Versão:</strong> {appVersion}</Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 1 }}>
                             <strong>Desenvolvido por:</strong> Coord. de Sistemas de Informação
                         </Typography>
                         <Box sx={{ mt: 0.5 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.25 }}>Próximas atualizações:</Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>{appNotes || '—'}</Typography>
                         </Box>
                     </DialogContent>

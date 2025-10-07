@@ -514,14 +514,14 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={1}>
+        <Grid container spacing={2}>
           {currentRotas.map((rota) => {
             const materiais = materiaisPorRota[rota.id] || [];
             const isLoadingMateriais = loadingMateriais[rota.id];
             
             return (
               <Grid item xs={12} key={rota.id}>
-                <Paper elevation={3} sx={{ p: 3, px: 1, backgroundColor: '#f8f9fa' }}>
+                <Paper elevation={0} sx={{ p: 3, px: 1, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, position: 'relative', minHeight: 64 }}>
                     <Box sx={{ color: '#666', display: 'flex', alignItems: 'center', gap: 1 }}>
                       <span style={{ fontSize: 14 }}>
@@ -550,7 +550,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
                               bgcolor: '#F57C00'
                             }
                           }}
-                          aria-label="Envios"
+                          aria-label="Enviar"
                         >
                           <Typography 
                             variant="body2" 
@@ -559,7 +559,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
                               display: { xs: 'none', sm: 'inline' }
                             }}
                           >
-                            Envios
+                            Enviar
                           </Typography>
                         </Button>
                       )}
@@ -808,7 +808,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
               </Select>
             </FormControl>
             <TextField
-              label="Tipo"
+              label="Material"
               value={materialInfo.tipo}
               onChange={(e) => setMaterialInfo(prev => ({ ...prev, tipo: e.target.value }))}
               fullWidth
