@@ -531,7 +531,11 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
                         label={rota.status}
                         color={getStatusColor(rota.status)}
                         size="small"
-                        sx={{ ml: 1 }}
+                        sx={{
+                          ml: 1,
+                          height: 22,
+                          '& .MuiChip-label': { px: 0.75, fontSize: 11, lineHeight: '20px' }
+                        }}
                       />
                       {(['agendada','andamento'].includes(String(rota.status).toLowerCase())) && (
                         <Button 

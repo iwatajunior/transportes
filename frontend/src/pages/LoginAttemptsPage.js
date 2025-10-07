@@ -18,7 +18,8 @@ import {
     CircularProgress,
     Alert,
     Button,
-    TablePagination
+    TablePagination,
+    MenuItem
 } from '@mui/material';
 import { Search as SearchIcon, Refresh as RefreshIcon, History as HistoryIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
@@ -30,6 +31,8 @@ const LoginAttemptsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [ipTerm, setIpTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all'); // all | success | failure
     const [filteredAttempts, setFilteredAttempts] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(8);
@@ -41,7 +44,9 @@ const LoginAttemptsPage = () => {
             console.log('[LoginAttemptsPage] Iniciando busca de tentativas de login...');
             setLoading(true);
             setError(null);
-            const data = await getLoginAttempts(pageNumber + 1, rowsPerPage);
+            // Buscar um conjunto maior de registros para garantir que filtros (como Falha) encontrem resultados
+            const LARGE_LIMIT = 500;
+            const data = await getLoginAttempts(1, LARGE_LIMIT);
             console.log('[LoginAttemptsPage] Dados recebidos:', data);
             
             if (!data || !data.attempts) {
@@ -61,19 +66,41 @@ const LoginAttemptsPage = () => {
         }
     };
 
+    // Buscar os dados uma vez ao montar
     useEffect(() => {
         console.log('[LoginAttemptsPage] Componente montado, buscando tentativas...');
-        fetchAttempts(page);
-    }, [page, rowsPerPage]);
+        fetchAttempts(0);
+    }, []);
 
+    // Filtragem por email e status
     useEffect(() => {
-        console.log('[LoginAttemptsPage] Filtrando tentativas com termo:', searchTerm);
-        const filtered = attempts.filter(attempt => 
-            attempt.email.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        console.log('[LoginAttemptsPage] Filtrando tentativas com termo, IP e status:', searchTerm, ipTerm, statusFilter);
+        const normalizeSuccess = (val) => {
+            if (typeof val === 'boolean') return val;
+            if (typeof val === 'number') return val === 1;
+            if (typeof val === 'string') return val.toLowerCase() === 'true' || val === '1' || val.toLowerCase() === 'sucesso';
+            return false;
+        };
+
+        const filtered = attempts.filter((attempt) => {
+            const matchesEmail = (attempt.email || '').toLowerCase().includes(searchTerm.toLowerCase());
+            const ip = (attempt.ip_address || '').replace(/^::ffff:/, '').toLowerCase();
+            const matchesIP = ip.includes(ipTerm.toLowerCase());
+            const isSuccess = normalizeSuccess(attempt.status);
+            const matchesStatus =
+                statusFilter === 'all' ||
+                (statusFilter === 'success' && isSuccess) ||
+                (statusFilter === 'failure' && !isSuccess);
+            return matchesEmail && matchesIP && matchesStatus;
+        });
         console.log('[LoginAttemptsPage] Tentativas filtradas:', filtered.length);
         setFilteredAttempts(filtered);
-    }, [searchTerm, attempts]);
+    }, [searchTerm, ipTerm, statusFilter, attempts]);
+
+    // Resetar para a primeira página quando filtros mudarem
+    useEffect(() => {
+        setPage(0);
+    }, [searchTerm, ipTerm, statusFilter]);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -84,12 +111,19 @@ const LoginAttemptsPage = () => {
         setPage(0);
     };
 
+    const parseStatus = (status) => {
+        if (typeof status === 'boolean') return status;
+        if (typeof status === 'number') return status === 1;
+        const s = String(status).toLowerCase();
+        return s === 'true' || s === '1' || s === 'sucesso';
+    };
+
     const getStatusColor = (status) => {
-        return status ? 'success' : 'error';
+        return parseStatus(status) ? 'success' : 'error';
     };
 
     const getStatusLabel = (status) => {
-        return status ? 'Sucesso' : 'Falha';
+        return parseStatus(status) ? 'Sucesso' : 'Falha';
     };
 
     const formatDate = (dateString) => {
@@ -143,17 +177,38 @@ const LoginAttemptsPage = () => {
             </Box>
 
             <Paper sx={{ p: 3 }}>
-                <Box mb={3} sx={{ display:'flex', alignItems:'center', gap: 1 }}>
+                <Box mb={3} sx={{ display:'flex', alignItems:'center', gap: 1, flexWrap: 'wrap' }}>
                     <TextField
                         variant="outlined"
+                        size="small"
                         placeholder="Buscar por email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         InputProps={{
                             startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
                         }}
-                        sx={{ width: { xs: '100%', sm: 360 } }}
+                        sx={{ width: 240, minWidth: 240 }}
                     />
+                    <TextField
+                        variant="outlined"
+                        size="small"
+                        placeholder="Filtrar por IP..."
+                        value={ipTerm}
+                        onChange={(e) => setIpTerm(e.target.value)}
+                        sx={{ width: 160, minWidth: 160 }}
+                    />
+                    <TextField
+                        select
+                        label="Status"
+                        size="small"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        sx={{ minWidth: 160 }}
+                    >
+                        <MenuItem value="all">Todos</MenuItem>
+                        <MenuItem value="success">Sucesso</MenuItem>
+                        <MenuItem value="failure">Falha</MenuItem>
+                    </TextField>
                 </Box>
 
                 <TableContainer>
@@ -188,7 +243,9 @@ const LoginAttemptsPage = () => {
                         </TableHead>
                         <TableBody>
                             {filteredAttempts.length > 0 ? (
-                                filteredAttempts.map((attempt) => (
+                                filteredAttempts
+                                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                  .map((attempt) => (
                                     <TableRow key={attempt.id}>
                                         <TableCell sx={{ whiteSpace:'nowrap', maxWidth: 220 }}>
                                             {formatDate(attempt.data_tentativa)}
@@ -202,7 +259,7 @@ const LoginAttemptsPage = () => {
                                                 size="small"
                                             />
                                         </TableCell>
-                                        <TableCell sx={{ whiteSpace:'nowrap' }}>{attempt.motivo || '-'}</TableCell>
+                                        <TableCell sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>{attempt.motivo || '-'}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
@@ -217,7 +274,7 @@ const LoginAttemptsPage = () => {
                 </TableContainer>
                 <TablePagination
                     component="div"
-                    count={total}
+                    count={filteredAttempts.length}
                     page={page}
                     onPageChange={handleChangePage}
                     rowsPerPage={rowsPerPage}
