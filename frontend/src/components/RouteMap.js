@@ -514,14 +514,14 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={2}>
-          {currentRotas.map((rota) => {
+        <Grid container spacing={{ xs: 1, sm: 2 }}>
+          {currentRotas.map((rota, idx) => {
             const materiais = materiaisPorRota[rota.id] || [];
             const isLoadingMateriais = loadingMateriais[rota.id];
             
             return (
               <Grid item xs={12} key={rota.id}>
-                <Paper elevation={0} sx={{ p: 3, px: 1, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, px: 1, borderRadius: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, position: 'relative', minHeight: 64 }}>
                     <Box sx={{ color: '#666', display: 'flex', alignItems: 'center', gap: 1 }}>
                       <span style={{ fontSize: 14 }}>
@@ -565,18 +565,18 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
                       )}
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
-                      <Box sx={{ textAlign: 'center', minWidth: 220 }}>
+                      <Box sx={{ textAlign: 'center', minWidth: { xs: 140, sm: 220 } }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Cidade de Origem</Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                           <LocationOn sx={{ color: '#1976d2' }} />
                           <Typography variant="body1" sx={{ fontWeight: 'medium' }}>{getCidadeNome(rota.cidade_origem)}</Typography>
                         </Box>
                       </Box>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mx: 3 }}>
-                        <DoubleArrow sx={{ fontSize: 18, color: 'primary.main' }} />
-                        <DoubleArrow sx={{ fontSize: 18, color: 'secondary.main', transform: 'rotate(180deg)' }} />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mx: { xs: 2, sm: 3 } }}>
+                        <DoubleArrow sx={{ fontSize: { xs: 16, sm: 18 }, color: 'primary.main' }} />
+                        <DoubleArrow sx={{ fontSize: { xs: 16, sm: 18 }, color: 'secondary.main', transform: 'rotate(180deg)' }} />
                       </Box>
-                      <Box sx={{ textAlign: 'center', minWidth: 220 }}>
+                      <Box sx={{ textAlign: 'center', minWidth: { xs: 140, sm: 220 } }}>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>Cidade de Destino</Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
                           <Typography variant="body1" sx={{ fontWeight: 'medium' }}>{getCidadeNome(rota.cidade_destino)}</Typography>
@@ -594,8 +594,7 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
                       </span>
                     </Box>
                   </Box>
-                  <Divider sx={{ my: 2 }} />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 4, mt: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: { xs: 2, sm: 4 }, mt: 2, p: { xs: 1, sm: 1.5 }, bgcolor: 'grey.100', borderRadius: 2 }}>
                     {/* Percurso de Ida */}
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', mb: 1 }}>
@@ -689,6 +688,24 @@ const RouteMap = ({ rotas, currentPage = 1, itemsPerPage = 2, hideTitle = false 
                   
                   </Grid>
                 </Paper>
+                {idx < currentRotas.length - 1 && (
+                  <Divider
+                    variant="fullWidth"
+                    textAlign="center"
+                    sx={{
+                      my: { xs: 1.5, sm: 3 },
+                      color: 'text.secondary',
+                      opacity: 1,
+                      '&::before, &::after': {
+                        borderTopStyle: 'dashed',
+                        borderColor: 'grey.400',
+                        borderTopWidth: 2
+                      }
+                    }}
+                  >
+                    Próximas Rotas
+                  </Divider>
+                )}
               </Grid>
             );
           })}

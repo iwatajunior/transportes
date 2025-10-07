@@ -9,7 +9,7 @@ const RotasProgramadasPage = () => {
   const [rotas, setRotas] = useState([]);
   const [rotasFiltradas, setRotasFiltradas] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(3);
+  const [itemsPerPage] = useState(2);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -21,10 +21,26 @@ const RotasProgramadasPage = () => {
         const rotasData = response.data || [];
         if (!Array.isArray(rotasData)) throw new Error('Resposta inválida da API');
 
-        const ordenadas = rotasData.sort((a, b) => {
+        const ordenadas = rotasData.slice().sort((a, b) => {
+          // 1) Priorizar status desejados (agendada/andamento) primeiro
+          const desired = new Set(['agendada', 'andamento']);
+          const saStr = String(a.status || '').toLowerCase();
+          const sbStr = String(b.status || '').toLowerCase();
+          const pa = desired.has(saStr) ? 0 : 1;
+          const pb = desired.has(sbStr) ? 0 : 1;
+          if (pa !== pb) return pa - pb;
+
+          // 2) Dentro do mesmo grupo, ordenar por data de saída (mais recentes primeiro)
+          const ta = new Date(a.data_saida).getTime();
+          const tb = new Date(b.data_saida).getTime();
+          const va = isNaN(ta) ? -Infinity : ta;
+          const vb = isNaN(tb) ? -Infinity : tb;
+          if (vb !== va) return vb - va;
+
+          // 3) Desempate por status (agendada antes de andamento, depois concluída/cancelada)
           const statusOrder = { agendada: 1, andamento: 2, concluida: 3, cancelada: 4 };
-          const sa = statusOrder[(a.status || '').toLowerCase()] || 99;
-          const sb = statusOrder[(b.status || '').toLowerCase()] || 99;
+          const sa = statusOrder[saStr] || 99;
+          const sb = statusOrder[sbStr] || 99;
           return sa - sb;
         });
 
